@@ -1,0 +1,40 @@
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext_lazy as _
+from .models import CustomUser, Agency
+
+
+class AgencyInline(admin.StackedInline):
+    model = Agency
+    can_delete = False
+    verbose_name_plural = 'Agency'
+    fk_name = 'user'
+
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    inlines = (AgencyInline, )
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    search_fields = ('email', 'first_name', 'last_name')
+    ordering = ('email',)
+    filter_horizontal = ('groups', 'user_permissions',)
+
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Custom fields'), {'fields': ('is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2'),
+        }),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Custom fields'), {'fields': ('is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
+    )
+
+admin.site.register(CustomUser, CustomUserAdmin)
+
