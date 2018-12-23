@@ -34,7 +34,8 @@ def get_oauth_token():
         response = requests.post(
             settings.DCRC_TOKEN_URL,
             headers={'Authorization': f'Basic {encoded_key_secret}'},
-            data={'grant_type': 'client_credentials'}
+            data={'grant_type': 'client_credentials'},
+            verify=False
         )
         response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
         token_data = response.json()
@@ -51,7 +52,7 @@ def get_citizen_details(cid_number):
     logger.info(f"Making request to DCRC API: {request_url}")
 
     try:
-        response = requests.get(request_url, headers=headers)
+        response = requests.get(request_url, headers=headers, verify=False)
         response.raise_for_status()  # This will raise an error for HTTP error responses
         logger.info("DCRC API response received successfully.")
         return response.json()
@@ -70,7 +71,7 @@ def map_citizen_details_to_model(data):
         "middle_name": data.get('middleName', ''),
         "last_name": data.get('lastName', ''),
         "date_of_birth": data.get('dob', ''),
-        "gender": data.get('gender', 'O'),  # Default to 'O' for Others if gender is not provided
+        "gender": data.get('gender', 'O'), 
         "mob_number": data.get('mobileNumber', ''),
         "perm_add_village": data.get('villageName', ''),
         "perm_add_gewog": data.get('gewogName', ''),

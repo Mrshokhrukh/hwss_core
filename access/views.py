@@ -11,22 +11,110 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
+from django.views.decorators.csrf import csrf_exempt
+from pathlib import Path
+import logging
+import json
+import time
+import base64
+import os
+from django.http import JsonResponse
+from django.conf import settings
 import requests
+from requests.exceptions import RequestException
 
-class CitizenDetailsView(APIView):
-    def post(self, request, *args, **kwargs):
-        cid_number = request.data.get('cid_number')
-        try:
-            api_response = get_citizen_details(cid_number)
-            citizen_data = map_citizen_details_to_model(api_response)
-            return Response(citizen_data, status=status.HTTP_200_OK)
-        except requests.HTTPError as http_err:
-            # Handle HTTP errors (e.g., token endpoint not reachable, bad request, etc.)
-            return Response({'detail': str(http_err)}, status=http_err.response.status_code)
-        except requests.RequestException as err:
-            # Handle non-HTTP errors (e.g., network issues)
-            return Response({'detail': str(err)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+# Define your global file path
 
+GLOBAL_FILE_PATH = os.path.join(os.path.dirname(__file__), 'global.json')
+
+def read_global():
+    with open(GLOBAL_FILE_PATH, 'r') as file:
+        return json.load(file)
+
+
+def write_global(data):
+    with open(GLOBAL_FILE_PATH, 'w') as file:
+        json.dump(data, file)
+
+
+def get_authorization_code():
+    auth_key = 'ScC63jo40LjxifHweyLUR6IVto0a'
+    auth_secret = 'jk6jLebfES42oYmf8YuFNuMFpTUa'
+    auth_code = f"{auth_key}:{auth_secret}"
+    return base64.b64encode(auth_code.encode()).decode()
+
+
+def global_session():
+    data = read_global()
+    if data['accessToken'] != "" and data['expiryTime'] > time.time():
+        return True
+    return False
+
+
+def generate_token():
+    request_url = 'oauth2/token'
+    if not global_session():
+        headers = {'Authorization': 'Basic ' + get_authorization_code()}
+        form_params = {'grant_type': 'client_credentials'}
+
+        response = requests.post(
+            'https://stg-sso.dit.gov.bt/' + request_url,
+            headers=headers,
+            data=form_params,
+            verify=False,
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            json_object = response.json()
+            expiry_time = int(time.time()) + json_object['expires_in']
+
+            global_settings = read_global()
+            global_settings['accessToken'] = json_object['access_token']
+            global_settings['expiryTime'] = expiry_time
+
+            write_global(global_settings)
+
+            return global_settings['accessToken']
+        else:
+            return "Something went wrong. Please try again!"
+    else:
+        return read_global()['accessToken']
+
+
+logger = logging.getLogger(__name__)
+
+
+def fetch_citizen_details(request, cid):
+    print(f"Received request for CID: {cid}")
+    print(f"Request Headers: {request.headers}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        api_url = settings.CREDENTIALS['API_URL']
+
+        # Log the URL and headers
+        print(f"Making request to: {api_url}{cid}")
+        print(f"Request headers: {headers}")
+
+        response = requests.get(
+            f'{api_url}{cid}', headers=headers, verify=False)
+
+        # Log response details
+        if response.status_code == 200:
+            citizen_detail = response.json().get('citizenDetailsResponse', {}
+                                                 ).get('citizenDetail', [None])[0]
+            print(f"Response Data: {citizen_detail}")
+            return JsonResponse(citizen_detail, safe=False)
+        else:
+            print(
+                f"Response error. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching citizen details'}, status=response.status_code)
+
+    except RequestException as e:
+        print(f"Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 class UserCreate(generics.CreateAPIView):
@@ -38,17 +126,17 @@ class UserCreate(generics.CreateAPIView):
         user_serializer.is_valid(raise_exception=True)
         user = user_serializer.save()
 
-        # Create Agency data
         agency_data = request.data.get('agency', {})
         agency_serializer = AgencySerializer(data=agency_data)
         if agency_serializer.is_valid():
             agency_serializer.save(user=user)
         else:
-            user.delete()  # Rollback user creation if agency data is invalid
+            user.delete()
             return Response(agency_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(user_serializer.data)
         return Response(user_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class UserUpdate(generics.UpdateAPIView):
     queryset = CustomUser.objects.all()
@@ -57,14 +145,15 @@ class UserUpdate(generics.UpdateAPIView):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        user_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        user_serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
         user_serializer.is_valid(raise_exception=True)
         self.perform_update(user_serializer)
 
-        # Update Agency data
         agency_data = request.data.get('agency', {})
         if instance.agency:
-            agency_serializer = AgencySerializer(instance.agency, data=agency_data, partial=partial)
+            agency_serializer = AgencySerializer(
+                instance.agency, data=agency_data, partial=partial)
             if agency_serializer.is_valid():
                 agency_serializer.save()
             else:
@@ -92,6 +181,7 @@ class LoginView(APIView):
 
 User = get_user_model()
 
+
 class PasswordResetRequestView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
@@ -117,7 +207,8 @@ class PasswordResetRequestView(APIView):
 class PasswordResetView(APIView):
     def post(self, request, token, *args, **kwargs):
         password = request.data.get('password')
-        user = User.objects.filter(username=request.data.get('username')).first()
+        user = User.objects.filter(
+            username=request.data.get('username')).first()
 
         if user and default_token_generator.check_token(user, token):
             user.set_password(password)
