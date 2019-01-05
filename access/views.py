@@ -23,7 +23,7 @@ from django.conf import settings
 import requests
 from requests.exceptions import RequestException
 
-# Define your global file path
+
 
 GLOBAL_FILE_PATH = os.path.join(os.path.dirname(__file__), 'global.json')
 
@@ -94,7 +94,6 @@ def fetch_citizen_details(request, cid):
         headers = {'Authorization': token}
         api_url = settings.CREDENTIALS['API_URL']
 
-        # Log the URL and headers
         print(f"Making request to: {api_url}{cid}")
         print(f"Request headers: {headers}")
 

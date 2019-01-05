@@ -119,7 +119,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'access.CustomUser'
 
 
-DCRC_API_BASE_URL = 'https://staging-datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0'
+# DCRC_API_BASE_URL = 'https://staging-datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0' #DCRC
+DCRC_API_BASE_URL = 'https://staging-datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid' #RCSC
+# DCRC_API_BASE_URL = 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/staffdetails' #EMIS COUNSELLOR
+# DCRC_API_BASE_URL = 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/' #EMIS STUDENT
 DCRC_TOKEN_URL = 'https://stg-sso.dit.gov.bt/oauth2/token'
 DCRC_CONSUMER_KEY = 'ScC63jo40LjxifHweyLUR6IVto0a'
 DCRC_CONSUMER_SECRET = 'jk6jLebfES42oYmf8YuFNuMFpTUa'
