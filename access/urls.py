@@ -11,5 +11,6 @@ urlpatterns = [
     path('get-citizen-details/<str:cid>/', views.fetch_citizen_details, name='get_citizen_details'),
     path('verify-pre-recorded-user/', views.verify_pre_recorded_user, name='verify-pre-recorded-user'),
     path('get-rcsc-details/<str:cid>/', views.fetch_rcsc_details, name='get_rcsc_details'),
+    path('register-api-user/', views.register_api_user, name='register_api_user'),
 
 ]

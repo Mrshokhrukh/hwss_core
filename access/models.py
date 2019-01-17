@@ -1,15 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
+import random
+import string
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, password=None, **extra_fields):
-        if not username:
-            raise ValueError('The Username field must be set')
+    def create_user(self, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
+
+        # Generate a temporary random username if not provided
+        temp_username = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        extra_fields.setdefault('username', temp_username)
+
         email = self.normalize_email(email)
-        user = self.model(username=username, email=email, **extra_fields)
+        user = self.model(
+            email=email,
+            identity_number=identity_number,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
+            gender=gender,
+            mob_number=mob_number,
+            perm_add_village=perm_add_village,
+            perm_add_gewog=perm_add_gewog,
+            perm_add_dzongkhag=perm_add_dzongkhag,
+            **extra_fields
+        )
         user.set_password(password)
         user.save(using=self._db)
         return user

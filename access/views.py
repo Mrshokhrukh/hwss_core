@@ -22,6 +22,7 @@ from django.http import JsonResponse
 from django.conf import settings
 import requests
 from requests.exceptions import RequestException
+from django.views.decorators.csrf import csrf_exempt
 
 
 
@@ -84,7 +85,7 @@ def generate_token():
 
 logger = logging.getLogger(__name__)
 
-
+@csrf_exempt
 def fetch_citizen_details(request, cid):
     print(f"Received request for CID: {cid}")
     print(f"Request Headers: {request.headers}")
@@ -116,6 +117,76 @@ def fetch_citizen_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@csrf_exempt
+def register_api_user(request):
+    """
+    Register a user with the provided data.
+    Modify this function based on your actual model fields.
+    """
+    try:
+        user_data = request.POST  # Assuming the frontend sends user data in the request body
+
+        # Create a new user
+        user = get_user_model().objects.create_user(
+            username=user_data['username'],
+            identity_number=user_data['identity_number'],
+            nationality=user_data['nationality'],
+            first_name=user_data['first_name'],
+            middle_name=user_data['middle_name'],
+            last_name=user_data['last_name'],
+            date_of_birth=user_data['date_of_birth'],
+            gender=user_data['gender'],
+            email=user_data['email'],
+            mob_number=user_data['mob_number'],
+            perm_add_village=user_data['perm_add_village'],
+            perm_add_gewog=user_data['perm_add_gewog'],
+            perm_add_dzongkhag=user_data['perm_add_dzongkhag'],
+        )
+
+        # Log the user creation details
+        print(f"User created successfully: {user}")
+
+        return JsonResponse({'success': 'User registered successfully'}, status=201)
+    except Exception as e:
+        print(f"Error registering user: {str(e)}")
+        return JsonResponse({'error': 'Error registering user'}, status=500)
+
+# def fetch_rcsc_details(request, cid):
+#     print(f"Received request for RCSC details of CID: {cid}")
+
+#     try:
+#         token = 'Bearer ' + generate_token()
+#         headers = {'Authorization': token}
+#         rcsc_api_url = settings.CREDENTIALS['RCSC_API']
+#         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
+#         print(f"Request headers: {headers}")
+
+#         response = requests.get(f'{rcsc_api_url}{cid}', headers=headers, verify=False)
+
+#         if response.status_code == 200:
+#             rcsc_details = response.json()
+#             print(f"RCSC Details Response Data: {rcsc_details}")
+#             return JsonResponse(rcsc_details, safe=False)
+#         else:
+#             print(f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
+#             return JsonResponse({'error': 'Error fetching RCSC details'}, status=response.status_code)
+
+#     except RequestException as e:
+#         print(f"RCSC API Request Exception: {str(e)}")
+#         return JsonResponse({'error': str(e)}, status=500)
+
+
+
+def map_rcsc_data_to_agency_model(rcsc_data):
+    # Map the relevant data from rcsc_data to Agency model fields
+    mapped_data = {
+        'agency_code': rcsc_data.get('agencyID', ''),
+        'user_role_agency': rcsc_data.get('positionTitle', ''),
+        'agency_name': rcsc_data.get('agencyName', ''),
+        'user_code': rcsc_data.get('employeeNumber', ''),
+        # Map other fields as needed
+    }
+    return mapped_data
 
 def fetch_rcsc_details(request, cid):
     print(f"Received request for RCSC details of CID: {cid}")
@@ -130,9 +201,21 @@ def fetch_rcsc_details(request, cid):
         response = requests.get(f'{rcsc_api_url}{cid}', headers=headers, verify=False)
 
         if response.status_code == 200:
-            rcsc_details = response.json()
+            rcsc_details = response.json().get('employeedetails', {}).get('employeedetail', [])[0]
             print(f"RCSC Details Response Data: {rcsc_details}")
-            return JsonResponse(rcsc_details, safe=False)
+
+            # Map the RCSC data to Agency model
+            mapped_data = map_rcsc_data_to_agency_model(rcsc_details)
+
+            # Get the user ID associated with the request
+            user_id = request.user.id  # Assuming the user is authenticated
+
+            # Create or update the Agency model instance
+            agency, created = Agency.objects.update_or_create(user_id=user_id, defaults=mapped_data)
+
+            # Return the mapped data to Vue.js
+            return JsonResponse(mapped_data, safe=False)
+
         else:
             print(f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
             return JsonResponse({'error': 'Error fetching RCSC details'}, status=response.status_code)
