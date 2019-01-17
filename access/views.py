@@ -116,25 +116,76 @@ def fetch_citizen_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+
+def fetch_rcsc_details(request, cid):
+    print(f"Received request for RCSC details of CID: {cid}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        rcsc_api_url = settings.CREDENTIALS['RCSC_API']
+        print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
+        print(f"Request headers: {headers}")
+
+        response = requests.get(f'{rcsc_api_url}{cid}', headers=headers, verify=False)
+
+        if response.status_code == 200:
+            rcsc_details = response.json()
+            print(f"RCSC Details Response Data: {rcsc_details}")
+            return JsonResponse(rcsc_details, safe=False)
+        else:
+            print(f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching RCSC details'}, status=response.status_code)
+
+    except RequestException as e:
+        print(f"RCSC API Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# class UserCreate(generics.CreateAPIView):
+#     queryset = CustomUser.objects.all()
+#     serializer_class = CustomUserSerializer
+
+#     def create(self, request, *args, **kwargs):
+#         user_serializer = self.get_serializer(data=request.data)
+#         user_serializer.is_valid(raise_exception=True)
+#         user = user_serializer.save()
+
+#         agency_data = request.data.get('agency', {})
+#         agency_serializer = AgencySerializer(data=agency_data)
+#         if agency_serializer.is_valid():
+#             agency_serializer.save(user=user)
+#         else:
+#             user.delete()
+#             return Response(agency_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         headers = self.get_success_headers(user_serializer.data)
+#         return Response(user_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 class UserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
 
     def create(self, request, *args, **kwargs):
-        user_serializer = self.get_serializer(data=request.data)
+        user_data = request.data.get('user', {})
+        agency_data = request.data.get('agency', {})
+
+        # Validate user data
+        user_serializer = self.get_serializer(data=user_data)
         user_serializer.is_valid(raise_exception=True)
         user = user_serializer.save()
 
-        agency_data = request.data.get('agency', {})
+        # Validate agency data
         agency_serializer = AgencySerializer(data=agency_data)
         if agency_serializer.is_valid():
-            agency_serializer.save(user=user)
+            agency_serializer.save(user=user)  # Associate agency with user
         else:
-            user.delete()
+            user.delete()  # Rollback user creation if agency validation fails
             return Response(agency_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(user_serializer.data)
         return Response(user_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 
 class UserUpdate(generics.UpdateAPIView):
@@ -215,3 +266,20 @@ class PasswordResetView(APIView):
             return Response({"message": "Password has been reset."}, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid token or username."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @APIView(['POST'])
+def verify_pre_recorded_user(request):
+    cid = request.data.get('cid')
+    dob = request.data.get('dob')
+
+    user = get_object_or_404(PreRecordedUser, identity_number=cid, date_of_birth=dob)
+    return Response({
+        'success': True,
+        'message': 'Pre-recorded user found.',
+        'user_data': {
+            'identity_number': user.identity_number,
+            'first_name': user.first_name,
+            # Add other fields as needed
+        }
+    })

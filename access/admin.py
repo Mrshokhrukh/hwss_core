@@ -1,7 +1,21 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import CustomUser, Agency
+from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency
+
+
+class PreRecordedAgencyInline(admin.StackedInline):
+    model = PreRecordedAgency
+    extra = 0  # Prevents displaying empty new agency form by default
+    can_delete = True  # Allows deleting agencies if needed
+
+@admin.register(PreRecordedUser)
+class PreRecordedUserAdmin(admin.ModelAdmin):
+    list_display = ('identity_number', 'first_name', 'last_name', 'email', 'date_joined')
+    search_fields = ('identity_number', 'first_name', 'last_name', 'email')
+    ordering = ('date_joined',)
+    readonly_fields = ('date_joined',)
+    inlines = [PreRecordedAgencyInline]
 
 
 class AgencyInline(admin.StackedInline):
