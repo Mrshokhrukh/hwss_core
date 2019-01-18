@@ -88,7 +88,7 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def fetch_citizen_details(request, cid):
     print(f"Received request for CID: {cid}")
-    print(f"Request Headers: {request.headers}")
+    print(f"Request Headers: {request.body}")
 
     try:
         token = 'Bearer ' + generate_token()
