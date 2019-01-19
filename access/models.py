@@ -15,7 +15,6 @@ class CustomUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(
-            username=temporary_username,
             email=email,
             identity_number=identity_number,
             first_name=first_name,
@@ -28,6 +27,7 @@ class CustomUserManager(BaseUserManager):
             perm_add_dzongkhag=perm_add_dzongkhag,
             **extra_fields
         )
+        user.username = temporary_username  # Set the username separately
         user.set_password(password)
         user.save(using=self._db)
         return user
