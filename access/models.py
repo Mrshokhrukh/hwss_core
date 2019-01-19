@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
             perm_add_village=perm_add_village,
             perm_add_gewog=perm_add_gewog,
             perm_add_dzongkhag=perm_add_dzongkhag,
-            **extra_fields
+            **extra_fields,
         )
         user.username = temporary_username  # Set the username separately
         user.set_password(password)
