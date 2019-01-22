@@ -13,6 +13,20 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['172.30.3.5', 'localhost', '127.0.0.1']
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',  # Adjust the level as needed
+    },
+}
+
 
 CREDENTIALS = {
     'API_KEY': config('CONSUMER_KEY'),
@@ -47,9 +61,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -118,10 +132,32 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'access.CustomUser'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5173',
+    'http://localhost:5173',
+    'http://localhost:8000',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'x-csrftoken', 
+    'content-type', 
+    'accept', 
+    'origin', 
+    'authorization', 
+    'x-requested-with',
+    'x-csrftoken',
+]
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173'
+]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:5173',
+]  # or 'Lax'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

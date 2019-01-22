@@ -1,31 +1,50 @@
-from rest_framework import generics
-from .models import CustomUser, Agency
-from .serializers import CustomUserSerializer, AgencySerializer
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.urls import reverse
-from django.contrib.auth import get_user_model
-from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
-from django.views.decorators.csrf import csrf_exempt
 from pathlib import Path
-import logging
 import json
 import time
 import base64
 import os
-from django.http import JsonResponse
-from django.conf import settings
+import logging
 import requests
-from requests.exceptions import RequestException
+import traceback
+from datetime import datetime
+
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
+from requests.exceptions import RequestException
+from django.conf import settings
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+
+from .models import CustomUser, Agency
+from .serializers import CustomUserSerializer, AgencySerializer
+from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
+
+from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
+
+from django.db import transaction
+
+logger = logging.getLogger(__name__)
 
 
-GLOBAL_FILE_PATH = os.path.join(os.path.dirname(__file__), 'global.json')
+def read_json(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+
+def write_json(file_path, data):
+    with open(file_path, 'w') as file:
+        json.dump(data, file)
 
 
 def read_global():
@@ -83,8 +102,6 @@ def generate_token():
         return read_global()['accessToken']
 
 
-logger = logging.getLogger(__name__)
-
 @csrf_exempt
 def fetch_citizen_details(request, cid):
     try:
@@ -94,11 +111,18 @@ def fetch_citizen_details(request, cid):
         response = requests.get(
             f'{api_url}{cid}', headers=headers, verify=False)
 
-        # Log response details
         if response.status_code == 200:
             citizen_detail = response.json().get('citizenDetailsResponse', {}
                                                  ).get('citizenDetail', [None])[0]
-            print(f"Response Data: {citizen_detail}")
+
+            # Map user data before storing in the JSON file
+            mapped_user_data = map_user_data(citizen_detail)
+
+            print(f"User Data from Step 2: {citizen_detail}")
+
+            # Store user data in the JSON file
+            write_json(USER_DATA_FILE_PATH, mapped_user_data)
+
             return JsonResponse(citizen_detail, safe=False)
         else:
             print(
@@ -110,61 +134,41 @@ def fetch_citizen_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@csrf_exempt
-def register_api_user(request):
-    try:
-        user_data = request.POST 
+def map_user_data(citizen_detail):
+    # Map the relevant data from citizen_detail to user model fields
+    mapped_data = {
+        'identity_number': citizen_detail.get('cid', ''),
+        'first_name': citizen_detail.get('firstName', ''),
+        'middle_name': citizen_detail.get('middleName', '') or '',
+        'last_name': citizen_detail.get('lastName', ''),
+        'date_of_birth': formatDOB(citizen_detail.get('dob', '')),
+        'gender': mapGender(citizen_detail.get('gender', '')),
+        'mob_number': citizen_detail.get('mobileNumber', ''),
+        'perm_add_village': citizen_detail.get('villageName', ''),
+        'perm_add_gewog': citizen_detail.get('gewogName', ''),
+        'perm_add_dzongkhag': citizen_detail.get('dzongkhagName', ''),
+        'nationality': mapNationality(citizen_detail.get('country', '')),
+        'username': '',  # Include an empty username
+        'password': '',  # Include an empty password
+    }
+    return mapped_data
 
-        print('Received User Data:', user_data)
 
-        # Create a new user
-        user = get_user_model().objects.create_user(
-            username=user_data['username'],
-            identity_number=user_data['identity_number'],
-            nationality=user_data['nationality'],
-            first_name=user_data['first_name'],
-            middle_name=user_data['middle_name'],
-            last_name=user_data['last_name'],
-            date_of_birth=user_data['date_of_birth'],
-            gender=user_data['gender'],
-            email=user_data['email'],
-            mob_number=user_data['mob_number'],
-            perm_add_village=user_data['perm_add_village'],
-            perm_add_gewog=user_data['perm_add_gewog'],
-            perm_add_dzongkhag=user_data['perm_add_dzongkhag'],
-        )
 
-        # Log the user creation details
-        print(f"User created successfully: {user}")
+def formatDOB(dob):
+    date_object = datetime.strptime(dob, '%d/%m/%Y')
+    formatted_date = date_object.strftime('%Y-%m-%d')
+    return formatted_date
 
-        return JsonResponse({'success': 'User registered successfully'}, status=201)
-    except Exception as e:
-        print(f"Error registering user: {str(e)}")
-        return JsonResponse({'error': 'Error registering user'}, status=500)
 
-# def fetch_rcsc_details(request, cid):
-#     print(f"Received request for RCSC details of CID: {cid}")
+def mapGender(gender):
+    return 'Female' if gender == 'F' else 'Male'
 
-#     try:
-#         token = 'Bearer ' + generate_token()
-#         headers = {'Authorization': token}
-#         rcsc_api_url = settings.CREDENTIALS['RCSC_API']
-#         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
-#         print(f"Request headers: {headers}")
 
-#         response = requests.get(f'{rcsc_api_url}{cid}', headers=headers, verify=False)
-
-#         if response.status_code == 200:
-#             rcsc_details = response.json()
-#             print(f"RCSC Details Response Data: {rcsc_details}")
-#             return JsonResponse(rcsc_details, safe=False)
-#         else:
-#             print(f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
-#             return JsonResponse({'error': 'Error fetching RCSC details'}, status=response.status_code)
-
-#     except RequestException as e:
-#         print(f"RCSC API Request Exception: {str(e)}")
-#         return JsonResponse({'error': str(e)}, status=500)
+def mapNationality(country):
+    if not country or country.strip() == '':
+        return 'Bhutanese'
+    return country
 
 
 def map_rcsc_data_to_agency_model(rcsc_data):
@@ -174,9 +178,10 @@ def map_rcsc_data_to_agency_model(rcsc_data):
         'user_role_agency': rcsc_data.get('positionTitle', ''),
         'agency_name': rcsc_data.get('agencyName', ''),
         'user_code': rcsc_data.get('employeeNumber', ''),
-        # Map other fields as needed
     }
     return mapped_data
+
+# views.py - Step 3 (fetch_rcsc_details function)
 
 
 def fetch_rcsc_details(request, cid):
@@ -187,7 +192,7 @@ def fetch_rcsc_details(request, cid):
         headers = {'Authorization': token}
         rcsc_api_url = settings.CREDENTIALS['RCSC_API']
         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
-        print(f"Request headers: {headers}")
+        # print(f"Request headers: {headers}")
 
         response = requests.get(
             f'{rcsc_api_url}{cid}', headers=headers, verify=False)
@@ -200,16 +205,14 @@ def fetch_rcsc_details(request, cid):
             # Map the RCSC data to Agency model
             mapped_data = map_rcsc_data_to_agency_model(rcsc_details)
 
-            # Get the user ID associated with the request
-            user_id = request.user.id  # Assuming the user is authenticated
+            # Convert 'user_code' to integer
+            mapped_data['user_code'] = int(mapped_data['user_code'])
 
-            # Create or update the Agency model instance
-            agency, created = Agency.objects.update_or_create(
-                user_id=user_id, defaults=mapped_data)
+            # Store agency data in the session
+            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
 
-            # Return the mapped data to Vue.js
+            # Proceed to Step 4 or any other step as needed
             return JsonResponse(mapped_data, safe=False)
-
         else:
             print(
                 f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
@@ -220,25 +223,94 @@ def fetch_rcsc_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-# class UserCreate(generics.CreateAPIView):
-#     queryset = CustomUser.objects.all()
-#     serializer_class = CustomUserSerializer
+# views.py - Step 4
+# Step 1: Register user
+@api_view(['POST'])
+@csrf_exempt
+def register_user(request):
+    try:
+        print("Received request to register user.")
 
-#     def create(self, request, *args, **kwargs):
-#         user_serializer = self.get_serializer(data=request.data)
-#         user_serializer.is_valid(raise_exception=True)
-#         user = user_serializer.save()
+        # Get username and password from the request data
+        username = request.data.get('username')
+        password = request.data.get('password')
 
-#         agency_data = request.data.get('agency', {})
-#         agency_serializer = AgencySerializer(data=agency_data)
-#         if agency_serializer.is_valid():
-#             agency_serializer.save(user=user)
-#         else:
-#             user.delete()
-#             return Response(agency_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # If you need additional data from the session, retrieve it here
+        user_data = read_json(USER_DATA_FILE_PATH)
 
-#         headers = self.get_success_headers(user_serializer.data)
-#         return Response(user_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        print(f"Received data - Username: {username}, Password: {password}")
+        print(f"User Data: {user_data}")
+
+        # Create a dictionary with the necessary data for the serializers
+        user_data.update({'username': username, 'password': password})
+
+        # Use Django's transaction.atomic for atomic operations
+        with transaction.atomic():
+            # Create instances of the models and validate them
+            user_serializer = CustomUserSerializer(data=user_data)
+            user_serializer.is_valid(raise_exception=True)
+
+            # Save the user instance
+            user_instance = user_serializer.save()
+
+        print(
+            f"Session data after user registration: {request.session.items()}")
+
+        # Return the user ID in the response
+        response_data = {'userId': user_instance.id}
+        return Response(response_data, status=201)
+
+    except Exception as e:
+        # Log the exception details
+        print(f"Error registering user: {str(e)}")
+        response_data = {'error': 'Error registering user'}
+        print(f"Response data: {response_data}")
+        return Response(response_data, status=500)
+
+# Step 2: Register agency
+@api_view(['POST'])
+@csrf_exempt
+def register_agency(request):
+    try:
+        print("Received request to register agency.")
+
+        # Get the user ID and agency data from the request data
+        user_id = int(request.data.get('userId'))  # Convert user_id to an integer
+        agency_data = request.data.get('agencyData')
+
+        print(f"User ID from frontend: {user_id}")
+        print(f"Agency Data from frontend: {agency_data}")
+
+        # Ensure 'user' key is not present in agency_data
+        agency_data.pop('user', None)
+
+        print("Removed 'user' key from agency data:", agency_data)
+
+        # Get the user instance using the user ID
+        user_instance = CustomUser.objects.get(id=user_id)
+
+        # Set the user field in the AgencySerializer
+        agency_serializer = AgencySerializer(data=agency_data, context={'user': user_instance})
+        if agency_serializer.is_valid():
+            agency_instance = agency_serializer.save()  # No need to set user_id explicitly
+
+            print(f"Agency instance created: {agency_instance}")
+
+            response_data = {'success': 'Agency registered successfully'}
+            return Response(response_data, status=201)
+        else:
+            print("Validation errors in agency data:")
+            print(agency_serializer.errors)
+            response_data = {'error': 'Validation error in agency data'}
+            return Response(response_data, status=400)
+
+    except Exception as e:
+        # Log the exception details
+        print(f"Error registering agency: {str(e)}")
+        traceback.print_exc()  # Add this line to print detailed traceback
+        response_data = {'error': 'Error registering agency'}
+        return Response(response_data, status=500)
+
 
 class UserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -248,17 +320,15 @@ class UserCreate(generics.CreateAPIView):
         user_data = request.data.get('user', {})
         agency_data = request.data.get('agency', {})
 
-        # Validate user data
         user_serializer = self.get_serializer(data=user_data)
         user_serializer.is_valid(raise_exception=True)
         user = user_serializer.save()
 
-        # Validate agency data
         agency_serializer = AgencySerializer(data=agency_data)
         if agency_serializer.is_valid():
-            agency_serializer.save(user=user)  # Associate agency with user
+            agency_serializer.save(user=user)
         else:
-            user.delete()  # Rollback user creation if agency validation fails
+            user.delete()
             return Response(agency_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(user_serializer.data)

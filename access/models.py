@@ -50,7 +50,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50)
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=True)
     mob_number = models.CharField(max_length=15)
     perm_add_village = models.CharField(max_length=100)
     perm_add_gewog = models.CharField(max_length=100)
@@ -58,12 +58,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'email', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+    REQUIRED_FIELDS = ['identity_number', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return self.email or f"CustomUser #{self.pk}"
 
     class Meta:
         verbose_name = 'user'
@@ -73,9 +73,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class Agency(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='agency')
     user_code = models.CharField(max_length=100)
-    ps_add_village = models.CharField(max_length=100)
-    ps_add_gewog = models.CharField(max_length=100)
-    ps_add_dzongkhag = models.CharField(max_length=100)
+    ps_add_village = models.CharField(max_length=100, blank=True, null=True)
+    ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
+    ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     father_name = models.CharField(max_length=100, blank=True, null=True)
     mother_name = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
@@ -93,7 +93,7 @@ class Agency(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.agency_name}"
-
+    
 
 class PreRecordedUser(models.Model):
     identity_number = models.CharField(max_length=50, unique=True)

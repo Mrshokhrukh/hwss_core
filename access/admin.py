@@ -9,6 +9,7 @@ class PreRecordedAgencyInline(admin.StackedInline):
     extra = 0  # Prevents displaying empty new agency form by default
     can_delete = True  # Allows deleting agencies if needed
 
+
 @admin.register(PreRecordedUser)
 class PreRecordedUserAdmin(admin.ModelAdmin):
     list_display = ('identity_number', 'first_name', 'last_name', 'email', 'date_joined')
@@ -24,17 +25,18 @@ class AgencyInline(admin.StackedInline):
     verbose_name_plural = 'Agency'
     fk_name = 'user'
 
+
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     inlines = (AgencyInline, )
-    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active')  # Change 'email' to 'username'
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email', 'first_name', 'last_name')
-    ordering = ('email',)
+    search_fields = ('username', 'first_name', 'last_name', 'email')  # Change 'email' to 'username'
+    ordering = ('username',)  # Change 'email' to 'username'
     filter_horizontal = ('groups', 'user_permissions',)
 
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('username', 'password')}),  # Change 'email' to 'username'
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
@@ -43,7 +45,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2'),
+            'fields': ('username', 'password1', 'password2'),
         }),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
@@ -51,4 +53,3 @@ class CustomUserAdmin(UserAdmin):
     )
 
 admin.site.register(CustomUser, CustomUserAdmin)
-
