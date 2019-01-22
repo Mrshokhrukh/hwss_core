@@ -3,15 +3,15 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.utils import timezone
 import random
 import string
+import uuid
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
-
-        # Generate a temporary random username if not provided
-        temp_username = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-        extra_fields.setdefault('username', temp_username)
+        
+        # Generate a temporary unique username
+        temporary_username = str(uuid.uuid4())
 
         email = self.normalize_email(email)
         user = self.model(
@@ -25,8 +25,9 @@ class CustomUserManager(BaseUserManager):
             perm_add_village=perm_add_village,
             perm_add_gewog=perm_add_gewog,
             perm_add_dzongkhag=perm_add_dzongkhag,
-            **extra_fields
+            **extra_fields,
         )
+        user.username = temporary_username  # Set the username separately
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -38,7 +39,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=50, unique=True)
+    username = models.CharField(max_length=50, unique=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_gyalsung = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -92,7 +93,7 @@ class Agency(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.agency_name}"
-
+    
 
 class PreRecordedUser(models.Model):
     identity_number = models.CharField(max_length=50, unique=True)

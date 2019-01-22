@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from pathlib import Path
 import logging
 import json
@@ -25,8 +26,8 @@ from requests.exceptions import RequestException
 from django.views.decorators.csrf import csrf_exempt
 
 
-
 GLOBAL_FILE_PATH = os.path.join(os.path.dirname(__file__), 'global.json')
+
 
 def read_global():
     with open(GLOBAL_FILE_PATH, 'r') as file:
@@ -87,17 +88,10 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def fetch_citizen_details(request, cid):
-    print(f"Received request for CID: {cid}")
-    print(f"Request Headers: {request.headers}")
-
     try:
         token = 'Bearer ' + generate_token()
         headers = {'Authorization': token}
         api_url = settings.CREDENTIALS['API_URL']
-
-        print(f"Making request to: {api_url}{cid}")
-        print(f"Request headers: {headers}")
-
         response = requests.get(
             f'{api_url}{cid}', headers=headers, verify=False)
 
@@ -119,12 +113,10 @@ def fetch_citizen_details(request, cid):
 
 @csrf_exempt
 def register_api_user(request):
-    """
-    Register a user with the provided data.
-    Modify this function based on your actual model fields.
-    """
     try:
-        user_data = request.POST  # Assuming the frontend sends user data in the request body
+        user_data = request.POST 
+
+        print('Received User Data:', user_data)
 
         # Create a new user
         user = get_user_model().objects.create_user(
@@ -176,7 +168,6 @@ def register_api_user(request):
 #         return JsonResponse({'error': str(e)}, status=500)
 
 
-
 def map_rcsc_data_to_agency_model(rcsc_data):
     # Map the relevant data from rcsc_data to Agency model fields
     mapped_data = {
@@ -188,6 +179,8 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     }
     return mapped_data
 
+
+@require_GET
 def fetch_rcsc_details(request, cid):
     print(f"Received request for RCSC details of CID: {cid}")
 
@@ -198,32 +191,25 @@ def fetch_rcsc_details(request, cid):
         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
         print(f"Request headers: {headers}")
 
-        response = requests.get(f'{rcsc_api_url}{cid}', headers=headers, verify=False)
+        response = requests.get(
+            f'{rcsc_api_url}{cid}', headers=headers, verify=False)
 
         if response.status_code == 200:
-            rcsc_details = response.json().get('employeedetails', {}).get('employeedetail', [])[0]
+            rcsc_details = response.json().get(
+                'employeedetails', {}).get('employeedetail', [])[0]
             print(f"RCSC Details Response Data: {rcsc_details}")
 
-            # Map the RCSC data to Agency model
-            mapped_data = map_rcsc_data_to_agency_model(rcsc_details)
-
-            # Get the user ID associated with the request
-            user_id = request.user.id  # Assuming the user is authenticated
-
-            # Create or update the Agency model instance
-            agency, created = Agency.objects.update_or_create(user_id=user_id, defaults=mapped_data)
-
-            # Return the mapped data to Vue.js
-            return JsonResponse(mapped_data, safe=False)
+            # Return the fetched RCSC details to Vue.js
+            return JsonResponse(rcsc_details, safe=False)
 
         else:
-            print(f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
+            print(
+                f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
             return JsonResponse({'error': 'Error fetching RCSC details'}, status=response.status_code)
 
     except RequestException as e:
         print(f"RCSC API Request Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
-
 
 # class UserCreate(generics.CreateAPIView):
 #     queryset = CustomUser.objects.all()
@@ -268,7 +254,6 @@ class UserCreate(generics.CreateAPIView):
 
         headers = self.get_success_headers(user_serializer.data)
         return Response(user_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
 
 
 class UserUpdate(generics.UpdateAPIView):
@@ -356,7 +341,8 @@ def verify_pre_recorded_user(request):
     cid = request.data.get('cid')
     dob = request.data.get('dob')
 
-    user = get_object_or_404(PreRecordedUser, identity_number=cid, date_of_birth=dob)
+    user = get_object_or_404(
+        PreRecordedUser, identity_number=cid, date_of_birth=dob)
     return Response({
         'success': True,
         'message': 'Pre-recorded user found.',
