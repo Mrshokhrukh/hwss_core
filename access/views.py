@@ -181,8 +181,6 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     }
     return mapped_data
 
-# views.py - Step 3 (fetch_rcsc_details function)
-
 
 def fetch_rcsc_details(request, cid):
     print(f"Received request for RCSC details of CID: {cid}")
@@ -208,8 +206,9 @@ def fetch_rcsc_details(request, cid):
             # Convert 'user_code' to integer
             mapped_data['user_code'] = int(mapped_data['user_code'])
 
-            # Store agency data in the session
-            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
+            # Create or update the Agency model instance
+            agency, created = Agency.objects.update_or_create(
+                user_id=user_id, defaults=mapped_data)
 
             # Proceed to Step 4 or any other step as needed
             return JsonResponse(mapped_data, safe=False)
@@ -223,35 +222,14 @@ def fetch_rcsc_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-# views.py - Step 4
-# Step 1: Register user
-@api_view(['POST'])
-@csrf_exempt
-def register_user(request):
-    try:
-        print("Received request to register user.")
+# class UserCreate(generics.CreateAPIView):
+#     queryset = CustomUser.objects.all()
+#     serializer_class = CustomUserSerializer
 
-        # Get username and password from the request data
-        username = request.data.get('username')
-        password = request.data.get('password')
-
-        # If you need additional data from the session, retrieve it here
-        user_data = read_json(USER_DATA_FILE_PATH)
-
-        print(f"Received data - Username: {username}, Password: {password}")
-        print(f"User Data: {user_data}")
-
-        # Create a dictionary with the necessary data for the serializers
-        user_data.update({'username': username, 'password': password})
-
-        # Use Django's transaction.atomic for atomic operations
-        with transaction.atomic():
-            # Create instances of the models and validate them
-            user_serializer = CustomUserSerializer(data=user_data)
-            user_serializer.is_valid(raise_exception=True)
-
-            # Save the user instance
-            user_instance = user_serializer.save()
+#     def create(self, request, *args, **kwargs):
+#         user_serializer = self.get_serializer(data=request.data)
+#         user_serializer.is_valid(raise_exception=True)
+#         user = user_serializer.save()
 
         print(
             f"Session data after user registration: {request.session.items()}")
