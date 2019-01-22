@@ -179,8 +179,6 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     }
     return mapped_data
 
-
-@require_GET
 def fetch_rcsc_details(request, cid):
     print(f"Received request for RCSC details of CID: {cid}")
 
@@ -199,8 +197,17 @@ def fetch_rcsc_details(request, cid):
                 'employeedetails', {}).get('employeedetail', [])[0]
             print(f"RCSC Details Response Data: {rcsc_details}")
 
-            # Return the fetched RCSC details to Vue.js
-            return JsonResponse(rcsc_details, safe=False)
+            # Map the RCSC data to Agency model
+            mapped_data = map_rcsc_data_to_agency_model(rcsc_details)
+
+            # Get the user ID associated with the request
+            user_id = request.user.id  # Assuming the user is authenticated
+
+            # Create or update the Agency model instance
+            agency, created = Agency.objects.update_or_create(user_id=user_id, defaults=mapped_data)
+
+            # Return the mapped data to Vue.js
+            return JsonResponse(mapped_data, safe=False)
 
         else:
             print(
