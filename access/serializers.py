@@ -33,7 +33,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class AgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Agency
@@ -46,17 +45,28 @@ class AgencySerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        # Retrieve 'user' from the context
-        user_instance = self.context.get('user', None)
+        # Retrieve 'user' from the validated data
+        user_data = self.context.get('user_data', '')
+        user_id = user_data
 
-        if user_instance:
-            agency = Agency.objects.create(user=user_instance, **validated_data)
+        if user_id:
+            # Fetch the user instance based on the user ID
+            user_instance = CustomUser.objects.get(id=user_id)
+
+            # Set the 'user' field with the correct user instance
+            validated_data['user'] = user_instance
+
+            # Create the Agency instance
+            agency = Agency.objects.create(**validated_data)
             return agency
         else:
-            raise serializers.ValidationError("User instance is required for creating an Agency.")
+            raise serializers.ValidationError("User ID is required for creating an Agency.")
+
+
 
     def update(self, instance, validated_data):
         for field, value in validated_data.items():
             setattr(instance, field, value)
         instance.save()
         return instance
+

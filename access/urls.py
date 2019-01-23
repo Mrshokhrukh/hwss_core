@@ -16,6 +16,9 @@ urlpatterns = [
          name='verify-pre-recorded-user'),
     path('get-rcsc-details/<str:cid>/',
          views.fetch_rcsc_details, name='get_rcsc_details'),
+    path('get-rcsc-details/<str:cid>/<str:reg_email>/',
+         views.fetch_rcsc_details, name='get_rcsc_details_with_email'),
     path('register-user/', views.register_user, name='register_user'),
     path('register-agency/', views.register_agency, name='register_agency'),
+
 ]

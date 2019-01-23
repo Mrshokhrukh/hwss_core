@@ -29,9 +29,9 @@ class AgencyInline(admin.StackedInline):
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     inlines = (AgencyInline, )
-    list_display = ('username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active')  # Change 'email' to 'username'
+    list_display = ('email', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active')  # Change 'email' to 'username'
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('username', 'first_name', 'last_name', 'email')  # Change 'email' to 'username'
+    search_fields = ('email','username', 'first_name', 'last_name', 'email')  # Change 'email' to 'username'
     ordering = ('username',)  # Change 'email' to 'username'
     filter_horizontal = ('groups', 'user_permissions',)
 
