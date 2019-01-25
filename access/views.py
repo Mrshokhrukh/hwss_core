@@ -22,7 +22,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-
+from django.contrib.auth import authenticate
 from .models import CustomUser, Agency
 from .serializers import CustomUserSerializer, AgencySerializer
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
@@ -184,8 +184,6 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     return mapped_data
 
 # views.py - Step 3 (fetch_rcsc_details function)
-
-
 @csrf_exempt
 def fetch_rcsc_details(request, cid, reg_email):
     print(
@@ -259,6 +257,7 @@ def register_user(request):
         # If you need additional data from the session, retrieve it here
         user_data = read_json(USER_DATA_FILE_PATH)
         user_data.update({'username': username})
+        write_json(USER_DATA_FILE_PATH, user_data)
 
         # Create a dictionary with only the necessary data for user creation
         user_creation_data = {
@@ -411,14 +410,25 @@ class UserList(generics.ListAPIView):
 
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        user = authenticate(email=email, password=password)
+        try:
+            username = request.data.get('username')  # Change 'email' to 'username'
+            password = request.data.get('password')
 
-        if user:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
-        return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            # Use authenticate function from django.contrib.auth
+            user = authenticate(username=username, password=password)
+
+            if user:
+                token, created = Token.objects.get_or_create(user=user)
+                return Response({"token": token.key}, status=status.HTTP_200_OK)
+            else:
+                # Enhance error logging using the Django logger
+                logger.warning('Authentication failed for username: %s', username)
+                return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # Log the exception for further analysis using the Django logger
+            logger.error('Exception during login: %s', str(e))
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 User = get_user_model()
