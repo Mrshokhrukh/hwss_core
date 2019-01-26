@@ -6,15 +6,13 @@ import string
 import uuid
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
+    def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
+        if not username:
+            raise ValueError('The Username field must be set')
         
-        # Generate a temporary unique username
-        temporary_username = str(uuid.uuid4())
-
         email = self.normalize_email(email)
         user = self.model(
+            username=username,
             email=email,
             identity_number=identity_number,
             first_name=first_name,
@@ -27,7 +25,6 @@ class CustomUserManager(BaseUserManager):
             perm_add_dzongkhag=perm_add_dzongkhag,
             **extra_fields,
         )
-        user.username = temporary_username  # Set the username separately
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -35,7 +32,12 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username, email, password, **extra_fields)
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+        return self.create_user(username, email, password=password, **extra_fields)
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
@@ -58,16 +60,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email or f"CustomUser #{self.pk}"
+        return self.username or f"CustomUser #{self.pk}"
 
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
+
 
 
 class Agency(models.Model):

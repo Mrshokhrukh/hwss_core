@@ -62,11 +62,46 @@ class AgencySerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("User ID is required for creating an Agency.")
 
-
-
     def update(self, instance, validated_data):
         for field, value in validated_data.items():
             setattr(instance, field, value)
         instance.save()
         return instance
 
+
+class PreRecordedAgencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Agency
+        fields = [
+            'user_code', 'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
+            'father_name', 'mother_name', 'parent_occupation', 'guardian_name',
+            'guardian_occupation', 'parent_status', 'current_living_with',
+            'agency_code', 'user_role_agency', 'agency_name', 'user_class',
+            'user_sub_class', 'academy_code', 'status',
+        ]
+
+    def create(self, validated_data):
+        # Retrieve 'user_id' from the context
+        user_id = self.context.get('user_id')
+        
+        if user_id:
+            try:
+                # Fetch the user instance based on the user ID
+                user_instance = CustomUser.objects.get(id=user_id)
+
+                # Set the 'user' field with the correct user instance
+                validated_data['user'] = user_instance
+
+                # Create the Agency instance
+                agency = Agency.objects.create(**validated_data)
+                return agency
+            except CustomUser.DoesNotExist:
+                raise serializers.ValidationError("User does not exist")
+        else:
+            raise serializers.ValidationError("User ID is required for creating an Agency.")
+
+    def update(self, instance, validated_data):
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        instance.save()
+        return instance

@@ -23,14 +23,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
-from .models import CustomUser, Agency
-from .serializers import CustomUserSerializer, AgencySerializer
+from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency
+from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedAgencySerializer
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
 
 from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
 
 from django.db import transaction
 from django.http import QueryDict
+from . import models
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,8 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     return mapped_data
 
 # views.py - Step 3 (fetch_rcsc_details function)
+
+
 @csrf_exempt
 def fetch_rcsc_details(request, cid, reg_email):
     print(
@@ -411,27 +414,33 @@ class UserList(generics.ListAPIView):
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
         try:
-            username = request.data.get('username')  # Change 'email' to 'username'
+            username = request.data.get('username')
             password = request.data.get('password')
 
-            # Use authenticate function from django.contrib.auth
             user = authenticate(username=username, password=password)
 
             if user:
                 token, created = Token.objects.get_or_create(user=user)
-                return Response({"token": token.key}, status=status.HTTP_200_OK)
+                agency = user.agency
+                if agency:
+                    agency_data = {
+                        'user_role_agency': agency.user_role_agency,
+                    }
+                else:
+                    agency_data = None
+
+                return Response({"token": token.key, "user_role_agency": agency_data.get('user_role_agency', None)}, status=status.HTTP_200_OK)
             else:
-                # Enhance error logging using the Django logger
                 logger.warning('Authentication failed for username: %s', username)
                 return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            # Log the exception for further analysis using the Django logger
             logger.error('Exception during login: %s', str(e))
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-User = get_user_model()
+def get_user_details(request):
+    user = CustomUser.objects.get(id=user_id)
 
 
 class PasswordResetRequestView(APIView):
@@ -471,18 +480,189 @@ class PasswordResetView(APIView):
 
 
 # @APIView(['POST'])
+@csrf_exempt
 def verify_pre_recorded_user(request):
-    cid = request.data.get('cid')
-    dob = request.data.get('dob')
+    cid = request.GET.get('cid')
 
-    user = get_object_or_404(
-        PreRecordedUser, identity_number=cid, date_of_birth=dob)
-    return Response({
-        'success': True,
-        'message': 'Pre-recorded user found.',
-        'user_data': {
+    try:
+        user = PreRecordedUser.objects.get(identity_number=cid)
+        agency = PreRecordedAgency.objects.filter(
+            prerecorded_user=user).first()
+
+        user_data = {
             'identity_number': user.identity_number,
             'first_name': user.first_name,
-            # Add other fields as needed
+            'middle_name': user.middle_name,
+            'last_name': user.last_name,
+            'date_of_birth': user.date_of_birth,
+            'gender': user.gender,
+            'email': user.email,
+            'mob_number': user.mob_number,
+            'perm_add_village': user.perm_add_village,
+            'perm_add_gewog': user.perm_add_gewog,
+            'perm_add_dzongkhag': user.perm_add_dzongkhag,
+            'nationality': user.nationality,
+            'date_joined': user.date_joined,
+            # Add other fields from PreRecordedUser model as needed
+
+            'agency_data': {
+                'user_code': agency.user_code,
+                'ps_add_village': agency.ps_add_village,
+                'ps_add_gewog': agency.ps_add_gewog,
+                'ps_add_dzongkhag': agency.ps_add_dzongkhag,
+                'father_name': agency.father_name,
+                'mother_name': agency.mother_name,
+                'parent_occupation': agency.parent_occupation,
+                'guardian_name': agency.guardian_name,
+                'guardian_occupation': agency.guardian_occupation,
+                'parent_status': agency.parent_status,
+                'current_living_with': agency.current_living_with,
+                'agency_code': agency.agency_code,
+                'user_role_agency': agency.user_role_agency,
+                'agency_name': agency.agency_name,
+                'user_class': agency.user_class,
+                'user_sub_class': agency.user_sub_class,
+                'academy_code': agency.academy_code,
+                'status': agency.status,
+                # Add other fields from PreRecordedAgency model as needed
+            }
         }
-    })
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Pre-recorded user found.',
+            'user_data': user_data
+        })
+    except PreRecordedUser.DoesNotExist:
+        logger.error(f'Pre-recorded user not found for CID: {cid}')
+        return JsonResponse({'success': False, 'message': 'Pre-recorded user not found.'}, status=404)
+    except Exception as e:
+        logger.exception(f'Error in verify_pre_recorded_user: {str(e)}')
+        return JsonResponse({'success': False, 'message': 'Internal Server Error'}, status=500)
+
+
+# Step 1: Register pre-recorded user
+@api_view(['POST'])
+@csrf_exempt
+def register_pre_recorded_user(request):
+    try:
+        print("Received request to register pre-recorded user.")
+
+        # Get user data from the request data
+        user_data = request.data
+        print(f"Received user data: {user_data}")
+
+        # If password is not provided in the data, set it to an empty string
+        password = user_data.get('password', '')
+
+        # Set default values for required fields if not provided
+        for field in ['identity_number', 'nationality', 'first_name', 'last_name', 'date_of_birth', 'gender',
+                      'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']:
+            user_data.setdefault(field, '')
+
+        # Set the password back to the original value
+        user_data['password'] = password
+
+        # Create a dictionary with only the necessary data for user creation
+        user_creation_data = {
+            'username': user_data.get('username', ''),
+            'password': user_data.get('password', ''),
+            'email': user_data.get('email', ''),
+            'identity_number': user_data.get('identity_number', ''),
+            'nationality': user_data.get('nationality', ''),
+            'first_name': user_data.get('first_name', ''),
+            'middle_name': user_data.get('middle_name', ''),
+            'last_name': user_data.get('last_name', ''),
+            'date_of_birth': user_data.get('date_of_birth', ''),
+            'gender': user_data.get('gender', ''),
+            'mob_number': user_data.get('mob_number', ''),
+            'perm_add_village': user_data.get('perm_add_village', ''),
+            'perm_add_gewog': user_data.get('perm_add_gewog', ''),
+            'perm_add_dzongkhag': user_data.get('perm_add_dzongkhag', ''),
+        }
+
+        # Use Django's transaction.atomic for atomic operations
+        with transaction.atomic():
+            # Create instances of the models and validate them
+            user_serializer = CustomUserSerializer(data=user_creation_data)
+            if not user_serializer.is_valid():
+                print(f"User serializer errors: {user_serializer.errors}")
+                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # Save the user instance
+            user_instance = user_serializer.save()
+
+            print(f"Session data after pre-recorded user registration: {request.session.items()}")
+
+            # Return the user ID in the response
+            response_data = {'userId': user_instance.id}
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        # Log the exception details
+        print(f"Error registering pre-recorded user: {str(e)}")
+        response_data = {'error': 'Error registering pre-recorded user'}
+        print(f"Response data: {response_data}")
+        return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Step 2: Register pre-recorded agency
+@api_view(['POST'])
+@csrf_exempt
+@permission_classes([])
+def register_pre_recorded_agency(request):
+    try:
+        logger.info("Received request to register pre-recorded agency.")
+
+        # Get the agency data from the request
+        agency_data = request.data.get('agency_data', {})
+        logger.debug(f"Received agency data: {agency_data}")
+
+        # Print the full request body for debugging
+        logger.debug(f"Full request body: {request.data}")
+
+        # Ensure 'user' data is present in the agency data
+        user_data = agency_data.get('user', None)
+        logger.debug(f"User data in agency_data: {user_data}")
+        if not user_data:
+            logger.error("User data is missing in the agency data")
+            return Response({'error': 'User data is missing in the agency data'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert user ID to integer
+        user_id = int(user_data)
+
+        # Pass user ID as context to serializer
+        serializer_context = {'user_id': user_id}
+
+        # Set default values for required fields if not provided
+        for field in ['user_code', 'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag', 'father_name',
+                      'mother_name', 'parent_occupation', 'guardian_name', 'guardian_occupation', 'parent_status',
+                      'current_living_with', 'agency_code', 'user_role_agency', 'agency_name', 'user_class',
+                      'user_sub_class', 'academy_code']:
+            agency_data.setdefault(field, '')
+
+        # Use Django's transaction.atomic for atomic operations
+        with transaction.atomic():
+            # Create and validate the agency serializer
+            agency_serializer = PreRecordedAgencySerializer(data=agency_data, context=serializer_context)
+            agency_serializer.is_valid(raise_exception=True)
+
+            # Save the agency instance
+            agency_instance = agency_serializer.save()
+
+            logger.info(
+                f"Pre-recorded agency registered successfully with ID: {agency_instance.id}")
+
+            response_data = {
+                'success': 'Pre-recorded agency registered successfully'}
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        # Log the exception details
+        logger.exception(f"Error registering pre-recorded agency: {str(e)}")
+        response_data = {'error': 'Error registering pre-recorded agency'}
+        return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+

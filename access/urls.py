@@ -20,5 +20,10 @@ urlpatterns = [
          views.fetch_rcsc_details, name='get_rcsc_details_with_email'),
     path('register-user/', views.register_user, name='register_user'),
     path('register-agency/', views.register_agency, name='register_agency'),
+    path('verify-pre-recorded-user/', views.verify_pre_recorded_user, name='verify_pre_recorded_user'),
+    path('register-pre-recorded-user/', views. register_pre_recorded_user, name=' register_pre_recorded_user'),
+    path('register-pre-recorded-agency/', views.register_pre_recorded_agency, name='register_pre_recorded_agency'),
+    path('get-user-details/', views.get_user_details, name='get_user_details'),
+
 
 ]
