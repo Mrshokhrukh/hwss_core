@@ -439,8 +439,58 @@ class LoginView(APIView):
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@csrf_exempt
 def get_user_details(request):
-    user = CustomUser.objects.get(id=user_id)
+    try:
+        user_id = request.user.id
+        user = CustomUser.objects.get(id=user_id)
+
+        user_data = {
+            'identity_number': user.identity_number,
+            'first_name': user.first_name,
+            'middle_name': user.middle_name,
+            'last_name': user.last_name,
+            'date_of_birth': user.date_of_birth,
+            'gender': user.gender,
+            'email': user.email,
+            'mob_number': user.mob_number,
+            'perm_add_village': user.perm_add_village,
+            'perm_add_gewog': user.perm_add_gewog,
+            'perm_add_dzongkhag': user.perm_add_dzongkhag,
+            'nationality': user.nationality,
+            'date_joined': user.date_joined,
+        }
+
+        agency = user.agency
+        if agency:
+            agency_data = {
+                'user_code': agency.user_code,
+                'ps_add_village': agency.ps_add_village,
+                'ps_add_gewog': agency.ps_add_gewog,
+                'ps_add_dzongkhag': agency.ps_add_dzongkhag,
+                'father_name': agency.father_name,
+                'mother_name': agency.mother_name,
+                'parent_occupation': agency.parent_occupation,
+                'guardian_name': agency.guardian_name,
+                'guardian_occupation': agency.guardian_occupation,
+                'parent_status': agency.parent_status,
+                'current_living_with': agency.current_living_with,
+                'agency_code': agency.agency_code,
+                'user_role_agency': agency.user_role_agency,
+                'agency_name': agency.agency_name,
+                'user_class': agency.user_class,
+                'user_sub_class': agency.user_sub_class,
+                'academy_code': agency.academy_code,
+                'status': agency.status,
+            }
+        else:
+            agency_data = None
+
+        return Response({"user": user_data, "agency": agency_data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error('Exception while fetching user details: %s', str(e))
+        return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PasswordResetRequestView(APIView):
@@ -663,6 +713,9 @@ def register_pre_recorded_agency(request):
         response_data = {'error': 'Error registering pre-recorded agency'}
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-
-
+@api_view(['POST'])
+@csrf_exempt
+def user_logout(request):
+    response = JsonResponse({'message': 'Logout successful'})
+    response.delete_cookie('sessionid')  # Clear session cookie
+    return response

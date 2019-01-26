@@ -24,6 +24,7 @@ urlpatterns = [
     path('register-pre-recorded-user/', views. register_pre_recorded_user, name=' register_pre_recorded_user'),
     path('register-pre-recorded-agency/', views.register_pre_recorded_agency, name='register_pre_recorded_agency'),
     path('get-user-details/', views.get_user_details, name='get_user_details'),
+    path('user-logout/', views.user_logout, name='user_logout'),
 
 
 ]
