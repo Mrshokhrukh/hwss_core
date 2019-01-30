@@ -185,8 +185,6 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     return mapped_data
 
 # views.py - Step 3 (fetch_rcsc_details function)
-
-
 @csrf_exempt
 def fetch_rcsc_details(request, cid, reg_email):
     print(
@@ -243,6 +241,134 @@ def fetch_rcsc_details(request, cid, reg_email):
         print(f"RCSC API Request Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
+
+def map_emis_student_data_to_agency_model(emis_student_data):
+    # Map the relevant data from emis_student_data to Agency model fields
+    mapped_data = {
+        # ... map other fields ...
+        'dob': emis_student_data.get('dob', ''),
+    }
+    return mapped_data
+
+@csrf_exempt
+def fetch_emis_student_details(request, student_id, reg_email, dob):
+    logger.info(f"Received request for EMIS student details of Student ID: {student_id} with reg_email: {reg_email} and DOB: {dob}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        emis_student_api_url = settings.CREDENTIALS['EMIS_STUDENT_API']
+        logger.info(f"Making request to EMIS Student API: {emis_student_api_url}{student_id}/{dob}")
+        logger.debug(f"Request headers: {headers}")
+
+        # Step 1: Read user_data.json
+        user_data = read_json(USER_DATA_FILE_PATH)
+        logger.debug(f"Read user data: {user_data}")
+
+        # Step 2: Update email field in user data
+        user_data.update({'email': reg_email})  # Update the email field
+        logger.debug(f"Updated user data: {user_data}")
+
+        # Step 3: Save updated user data back to user_data.json
+        write_json(USER_DATA_FILE_PATH, user_data)
+        logger.debug("User data written to file.")
+
+        # Step 4: Proceed with EMIS Student API request
+        response = requests.get(
+            f'{emis_student_api_url}{student_id}/{dob}', headers=headers, verify=False)
+
+        if response.status_code == 200:
+            emis_student_details = response.json().get('student_details', {})
+            logger.debug(f"EMIS Student Details Response Data: {emis_student_details}")
+
+            # Check if the response data is empty
+            if not emis_student_details:
+                logger.warning("EMIS Student details not found for the provided information")
+                return JsonResponse({'error': 'EMIS Student details not found for the provided information'}, status=404)
+
+            # Map the EMIS student data to Agency model
+            mapped_data = map_emis_student_data_to_agency_model(emis_student_details)
+
+            # Store agency data in the session
+            request.session['agency_data'] = mapped_data
+
+            # store agency data to the JSON file
+            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
+
+            # Proceed to Step 4 or any other step as needed
+            return JsonResponse(mapped_data, safe=False)
+        else:
+            logger.error(f"Response error from EMIS Student API. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching EMIS Student details'}, status=response.status_code)
+
+    except RequestException as e:
+        logger.exception(f"EMIS Student API Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def map_emis_employee_data_to_agency_model(emis_employee_data):
+    # Map the relevant data from emis_employee_data to Agency model fields
+    mapped_data = {
+        # ... map other fields ...
+        'dob': emis_employee_data.get('dob', ''),
+    }
+    return mapped_data
+
+
+@csrf_exempt
+def fetch_emis_employee_details(request, employee_id, reg_email):
+    logger.info(f"Received request for EMIS employee details of Employee ID: {employee_id} with reg_email: {reg_email}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        emis_employee_api_url = settings.CREDENTIALS['EMIS_STAFF_API']
+        logger.info(f"Making request to EMIS Employee API: {emis_employee_api_url}{employee_id}/")
+        logger.debug(f"Request headers: {headers}")
+
+        # Step 1: Read user_data.json
+        user_data = read_json(USER_DATA_FILE_PATH)
+        logger.debug(f"Read user data: {user_data}")
+
+        # Step 2: Update email field in user data
+        user_data.update({'email': reg_email})  # Update the email field
+        logger.debug(f"Updated user data: {user_data}")
+
+        # Step 3: Save updated user data back to user_data.json
+        write_json(USER_DATA_FILE_PATH, user_data)
+        logger.debug("User data written to file.")
+
+        # Step 4: Proceed with EMIS Employee API request
+        response = requests.get(
+            f'{emis_employee_api_url}{employee_id}/', headers=headers, verify=False)
+
+        if response.status_code == 200:
+            emis_employee_details = response.json().get('employee_details', {})
+            logger.debug(f"EMIS Employee Details Response Data: {emis_employee_details}")
+
+            # Check if the response data is empty
+            if not emis_employee_details:
+                logger.warning("EMIS Employee details not found for the provided information")
+                return JsonResponse({'error': 'EMIS Employee details not found for the provided information'}, status=404)
+
+            # Map the EMIS employee data to Agency model
+            mapped_data = map_emis_employee_data_to_agency_model(emis_employee_details)
+
+            # Store agency data in the session
+            request.session['agency_data'] = mapped_data
+
+            # store agency data to the JSON file
+            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
+
+            # Proceed to Step 4 or any other step as needed
+            return JsonResponse(mapped_data, safe=False)
+        else:
+            logger.error(f"Response error from EMIS Employee API. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching EMIS Employee details'}, status=response.status_code)
+
+    except RequestException as e:
+        logger.exception(f"EMIS Employee API Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 # views.py - Step 4
 # Step 1: Register user
