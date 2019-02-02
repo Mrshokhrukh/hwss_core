@@ -438,7 +438,7 @@ class GetUserDetails(APIView):
                 'date_joined': user.date_joined,
                 'role': user.role,
                 'access_level': user.access_level,
-            }
+            },
 
             # Retrieve agency data
             if user.active_agency:
