@@ -1,61 +1,50 @@
 from django.contrib import admin
-from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency, UserAgency
-
+from .models import CustomUser, Agency, UserAgency
 
 class UserAgencyInline(admin.TabularInline):
     model = UserAgency
-    extra = 0
-    verbose_name = 'Active Agency'
-    verbose_name_plural = 'Active Agencies'
 
-
-@admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
-    model = CustomUser
-    list_display = ('email', 'username', 'first_name', 'last_name',
-                    'is_staff', 'is_active', 'get_active_agency')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email', 'username', 'first_name', 'last_name')
-    ordering = ('username',)
-    filter_horizontal = ('groups', 'user_permissions',)
+    list_display = ('username', 'email', 'role', 'active_agency')
+    inlines = [UserAgencyInline]
+
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'identity_number',
-         'nationality', 'date_of_birth', 'gender', 'mob_number')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff',
-         'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-        ('Custom fields', {'fields': (
-            'is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
-    )
-    add_fieldsets = (
         (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2'),
+            'fields': ('username', 'email', 'role', 'active_agency'),
         }),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'identity_number',
-         'nationality', 'date_of_birth', 'gender', 'mob_number')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff',
-         'is_superuser', 'groups', 'user_permissions')}),
-        ('Custom fields', {'fields': (
-            'is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
+        ('Personal Information', {
+            'fields': ('first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender', 'identity_number', 'nationality', 'mob_number', 'father_name', 'mother_name'),
+        }),
+        ('Address Information', {
+            'fields': ('perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'),
+        }),
+        ('Gyalsuung Information', {
+            'fields': ('is_gyalsung', 'academy_code'),
+        }),
     )
-    inlines = [UserAgencyInline]
 
-    def get_active_agency(self, obj):
-        active_user_agency = obj.useragency_set.filter(is_active=True).first()
-        if active_user_agency:
-            return active_user_agency.agency.agency_name
-        return None
+    def active_agency(self, obj):
+        try:
+            active_agency = obj.agency.filter(is_active=True).first()
+            return active_agency.agency_name if active_agency else None
+        except AttributeError:
+            return None
 
-
-    get_active_agency.short_description = 'Active Agency'
-    get_active_agency.admin_order_field = 'useragency__is_active'
+    active_agency.short_description = 'Active Agency'
 
 
-@admin.register(Agency)
 class AgencyAdmin(admin.ModelAdmin):
-    model = Agency
-    list_display = ('agency_code', 'agency_name', 'status')
-    search_fields = ('agency_code', 'agency_name')
+    list_display = ('agency_name',)
     inlines = [UserAgencyInline]
+
+class UserAgencyAdmin(admin.ModelAdmin):
+    list_display = ('user', 'agency', 'get_is_active')
+
+    def get_is_active(self, obj):
+        return obj.user.is_active if obj.user else False  # Check if the associated user is active
+    get_is_active.short_description = 'Is Active'
+
+
+admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(Agency, AgencyAdmin)
+admin.site.register(UserAgency, UserAgencyAdmin)

@@ -9,7 +9,7 @@
 #     def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
 #         if not username:
 #             raise ValueError('The Username field must be set')
-        
+
 #         email = self.normalize_email(email)
 #         user = self.model(
 #             username=username,
@@ -72,7 +72,6 @@
 #         verbose_name_plural = 'users'
 
 
-
 # class Agency(models.Model):
 #     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='agency')
 #     user_code = models.CharField(max_length=100)
@@ -96,7 +95,7 @@
 
 #     def __str__(self):
 #         return f"{self.user.email} - {self.agency_name}"
-    
+
 
 # class PreRecordedUser(models.Model):
 #     identity_number = models.CharField(max_length=50, unique=True)
@@ -143,7 +142,6 @@
 #         verbose_name_plural = 'Pre-recorded agencies'
 
 
-
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
@@ -151,11 +149,12 @@ import random
 import string
 import uuid
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, role=None, agency_data=None, **extra_fields):
         if not username:
             raise ValueError('The Username field must be set')
-        
+
         email = self.normalize_email(email)
         user = self.model(
             username=username,
@@ -175,10 +174,10 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
 
-        # Create the associated agency
+        # Create the associated agency user details
         if agency_data:
-            agency = Agency.objects.create(user=user, **agency_data)
-            UserAgency.objects.create(user=user, agency=agency, is_active=True)
+            agency = Agency.objects.create(**agency_data)
+            UserAgency.objects.create(user=user, agency=agency)
 
         return user
 
@@ -193,44 +192,39 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(username, email, password=password, **extra_fields)
 
+
+
 class Agency(models.Model):
-    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, related_name='agency')
+    agency_code = models.CharField(max_length=100, unique=True)
+    agency_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.agency_name
+
+class UserAgency(models.Model):
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, related_name='agency_details')
+    agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
     user_code = models.CharField(max_length=100)
     ps_add_village = models.CharField(max_length=100, blank=True, null=True)
     ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
     ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
-    father_name = models.CharField(max_length=100, blank=True, null=True)
-    mother_name = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
     guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
     parent_status = models.CharField(max_length=100, blank=True, null=True)
     current_living_with = models.CharField(max_length=100, blank=True, null=True)
-    agency_code = models.CharField(max_length=100)
     user_role_agency = models.CharField(max_length=100)
-    agency_name = models.CharField(max_length=100)
     user_class = models.CharField(max_length=100, blank=True, null=True)
     user_sub_class = models.CharField(max_length=100, blank=True, null=True)
-    academy_code = models.CharField(max_length=100, blank=True, null=True)
-    status = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.user.email} - {self.agency_name}"
+        return f"{self.user.email} - {self.agency.agency_name}"
 
-
-class UserAgency(models.Model):
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
-    agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('user', 'is_active')
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=50, unique=True, null=True)
     is_staff = models.BooleanField(default=False)
-    is_gyalsung = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     identity_number = models.CharField(max_length=50, unique=True)
     nationality = models.CharField(max_length=50)
@@ -241,35 +235,33 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=10)
     email = models.EmailField(unique=True, null=True)
     mob_number = models.CharField(max_length=15, null=True)
+    father_name = models.CharField(max_length=100, blank=True, null=True)
+    mother_name = models.CharField(max_length=100, blank=True, null=True)
     perm_add_village = models.CharField(max_length=100)
     perm_add_gewog = models.CharField(max_length=100)
     perm_add_dzongkhag = models.CharField(max_length=100)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    # agencies = models.ManyToManyField('Agency', through='UserAgency', related_name='users')
+    active_agency = models.ForeignKey('Agency', on_delete=models.SET_NULL, null=True, blank=True)
+    is_gyalsung = models.BooleanField(default=False)
+    academy_code = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
-    # Define user roles
     ROLE_STUDENT = 'student'
     ROLE_CLINICAL_COUNSELOR = 'clinical_counselor'
     ROLE_SCHOOL_COUNSELOR = 'school_counselor'
     ROLE_ADMIN = 'admin'
     ROLE_RD_ADMIN = 'rd_admin'
 
-    # Define choices for user roles
     ROLE_CHOICES = [
         (ROLE_STUDENT, 'Student'),
         (ROLE_CLINICAL_COUNSELOR, 'Clinical Counselor'),
         (ROLE_SCHOOL_COUNSELOR, 'School Counselor'),
         (ROLE_ADMIN, 'Administrator'),
         (ROLE_RD_ADMIN, 'R&D Administrator'),
-        # Add more roles as needed
     ]
 
-    # Field to store the user's role
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
-
-    # Field to indicate the user's access level (if needed)
-    access_level = models.IntegerField(default=1)  # Example: 1 for basic, 2 for moderate, 3 for high, etc.
+    access_level = models.IntegerField(default=1)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
@@ -282,6 +274,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
+
 
 class PreRecordedUser(models.Model):
     identity_number = models.CharField(max_length=50, unique=True)
@@ -302,8 +295,10 @@ class PreRecordedUser(models.Model):
         verbose_name = 'Pre-recorded user'
         verbose_name_plural = 'Pre-recorded users'
 
+
 class PreRecordedAgency(models.Model):
-    prerecorded_user = models.ForeignKey(PreRecordedUser, on_delete=models.CASCADE, related_name='prerecorded_agencies') 
+    prerecorded_user = models.ForeignKey(
+        PreRecordedUser, on_delete=models.CASCADE, related_name='prerecorded_agencies')
     ps_add_village = models.CharField(max_length=100)
     ps_add_gewog = models.CharField(max_length=100)
     ps_add_dzongkhag = models.CharField(max_length=100)
@@ -311,9 +306,11 @@ class PreRecordedAgency(models.Model):
     mother_name = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
-    guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
+    guardian_occupation = models.CharField(
+        max_length=100, blank=True, null=True)
     parent_status = models.CharField(max_length=100, blank=True, null=True)
-    current_living_with = models.CharField(max_length=100, blank=True, null=True)
+    current_living_with = models.CharField(
+        max_length=100, blank=True, null=True)
     agency_code = models.CharField(max_length=100)
     user_role_agency = models.CharField(max_length=100)
     agency_name = models.CharField(max_length=100)

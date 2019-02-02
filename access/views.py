@@ -28,7 +28,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency, UserAgency
-from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedAgencySerializer
+from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedAgencySerializer, UserAgencySerializer
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
 
 from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
@@ -108,7 +108,6 @@ def generate_token():
         return read_global()['accessToken']
 
 
-@csrf_exempt
 def fetch_citizen_details(request, cid):
     try:
         token = 'Bearer ' + generate_token()
@@ -157,9 +156,18 @@ def map_user_data(citizen_detail):
         'perm_add_gewog': citizen_detail.get('gewogName', ''),
         'perm_add_dzongkhag': citizen_detail.get('dzongkhagName', ''),
         'nationality': mapNationality(citizen_detail.get('country', '')),
-        'username': '',  # Include an empty username
-        'password': '',  # Include an empty password
-        'email': '',  # Include an empty email
+        'father_name': citizen_detail.get('fatherName', ''),
+        'mother_name': citizen_detail.get('motherName', ''),
+        'ps_add_village': citizen_detail.get('villageName', ''),
+        'ps_add_gewog': citizen_detail.get('gewogName', ''),
+        'ps_add_dzongkhag': citizen_detail.get('dzongkhagName', ''),
+        'user_role_agency': '',
+        'user_class': '',
+        'user_sub_class': '',
+        'academy_code': '',
+        'username': '',
+        'password': '',
+        'email': '',
     }
     return mapped_data
 
@@ -182,27 +190,41 @@ def mapNationality(country):
 
 def map_rcsc_data_to_agency_model(rcsc_data):
     # Map the relevant data from rcsc_data to Agency model fields
-    mapped_data = {
+    agency_data = {
         'agency_code': rcsc_data.get('agencyID', ''),
-        'user_role_agency': rcsc_data.get('positionTitle', ''),
         'agency_name': rcsc_data.get('agencyName', ''),
-        'user_code': rcsc_data.get('employeeNumber', ''),
-        'user': ''
     }
 
     # Map user roles based on user_role_agency
-    if 'clinical counsellor' in mapped_data['user_role_agency'].lower():
-        mapped_data['user_role'] = CustomUser.ROLE_CLINICAL_COUNSELOR
-    elif 'it officer' in mapped_data['user_role_agency'].lower():
-        mapped_data['user_role'] = CustomUser.ROLE_ADMIN
-    elif 'school counsellor' in mapped_data['user_role_agency'].lower():
-        mapped_data['user_role'] = CustomUser.ROLE_SCHOOL_COUNSELLOR
-    elif 'student' in mapped_data['user_role_agency'].lower():
-        mapped_data['user_role'] = CustomUser.ROLE_STUDENT
+    if 'clinical counsellor' in rcsc_data.get('positionTitle', '').lower():
+        user_role = CustomUser.ROLE_CLINICAL_COUNSELOR
+    elif 'it officer' in rcsc_data.get('positionTitle', '').lower():
+        user_role = CustomUser.ROLE_ADMIN
+    elif 'school counsellor' in rcsc_data.get('positionTitle', '').lower():
+        user_role = CustomUser.ROLE_SCHOOL_COUNSELLOR
+    elif 'student' in rcsc_data.get('positionTitle', '').lower():
+        user_role = CustomUser.ROLE_STUDENT
     else:
-        mapped_data['user_role'] = CustomUser.ROLE_ADMIN  # Default to 'admin' for other roles
+        user_role = CustomUser.ROLE_ADMIN  # Default to 'admin' for other roles
 
-    return mapped_data
+    user_agency_data = {
+        'user_role_agency': rcsc_data.get('positionTitle', ''),
+        'user_code': rcsc_data.get('employeeNumber', ''),
+        'ps_add_village': rcsc_data.get('village', ''),
+        'ps_add_gewog': rcsc_data.get('gewog', ''),
+        'ps_add_dzongkhag': rcsc_data.get('dzongkhag', ''),
+        'parent_occupation': rcsc_data.get('parentOccupation', ''),
+        'guardian_name': rcsc_data.get('guardianName', ''),
+        'guardian_occupation': rcsc_data.get('guardianOccupation', ''),
+        'parent_status': rcsc_data.get('parentStatus', ''),
+        'current_living_with': rcsc_data.get('livingWith', ''),
+        'user_role_agency': user_role,
+        'user_class': rcsc_data.get('class', ''),
+        'user_sub_class': rcsc_data.get('subclass', ''),
+        'academy_code': rcsc_data.get('academyCode', ''),
+    }
+
+    return agency_data, user_agency_data
 
 
 # views.py - Step 3 (fetch_rcsc_details function)
@@ -216,16 +238,6 @@ def fetch_rcsc_details(request, cid, reg_email):
         headers = {'Authorization': token}
         rcsc_api_url = settings.CREDENTIALS['RCSC_API']
         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
-        print(f"Request headers: {headers}")
-
-        # Step 1: Update email field in user data
-        user_data = request.session.get('user_data', {})
-        user_data.update({'email': reg_email})  # Update the email field
-        # Store updated user data in session
-        request.session['user_data'] = user_data
-
-        # Debugging print statement
-        print(f"Updated user_data: {user_data}")
 
         # Step 2: Proceed with RCSC API request
         response = requests.get(
@@ -236,15 +248,12 @@ def fetch_rcsc_details(request, cid, reg_email):
                 'employeedetails', {}).get('employeedetail', [])[0]
             print(f"RCSC Details Response Data: {rcsc_details}")
 
-            # Map the RCSC data to Agency model
-            mapped_data = map_rcsc_data_to_agency_model(rcsc_details)
-
-            # Store agency data in the session
-            request.session['agency_data'] = mapped_data
+            # Map the RCSC data to Agency and UserAgency models
+            agency_data, user_agency_data = map_rcsc_data_to_agency_model(
+                rcsc_details)
 
             # Proceed to Step 4 or any other step as needed
-
-            return JsonResponse(mapped_data, safe=False)
+            return JsonResponse({'agency_data': agency_data, 'user_agency_data': user_agency_data}, safe=False)
         else:
             print(
                 f"Response error from RCSC API. Status code: {response.status_code}, Response body: {response.text}")
@@ -254,33 +263,46 @@ def fetch_rcsc_details(request, cid, reg_email):
         print(f"RCSC API Request Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
+
 @api_view(['POST'])
 @csrf_exempt
-@transaction.atomic 
+@transaction.atomic
 def register_user(request):
     try:
         print("Received request to register user.")
 
-        # Get username, password, user data, and agency data from the request data
+        # Get username, password, user data, agency data, and user agency data from the request data
         user_data = request.data.get('userData', {})
         agency_data = request.data.get('agencyData', {})
+        user_agency_data = request.data.get('userAgencyData', {})
 
         print(f'User Data Received are:', user_data)
         print(f'Agency Data Received are:', agency_data)
+        print(f'User Agency Data Received are:', user_agency_data)
+
+        # Check if an agency with the provided agency code exists
+        agency_code = agency_data.get('agency_code')
+        try:
+            existing_agency = Agency.objects.get(agency_code=agency_code)
+        except Agency.DoesNotExist:
+            # If the agency doesn't exist, create a new one
+            agency_serializer = AgencySerializer(data=agency_data)
+            agency_serializer.is_valid(raise_exception=True)
+            existing_agency = agency_serializer.save()
 
         # Create and validate the user instance
         user_serializer = CustomUserSerializer(data=user_data)
         user_serializer.is_valid(raise_exception=True)
         user_instance = user_serializer.save()
 
-        # Pass the user instance to the agency serializer during initialization
-        agency_serializer = AgencySerializer(data=agency_data, context={'user_instance': user_instance})
-        agency_serializer.is_valid(raise_exception=True)
-        agency_instance = agency_serializer.save()
+        # Include the user instance ID and agency instance ID in the user agency data
+        user_agency_data['user'] = user_instance.id
+        user_agency_data['agency'] = existing_agency.id
 
-        # Set the active agency for the user
-        UserAgency.objects.filter(user=user_instance).update(is_active=False)  # Deactivate existing associations
-        user_agency_instance = UserAgency.objects.create(user=user_instance, agency=agency_instance, is_active=True)
+        # Create and validate the user-agency instance
+        user_agency_serializer = UserAgencySerializer(data=user_agency_data)
+        user_agency_serializer.is_valid(raise_exception=True)
+        user_agency_instance = user_agency_serializer.save()
 
         # Return the user ID in the response
         response_data = {'userId': user_instance.id}
@@ -293,7 +315,6 @@ def register_user(request):
         response_data = {'error': 'Error registering user'}
         print(f"Response data: {response_data}")
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class UserCreate(generics.CreateAPIView):
@@ -356,28 +377,20 @@ class LoginView(APIView):
 
             logger.info('Login request received - Username: %s', username)
 
+            # Authenticate the user
             user = authenticate(username=username, password=password)
 
             if user:
+                # Generate or retrieve the authentication token
                 token, created = Token.objects.get_or_create(user=user)
-                user_role_agencies = None
 
-                try:
-                    # Fetch all agencies associated with the user
-                    agencies = user.agencies.all()
-                    if agencies:
-                        user_role_agencies = [
-                            agency.user_role_agency for agency in agencies]
-                        logger.debug('User role agencies: %s',
-                                     user_role_agencies)
-                except Exception as e:
-                    logger.error(
-                        'Exception while fetching user agencies: %s', str(e))
+                # Get the user's role
+                user_role = user.role
 
                 logger.info(
-                    'Login response sent - Token: %s, User Role Agencies: %s', token.key, user_role_agencies)
+                    'Login response sent - Token: %s, User Role: %s', token.key, user_role)
 
-                return Response({"token": token.key, "user_role_agencies": user_role_agencies}, status=status.HTTP_200_OK)
+                return Response({"token": token.key, "user_role": user_role}, status=status.HTTP_200_OK)
             else:
                 logger.warning(
                     'Authentication failed for username: %s', username)
@@ -398,8 +411,14 @@ class GetUserDetails(APIView):
 
             user = request.user
 
+            # Retrieve user data
             user_data = {
+                'id': user.id,
+                'username': user.username,
+                'is_staff': user.is_staff,
+                'is_active': user.is_active,
                 'identity_number': user.identity_number,
+                'nationality': user.nationality,
                 'first_name': user.first_name,
                 'middle_name': user.middle_name,
                 'last_name': user.last_name,
@@ -407,53 +426,60 @@ class GetUserDetails(APIView):
                 'gender': user.gender,
                 'email': user.email,
                 'mob_number': user.mob_number,
+                'father_name': user.father_name,
+                'mother_name': user.mother_name,
                 'perm_add_village': user.perm_add_village,
                 'perm_add_gewog': user.perm_add_gewog,
                 'perm_add_dzongkhag': user.perm_add_dzongkhag,
-                'nationality': user.nationality,
+                'profile_picture': user.profile_picture.url if user.profile_picture else None,
+                'active_agency': None,
+                'is_gyalsung': user.is_gyalsung,
+                'academy_code': user.academy_code,
                 'date_joined': user.date_joined,
+                'role': user.role,
+                'access_level': user.access_level,
             }
 
-            # Get the current date to check against the agency's status
-            current_date = timezone.now()
+            # Retrieve agency data
+            if user.active_agency:
+                agency_data = {
+                    'agency_code': user.active_agency.agency_code,
+                    'agency_name': user.active_agency.agency_name,
+                }
+            else:
+                agency_data = {}
 
-            # Retrieve active or current agency data
-            active_agency_data = None
+            # Retrieve user agency data
             try:
-                active_agency = user.agencies.filter(status='active').first()
-                if active_agency:
-                    active_agency_data = {
-                        'user_code': active_agency.user.id,
-                        'ps_add_village': active_agency.ps_add_village,
-                        'ps_add_gewog': active_agency.ps_add_gewog,
-                        'ps_add_dzongkhag': active_agency.ps_add_dzongkhag,
-                        'father_name': active_agency.father_name,
-                        'mother_name': active_agency.mother_name,
-                        'parent_occupation': active_agency.parent_occupation,
-                        'guardian_name': active_agency.guardian_name,
-                        'guardian_occupation': active_agency.guardian_occupation,
-                        'parent_status': active_agency.parent_status,
-                        'current_living_with': active_agency.current_living_with,
-                        'agency_code': active_agency.agency_code,
-                        'user_role_agency': active_agency.user_role_agency,
-                        'agency_name': active_agency.agency_name,
-                        'user_class': active_agency.user_class,
-                        'user_sub_class': active_agency.user_sub_class,
-                        'academy_code': active_agency.academy_code,
-                        'status': active_agency.status,
-                    }
-            except Exception as e:
-                logger.error(
-                    'Exception while fetching active agency: %s', str(e))
+                user_agency = UserAgency.objects.get(user=user)
+                user_agency_data = {
+                    'user_code': user_agency.user_code,
+                    'ps_add_village': user_agency.ps_add_village,
+                    'ps_add_gewog': user_agency.ps_add_gewog,
+                    'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
+                    'parent_occupation': user_agency.parent_occupation,
+                    'guardian_name': user_agency.guardian_name,
+                    'guardian_occupation': user_agency.guardian_occupation,
+                    'parent_status': user_agency.parent_status,
+                    'current_living_with': user_agency.current_living_with,
+                    'user_role_agency': user_agency.user_role_agency,
+                    'user_class': user_agency.user_class,
+                    'user_sub_class': user_agency.user_sub_class,
+                }
+            except UserAgency.DoesNotExist:
+                user_agency_data = {}
 
-            logger.info('User data: %s', user_data)
-            logger.info('Active agency data: %s', active_agency_data)
-
-            return Response({"user": user_data, "active_agency": active_agency_data}, status=status.HTTP_200_OK)
+            return Response({
+                "user": user_data,
+                "agency": agency_data,
+                "userAgency": user_agency_data
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error('Exception while fetching user details: %s', str(e))
-            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Error occurred: {str(e)}")
+            return Response({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 class PasswordResetRequestView(APIView):
