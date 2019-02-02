@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView
+from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetails
 from . import views
 
 urlpatterns = [
@@ -16,20 +16,15 @@ urlpatterns = [
          name='verify-pre-recorded-user'),
     path('get-rcsc-details/<str:cid>/',
          views.fetch_rcsc_details, name='get_rcsc_details'),
-    path('get-emis-student/<str:student_id>/<str:reg_email>/<str:dob>/', views.fetch_emis_student_details, name='fetch_emis_student_details'),
-    path('get-emis-employee/<str:employee_id>/<str:reg_email>/', views.fetch_emis_employee_details, name='fetch_emis_employee_details'),
     path('get-rcsc-details/<str:cid>/<str:reg_email>/',
          views.fetch_rcsc_details, name='get_rcsc_details_with_email'),
     path('register-user/', views.register_user, name='register_user'),
-    path('register-agency/', views.register_agency, name='register_agency'),
     path('verify-pre-recorded-user/', views.verify_pre_recorded_user,
          name='verify_pre_recorded_user'),
     path('register-pre-recorded-user/', views. register_pre_recorded_user,
          name=' register_pre_recorded_user'),
     path('register-pre-recorded-agency/', views.register_pre_recorded_agency,
          name='register_pre_recorded_agency'),
-    path('get-user-details/', views.get_user_details, name='get_user_details'),
+    path('get-user-details/', GetUserDetails.as_view(), name='get_user_details'),
     path('user-logout/', views.user_logout, name='user_logout'),
-
-
 ]

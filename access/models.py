@@ -1,3 +1,149 @@
+# from django.db import models
+# from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+# from django.utils import timezone
+# import random
+# import string
+# import uuid
+
+# class CustomUserManager(BaseUserManager):
+#     def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
+#         if not username:
+#             raise ValueError('The Username field must be set')
+        
+#         email = self.normalize_email(email)
+#         user = self.model(
+#             username=username,
+#             email=email,
+#             identity_number=identity_number,
+#             first_name=first_name,
+#             last_name=last_name,
+#             date_of_birth=date_of_birth,
+#             gender=gender,
+#             mob_number=mob_number,
+#             perm_add_village=perm_add_village,
+#             perm_add_gewog=perm_add_gewog,
+#             perm_add_dzongkhag=perm_add_dzongkhag,
+#             **extra_fields,
+#         )
+#         user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+
+#     def create_superuser(self, username, email, password=None, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         if extra_fields.get('is_staff') is not True:
+#             raise ValueError('Superuser must have is_staff=True.')
+#         if extra_fields.get('is_superuser') is not True:
+#             raise ValueError('Superuser must have is_superuser=True.')
+#         return self.create_user(username, email, password=password, **extra_fields)
+
+
+# class CustomUser(AbstractBaseUser, PermissionsMixin):
+#     id = models.AutoField(primary_key=True)
+#     username = models.CharField(max_length=50, unique=True, null=True)
+#     is_staff = models.BooleanField(default=False)
+#     is_gyalsung = models.BooleanField(default=False)
+#     is_active = models.BooleanField(default=True)
+#     identity_number = models.CharField(max_length=50, unique=True)
+#     nationality = models.CharField(max_length=50)
+#     first_name = models.CharField(max_length=50)
+#     middle_name = models.CharField(max_length=50, blank=True, null=True)
+#     last_name = models.CharField(max_length=50)
+#     date_of_birth = models.DateField()
+#     gender = models.CharField(max_length=10)
+#     email = models.EmailField(unique=True, null=True)
+#     mob_number = models.CharField(max_length=15)
+#     perm_add_village = models.CharField(max_length=100)
+#     perm_add_gewog = models.CharField(max_length=100)
+#     perm_add_dzongkhag = models.CharField(max_length=100)
+#     date_joined = models.DateTimeField(default=timezone.now)
+
+#     USERNAME_FIELD = 'username'
+#     REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+
+#     objects = CustomUserManager()
+
+#     def __str__(self):
+#         return self.username or f"CustomUser #{self.pk}"
+
+#     class Meta:
+#         verbose_name = 'user'
+#         verbose_name_plural = 'users'
+
+
+
+# class Agency(models.Model):
+#     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='agency')
+#     user_code = models.CharField(max_length=100)
+#     ps_add_village = models.CharField(max_length=100, blank=True, null=True)
+#     ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
+#     ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
+#     father_name = models.CharField(max_length=100, blank=True, null=True)
+#     mother_name = models.CharField(max_length=100, blank=True, null=True)
+#     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
+#     guardian_name = models.CharField(max_length=100, blank=True, null=True)
+#     guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
+#     parent_status = models.CharField(max_length=100, blank=True, null=True)
+#     current_living_with = models.CharField(max_length=100, blank=True, null=True)
+#     agency_code = models.CharField(max_length=100)
+#     user_role_agency = models.CharField(max_length=100)
+#     agency_name = models.CharField(max_length=100)
+#     user_class = models.CharField(max_length=100, blank=True, null=True)
+#     user_sub_class = models.CharField(max_length=100, blank=True, null=True)
+#     academy_code = models.CharField(max_length=100, blank=True, null=True)
+#     status = models.BooleanField(default=True)
+
+#     def __str__(self):
+#         return f"{self.user.email} - {self.agency_name}"
+    
+
+# class PreRecordedUser(models.Model):
+#     identity_number = models.CharField(max_length=50, unique=True)
+#     first_name = models.CharField(max_length=50)
+#     middle_name = models.CharField(max_length=50, blank=True, null=True)
+#     last_name = models.CharField(max_length=50)
+#     date_of_birth = models.DateField()
+#     gender = models.CharField(max_length=10)
+#     email = models.EmailField(unique=True)
+#     mob_number = models.CharField(max_length=15)
+#     perm_add_village = models.CharField(max_length=100)
+#     perm_add_gewog = models.CharField(max_length=100)
+#     perm_add_dzongkhag = models.CharField(max_length=100)
+#     nationality = models.CharField(max_length=50)
+#     date_joined = models.DateTimeField(default=timezone.now)
+
+#     class Meta:
+#         verbose_name = 'Pre-recorded user'
+#         verbose_name_plural = 'Pre-recorded users'
+
+# class PreRecordedAgency(models.Model):
+#     prerecorded_user = models.ForeignKey(PreRecordedUser, on_delete=models.CASCADE, related_name='prerecorded_agency')
+#     user_code = models.CharField(max_length=100)
+#     ps_add_village = models.CharField(max_length=100)
+#     ps_add_gewog = models.CharField(max_length=100)
+#     ps_add_dzongkhag = models.CharField(max_length=100)
+#     father_name = models.CharField(max_length=100, blank=True, null=True)
+#     mother_name = models.CharField(max_length=100, blank=True, null=True)
+#     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
+#     guardian_name = models.CharField(max_length=100, blank=True, null=True)
+#     guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
+#     parent_status = models.CharField(max_length=100, blank=True, null=True)
+#     current_living_with = models.CharField(max_length=100, blank=True, null=True)
+#     agency_code = models.CharField(max_length=100)
+#     user_role_agency = models.CharField(max_length=100)
+#     agency_name = models.CharField(max_length=100)
+#     user_class = models.CharField(max_length=100, blank=True, null=True)
+#     user_sub_class = models.CharField(max_length=100, blank=True, null=True)
+#     academy_code = models.CharField(max_length=100, blank=True, null=True)
+#     status = models.BooleanField(default=True)
+
+#     class Meta:
+#         verbose_name = 'Pre-recorded agency'
+#         verbose_name_plural = 'Pre-recorded agencies'
+
+
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
@@ -6,7 +152,7 @@ import string
 import uuid
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, **extra_fields):
+    def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, role=None, agency_data=None, **extra_fields):
         if not username:
             raise ValueError('The Username field must be set')
         
@@ -23,58 +169,32 @@ class CustomUserManager(BaseUserManager):
             perm_add_village=perm_add_village,
             perm_add_gewog=perm_add_gewog,
             perm_add_dzongkhag=perm_add_dzongkhag,
+            role=role,
             **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)
+
+        # Create the associated agency
+        if agency_data:
+            agency = Agency.objects.create(user=user, **agency_data)
+            UserAgency.objects.create(user=user, agency=agency, is_active=True)
+
         return user
 
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
+
         return self.create_user(username, email, password=password, **extra_fields)
 
-
-class CustomUser(AbstractBaseUser, PermissionsMixin):
-    id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=50, unique=True, null=True)
-    is_staff = models.BooleanField(default=False)
-    is_gyalsung = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    identity_number = models.CharField(max_length=50, unique=True)
-    nationality = models.CharField(max_length=50)
-    first_name = models.CharField(max_length=50)
-    middle_name = models.CharField(max_length=50, blank=True, null=True)
-    last_name = models.CharField(max_length=50)
-    date_of_birth = models.DateField()
-    gender = models.CharField(max_length=10)
-    email = models.EmailField(unique=True, null=True)
-    mob_number = models.CharField(max_length=15)
-    perm_add_village = models.CharField(max_length=100)
-    perm_add_gewog = models.CharField(max_length=100)
-    perm_add_dzongkhag = models.CharField(max_length=100)
-    date_joined = models.DateTimeField(default=timezone.now)
-
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
-
-    objects = CustomUserManager()
-
-    def __str__(self):
-        return self.username or f"CustomUser #{self.pk}"
-
-    class Meta:
-        verbose_name = 'user'
-        verbose_name_plural = 'users'
-
-
-
 class Agency(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='agency')
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, related_name='agency')
     user_code = models.CharField(max_length=100)
     ps_add_village = models.CharField(max_length=100, blank=True, null=True)
     ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
@@ -96,7 +216,72 @@ class Agency(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.agency_name}"
-    
+
+
+class UserAgency(models.Model):
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'is_active')
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=50, unique=True, null=True)
+    is_staff = models.BooleanField(default=False)
+    is_gyalsung = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    identity_number = models.CharField(max_length=50, unique=True)
+    nationality = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50)
+    date_of_birth = models.DateField()
+    gender = models.CharField(max_length=10)
+    email = models.EmailField(unique=True, null=True)
+    mob_number = models.CharField(max_length=15, null=True)
+    perm_add_village = models.CharField(max_length=100)
+    perm_add_gewog = models.CharField(max_length=100)
+    perm_add_dzongkhag = models.CharField(max_length=100)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+    # agencies = models.ManyToManyField('Agency', through='UserAgency', related_name='users')
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    # Define user roles
+    ROLE_STUDENT = 'student'
+    ROLE_CLINICAL_COUNSELOR = 'clinical_counselor'
+    ROLE_SCHOOL_COUNSELOR = 'school_counselor'
+    ROLE_ADMIN = 'admin'
+    ROLE_RD_ADMIN = 'rd_admin'
+
+    # Define choices for user roles
+    ROLE_CHOICES = [
+        (ROLE_STUDENT, 'Student'),
+        (ROLE_CLINICAL_COUNSELOR, 'Clinical Counselor'),
+        (ROLE_SCHOOL_COUNSELOR, 'School Counselor'),
+        (ROLE_ADMIN, 'Administrator'),
+        (ROLE_RD_ADMIN, 'R&D Administrator'),
+        # Add more roles as needed
+    ]
+
+    # Field to store the user's role
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
+
+    # Field to indicate the user's access level (if needed)
+    access_level = models.IntegerField(default=1)  # Example: 1 for basic, 2 for moderate, 3 for high, etc.
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+
+    objects = CustomUserManager()
+
+    def __str__(self):
+        return self.username or f"CustomUser #{self.pk}"
+
+    class Meta:
+        verbose_name = 'user'
+        verbose_name_plural = 'users'
 
 class PreRecordedUser(models.Model):
     identity_number = models.CharField(max_length=50, unique=True)
@@ -118,8 +303,7 @@ class PreRecordedUser(models.Model):
         verbose_name_plural = 'Pre-recorded users'
 
 class PreRecordedAgency(models.Model):
-    prerecorded_user = models.ForeignKey(PreRecordedUser, on_delete=models.CASCADE, related_name='prerecorded_agency')
-    user_code = models.CharField(max_length=100)
+    prerecorded_user = models.ForeignKey(PreRecordedUser, on_delete=models.CASCADE, related_name='prerecorded_agencies') 
     ps_add_village = models.CharField(max_length=100)
     ps_add_gewog = models.CharField(max_length=100)
     ps_add_dzongkhag = models.CharField(max_length=100)

@@ -1,55 +1,61 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.utils.translation import gettext_lazy as _
-from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency
+from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency, UserAgency
 
 
-class PreRecordedAgencyInline(admin.StackedInline):
-    model = PreRecordedAgency
-    extra = 0  # Prevents displaying empty new agency form by default
-    can_delete = True  # Allows deleting agencies if needed
+class UserAgencyInline(admin.TabularInline):
+    model = UserAgency
+    extra = 0
+    verbose_name = 'Active Agency'
+    verbose_name_plural = 'Active Agencies'
 
 
-@admin.register(PreRecordedUser)
-class PreRecordedUserAdmin(admin.ModelAdmin):
-    list_display = ('identity_number', 'first_name', 'last_name', 'email', 'date_joined')
-    search_fields = ('identity_number', 'first_name', 'last_name', 'email')
-    ordering = ('date_joined',)
-    readonly_fields = ('date_joined',)
-    inlines = [PreRecordedAgencyInline]
-
-
-class AgencyInline(admin.StackedInline):
-    model = Agency
-    can_delete = False
-    verbose_name_plural = 'Agency'
-    fk_name = 'user'
-
-
-class CustomUserAdmin(UserAdmin):
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
     model = CustomUser
-    inlines = (AgencyInline, )
-    list_display = ('email', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active')  # Change 'email' to 'username'
+    list_display = ('email', 'username', 'first_name', 'last_name',
+                    'is_staff', 'is_active', 'get_active_agency')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('email','username', 'first_name', 'last_name', 'email')  # Change 'email' to 'username'
-    ordering = ('username',)  # Change 'email' to 'username'
+    search_fields = ('email', 'username', 'first_name', 'last_name')
+    ordering = ('username',)
     filter_horizontal = ('groups', 'user_permissions',)
-
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),  # Change 'email' to 'username'
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
-        (_('Custom fields'), {'fields': ('is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'identity_number',
+         'nationality', 'date_of_birth', 'gender', 'mob_number')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff',
+         'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ('Custom fields', {'fields': (
+            'is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': ('username', 'password1', 'password2'),
         }),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'identity_number', 'nationality', 'date_of_birth', 'gender', 'mob_number')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        (_('Custom fields'), {'fields': ('is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'identity_number',
+         'nationality', 'date_of_birth', 'gender', 'mob_number')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff',
+         'is_superuser', 'groups', 'user_permissions')}),
+        ('Custom fields', {'fields': (
+            'is_gyalsung', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag')}),
     )
+    inlines = [UserAgencyInline]
 
-admin.site.register(CustomUser, CustomUserAdmin)
+    def get_active_agency(self, obj):
+        active_user_agency = obj.useragency_set.filter(is_active=True).first()
+        if active_user_agency:
+            return active_user_agency.agency.agency_name
+        return None
+
+
+    get_active_agency.short_description = 'Active Agency'
+    get_active_agency.admin_order_field = 'useragency__is_active'
+
+
+@admin.register(Agency)
+class AgencyAdmin(admin.ModelAdmin):
+    model = Agency
+    list_display = ('agency_code', 'agency_name', 'status')
+    search_fields = ('agency_code', 'agency_name')
+    inlines = [UserAgencyInline]

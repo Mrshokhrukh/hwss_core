@@ -6,6 +6,8 @@ import os
 import logging
 import requests
 import traceback
+from django.utils import timezone
+from django.db.models import F
 from datetime import datetime
 
 from django.http import JsonResponse
@@ -22,8 +24,10 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
-from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency
+from .models import CustomUser, Agency, PreRecordedUser, PreRecordedAgency, UserAgency
 from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedAgencySerializer
 from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
 
@@ -117,13 +121,16 @@ def fetch_citizen_details(request, cid):
             citizen_detail = response.json().get('citizenDetailsResponse', {}
                                                  ).get('citizenDetail', [None])[0]
 
-            # Map user data before storing in the JSON file
+            # Map user data
             mapped_user_data = map_user_data(citizen_detail)
 
             print(f"User Data from Step 2: {citizen_detail}")
 
-            # Store user data in the JSON file
-            write_json(USER_DATA_FILE_PATH, mapped_user_data)
+            # Store user data in the Django session
+            request.session['user_data'] = mapped_user_data
+
+            # Debugging print statement
+            print(f"User Data from Step 1: {mapped_user_data}")
 
             return JsonResponse(citizen_detail, safe=False)
         else:
@@ -180,9 +187,23 @@ def map_rcsc_data_to_agency_model(rcsc_data):
         'user_role_agency': rcsc_data.get('positionTitle', ''),
         'agency_name': rcsc_data.get('agencyName', ''),
         'user_code': rcsc_data.get('employeeNumber', ''),
-        'user': '',
+        'user': ''
     }
+
+    # Map user roles based on user_role_agency
+    if 'clinical counsellor' in mapped_data['user_role_agency'].lower():
+        mapped_data['user_role'] = CustomUser.ROLE_CLINICAL_COUNSELOR
+    elif 'it officer' in mapped_data['user_role_agency'].lower():
+        mapped_data['user_role'] = CustomUser.ROLE_ADMIN
+    elif 'school counsellor' in mapped_data['user_role_agency'].lower():
+        mapped_data['user_role'] = CustomUser.ROLE_SCHOOL_COUNSELLOR
+    elif 'student' in mapped_data['user_role_agency'].lower():
+        mapped_data['user_role'] = CustomUser.ROLE_STUDENT
+    else:
+        mapped_data['user_role'] = CustomUser.ROLE_ADMIN  # Default to 'admin' for other roles
+
     return mapped_data
+
 
 # views.py - Step 3 (fetch_rcsc_details function)
 @csrf_exempt
@@ -197,22 +218,16 @@ def fetch_rcsc_details(request, cid, reg_email):
         print(f"Making request to RCSC API: {rcsc_api_url}{cid}")
         print(f"Request headers: {headers}")
 
-        # Step 1: Read user_data.json
-        user_data = read_json(USER_DATA_FILE_PATH)
-
-        # Step 2: Update email field in user data
+        # Step 1: Update email field in user data
+        user_data = request.session.get('user_data', {})
         user_data.update({'email': reg_email})  # Update the email field
+        # Store updated user data in session
+        request.session['user_data'] = user_data
 
         # Debugging print statement
         print(f"Updated user_data: {user_data}")
 
-        # Step 3: Save updated user data back to user_data.json
-        write_json(USER_DATA_FILE_PATH, user_data)
-
-        # Debugging print statement
-        print("User data written to file.")
-
-        # Step 4: Proceed with RCSC API request
+        # Step 2: Proceed with RCSC API request
         response = requests.get(
             f'{rcsc_api_url}{cid}', headers=headers, verify=False)
 
@@ -227,10 +242,8 @@ def fetch_rcsc_details(request, cid, reg_email):
             # Store agency data in the session
             request.session['agency_data'] = mapped_data
 
-            # store agency data to the JSON file
-            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
-
             # Proceed to Step 4 or any other step as needed
+
             return JsonResponse(mapped_data, safe=False)
         else:
             print(
@@ -241,248 +254,46 @@ def fetch_rcsc_details(request, cid, reg_email):
         print(f"RCSC API Request Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
-
-def map_emis_student_data_to_agency_model(emis_student_data):
-    # Map the relevant data from emis_student_data to Agency model fields
-    mapped_data = {
-        # ... map other fields ...
-        'dob': emis_student_data.get('dob', ''),
-    }
-    return mapped_data
-
-@csrf_exempt
-def fetch_emis_student_details(request, student_id, reg_email, dob):
-    logger.info(f"Received request for EMIS student details of Student ID: {student_id} with reg_email: {reg_email} and DOB: {dob}")
-
-    try:
-        token = 'Bearer ' + generate_token()
-        headers = {'Authorization': token}
-        emis_student_api_url = settings.CREDENTIALS['EMIS_STUDENT_API']
-        logger.info(f"Making request to EMIS Student API: {emis_student_api_url}{student_id}/{dob}")
-        logger.debug(f"Request headers: {headers}")
-
-        # Step 1: Read user_data.json
-        user_data = read_json(USER_DATA_FILE_PATH)
-        logger.debug(f"Read user data: {user_data}")
-
-        # Step 2: Update email field in user data
-        user_data.update({'email': reg_email})  # Update the email field
-        logger.debug(f"Updated user data: {user_data}")
-
-        # Step 3: Save updated user data back to user_data.json
-        write_json(USER_DATA_FILE_PATH, user_data)
-        logger.debug("User data written to file.")
-
-        # Step 4: Proceed with EMIS Student API request
-        response = requests.get(
-            f'{emis_student_api_url}{student_id}/{dob}', headers=headers, verify=False)
-
-        if response.status_code == 200:
-            emis_student_details = response.json().get('student_details', {})
-            logger.debug(f"EMIS Student Details Response Data: {emis_student_details}")
-
-            # Check if the response data is empty
-            if not emis_student_details:
-                logger.warning("EMIS Student details not found for the provided information")
-                return JsonResponse({'error': 'EMIS Student details not found for the provided information'}, status=404)
-
-            # Map the EMIS student data to Agency model
-            mapped_data = map_emis_student_data_to_agency_model(emis_student_details)
-
-            # Store agency data in the session
-            request.session['agency_data'] = mapped_data
-
-            # store agency data to the JSON file
-            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
-
-            # Proceed to Step 4 or any other step as needed
-            return JsonResponse(mapped_data, safe=False)
-        else:
-            logger.error(f"Response error from EMIS Student API. Status code: {response.status_code}, Response body: {response.text}")
-            return JsonResponse({'error': 'Error fetching EMIS Student details'}, status=response.status_code)
-
-    except RequestException as e:
-        logger.exception(f"EMIS Student API Request Exception: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-def map_emis_employee_data_to_agency_model(emis_employee_data):
-    # Map the relevant data from emis_employee_data to Agency model fields
-    mapped_data = {
-        # ... map other fields ...
-        'dob': emis_employee_data.get('dob', ''),
-    }
-    return mapped_data
-
-
-@csrf_exempt
-def fetch_emis_employee_details(request, employee_id, reg_email):
-    logger.info(f"Received request for EMIS employee details of Employee ID: {employee_id} with reg_email: {reg_email}")
-
-    try:
-        token = 'Bearer ' + generate_token()
-        headers = {'Authorization': token}
-        emis_employee_api_url = settings.CREDENTIALS['EMIS_STAFF_API']
-        logger.info(f"Making request to EMIS Employee API: {emis_employee_api_url}{employee_id}/")
-        logger.debug(f"Request headers: {headers}")
-
-        # Step 1: Read user_data.json
-        user_data = read_json(USER_DATA_FILE_PATH)
-        logger.debug(f"Read user data: {user_data}")
-
-        # Step 2: Update email field in user data
-        user_data.update({'email': reg_email})  # Update the email field
-        logger.debug(f"Updated user data: {user_data}")
-
-        # Step 3: Save updated user data back to user_data.json
-        write_json(USER_DATA_FILE_PATH, user_data)
-        logger.debug("User data written to file.")
-
-        # Step 4: Proceed with EMIS Employee API request
-        response = requests.get(
-            f'{emis_employee_api_url}{employee_id}/', headers=headers, verify=False)
-
-        if response.status_code == 200:
-            emis_employee_details = response.json().get('employee_details', {})
-            logger.debug(f"EMIS Employee Details Response Data: {emis_employee_details}")
-
-            # Check if the response data is empty
-            if not emis_employee_details:
-                logger.warning("EMIS Employee details not found for the provided information")
-                return JsonResponse({'error': 'EMIS Employee details not found for the provided information'}, status=404)
-
-            # Map the EMIS employee data to Agency model
-            mapped_data = map_emis_employee_data_to_agency_model(emis_employee_details)
-
-            # Store agency data in the session
-            request.session['agency_data'] = mapped_data
-
-            # store agency data to the JSON file
-            write_json(AGENCY_DATA_FILE_PATH, mapped_data)
-
-            # Proceed to Step 4 or any other step as needed
-            return JsonResponse(mapped_data, safe=False)
-        else:
-            logger.error(f"Response error from EMIS Employee API. Status code: {response.status_code}, Response body: {response.text}")
-            return JsonResponse({'error': 'Error fetching EMIS Employee details'}, status=response.status_code)
-
-    except RequestException as e:
-        logger.exception(f"EMIS Employee API Request Exception: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500)
-
-# views.py - Step 4
-# Step 1: Register user
 @api_view(['POST'])
 @csrf_exempt
+@transaction.atomic 
 def register_user(request):
     try:
         print("Received request to register user.")
 
-        # Get username, password, and email from the request data
-        username = request.data.get('username')
-        password = request.data.get('password')
-        print(f"Received username: {username}, password: {password}")
+        # Get username, password, user data, and agency data from the request data
+        user_data = request.data.get('userData', {})
+        agency_data = request.data.get('agencyData', {})
 
-        # If you need additional data from the session, retrieve it here
-        user_data = read_json(USER_DATA_FILE_PATH)
-        user_data.update({'username': username})
-        write_json(USER_DATA_FILE_PATH, user_data)
+        print(f'User Data Received are:', user_data)
+        print(f'Agency Data Received are:', agency_data)
 
-        # Create a dictionary with only the necessary data for user creation
-        user_creation_data = {
-            'username': user_data.get('username', ''),
-            'password': password,
-            'email': user_data.get('email', ''),
-            'identity_number': user_data.get('identity_number', ''),
-            'nationality': user_data.get('nationality', ''),
-            'first_name': user_data.get('first_name', ''),
-            'middle_name': user_data.get('middle_name', ''),
-            'last_name': user_data.get('last_name', ''),
-            'date_of_birth': user_data.get('date_of_birth', ''),
-            'gender': user_data.get('gender', ''),
-            'mob_number': user_data.get('mob_number', ''),
-            'perm_add_village': user_data.get('perm_add_village', ''),
-            'perm_add_gewog': user_data.get('perm_add_gewog', ''),
-            'perm_add_dzongkhag': user_data.get('perm_add_dzongkhag', ''),
-        }
+        # Create and validate the user instance
+        user_serializer = CustomUserSerializer(data=user_data)
+        user_serializer.is_valid(raise_exception=True)
+        user_instance = user_serializer.save()
 
-        # Use Django's transaction.atomic for atomic operations
-        with transaction.atomic():
-            # Create instances of the models and validate them
-            user_serializer = CustomUserSerializer(data=user_creation_data)
-            if not user_serializer.is_valid():
-                print(f"User serializer errors: {user_serializer.errors}")
+        # Pass the user instance to the agency serializer during initialization
+        agency_serializer = AgencySerializer(data=agency_data, context={'user_instance': user_instance})
+        agency_serializer.is_valid(raise_exception=True)
+        agency_instance = agency_serializer.save()
 
-            # Save the user instance
-            user_instance = user_serializer.save()
+        # Set the active agency for the user
+        UserAgency.objects.filter(user=user_instance).update(is_active=False)  # Deactivate existing associations
+        user_agency_instance = UserAgency.objects.create(user=user_instance, agency=agency_instance, is_active=True)
 
-            # Update agency_data inside the same transaction block
-            agency_data = read_json(AGENCY_DATA_FILE_PATH)
-            agency_data.update({'user': str(user_instance.id)})
-            write_json(AGENCY_DATA_FILE_PATH, agency_data)
-
-            print(
-                f"Session data after user registration: {request.session.items()}")
-
-            # Return the user ID in the response
-            response_data = {'userId': user_instance.id}
-            return Response(response_data, status=201)
+        # Return the user ID in the response
+        response_data = {'userId': user_instance.id}
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         # Log the exception details
         print(f"Error registering user: {str(e)}")
+        traceback.print_exc()  # Print stack trace for detailed error information
         response_data = {'error': 'Error registering user'}
         print(f"Response data: {response_data}")
-        return Response(response_data, status=500)
+        return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-# Step 2: Register agency
-@api_view(['POST'])
-@csrf_exempt
-def register_agency(request):
-    try:
-        # Get the agency data directly from the frontend
-        agency_data = read_json(AGENCY_DATA_FILE_PATH)
-        logger.debug(f"Received agency data: {agency_data}")
-
-        # Ensure 'user' is a dictionary before accessing 'userId'
-        user_data = agency_data.get('user', '')
-        logger.debug(f"User data from agency_data: {user_data}")
-
-        user_id = user_data
-        logger.debug(f"User ID extracted: {user_id}")
-
-        if not user_id:
-            logger.error("User ID in the file is missing")
-            return Response({'error': 'User ID in the file is missing'}, status=400)
-
-        # Use Django's transaction.atomic for atomic operations
-        with transaction.atomic():
-            # Create and validate the agency serializer
-            agency_serializer = AgencySerializer(
-                data=agency_data, context={'user_data': user_data})
-            agency_serializer.is_valid(raise_exception=True)
-
-            # Save the agency instance
-            agency_instance = agency_serializer.save()
-
-            # Clear session data after successful registration
-            if 'user_data' in request.session:
-                request.session.pop('user_data')
-
-            if 'agency_data' in request.session:
-                request.session.pop('agency_data')
-
-            response_data = {'success': 'Agency registered successfully'}
-            logger.debug(f"Response data: {response_data}")
-            return Response(response_data, status=201)
-
-    except Exception as e:
-        # Log the exception details
-        logger.exception(f"Error registering agency: {str(e)}")
-        response_data = {'error': 'Error registering agency'}
-        logger.debug(f"Response data: {response_data}")
-        return Response(response_data, status=500)
 
 
 class UserCreate(generics.CreateAPIView):
@@ -543,21 +354,33 @@ class LoginView(APIView):
             username = request.data.get('username')
             password = request.data.get('password')
 
+            logger.info('Login request received - Username: %s', username)
+
             user = authenticate(username=username, password=password)
 
             if user:
                 token, created = Token.objects.get_or_create(user=user)
-                agency = user.agency
-                if agency:
-                    agency_data = {
-                        'user_role_agency': agency.user_role_agency,
-                    }
-                else:
-                    agency_data = None
+                user_role_agencies = None
 
-                return Response({"token": token.key, "user_role_agency": agency_data.get('user_role_agency', None)}, status=status.HTTP_200_OK)
+                try:
+                    # Fetch all agencies associated with the user
+                    agencies = user.agencies.all()
+                    if agencies:
+                        user_role_agencies = [
+                            agency.user_role_agency for agency in agencies]
+                        logger.debug('User role agencies: %s',
+                                     user_role_agencies)
+                except Exception as e:
+                    logger.error(
+                        'Exception while fetching user agencies: %s', str(e))
+
+                logger.info(
+                    'Login response sent - Token: %s, User Role Agencies: %s', token.key, user_role_agencies)
+
+                return Response({"token": token.key, "user_role_agencies": user_role_agencies}, status=status.HTTP_200_OK)
             else:
-                logger.warning('Authentication failed for username: %s', username)
+                logger.warning(
+                    'Authentication failed for username: %s', username)
                 return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
@@ -565,58 +388,72 @@ class LoginView(APIView):
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET'])
-@csrf_exempt
-def get_user_details(request):
-    try:
-        user_id = request.user.id
-        user = CustomUser.objects.get(id=user_id)
+class GetUserDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
-        user_data = {
-            'identity_number': user.identity_number,
-            'first_name': user.first_name,
-            'middle_name': user.middle_name,
-            'last_name': user.last_name,
-            'date_of_birth': user.date_of_birth,
-            'gender': user.gender,
-            'email': user.email,
-            'mob_number': user.mob_number,
-            'perm_add_village': user.perm_add_village,
-            'perm_add_gewog': user.perm_add_gewog,
-            'perm_add_dzongkhag': user.perm_add_dzongkhag,
-            'nationality': user.nationality,
-            'date_joined': user.date_joined,
-        }
+    def get(self, request, *args, **kwargs):
+        try:
+            logger.info('User details request received')
 
-        agency = user.agency
-        if agency:
-            agency_data = {
-                'user_code': agency.user_code,
-                'ps_add_village': agency.ps_add_village,
-                'ps_add_gewog': agency.ps_add_gewog,
-                'ps_add_dzongkhag': agency.ps_add_dzongkhag,
-                'father_name': agency.father_name,
-                'mother_name': agency.mother_name,
-                'parent_occupation': agency.parent_occupation,
-                'guardian_name': agency.guardian_name,
-                'guardian_occupation': agency.guardian_occupation,
-                'parent_status': agency.parent_status,
-                'current_living_with': agency.current_living_with,
-                'agency_code': agency.agency_code,
-                'user_role_agency': agency.user_role_agency,
-                'agency_name': agency.agency_name,
-                'user_class': agency.user_class,
-                'user_sub_class': agency.user_sub_class,
-                'academy_code': agency.academy_code,
-                'status': agency.status,
+            user = request.user
+
+            user_data = {
+                'identity_number': user.identity_number,
+                'first_name': user.first_name,
+                'middle_name': user.middle_name,
+                'last_name': user.last_name,
+                'date_of_birth': user.date_of_birth,
+                'gender': user.gender,
+                'email': user.email,
+                'mob_number': user.mob_number,
+                'perm_add_village': user.perm_add_village,
+                'perm_add_gewog': user.perm_add_gewog,
+                'perm_add_dzongkhag': user.perm_add_dzongkhag,
+                'nationality': user.nationality,
+                'date_joined': user.date_joined,
             }
-        else:
-            agency_data = None
 
-        return Response({"user": user_data, "agency": agency_data}, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error('Exception while fetching user details: %s', str(e))
-        return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Get the current date to check against the agency's status
+            current_date = timezone.now()
+
+            # Retrieve active or current agency data
+            active_agency_data = None
+            try:
+                active_agency = user.agencies.filter(status='active').first()
+                if active_agency:
+                    active_agency_data = {
+                        'user_code': active_agency.user.id,
+                        'ps_add_village': active_agency.ps_add_village,
+                        'ps_add_gewog': active_agency.ps_add_gewog,
+                        'ps_add_dzongkhag': active_agency.ps_add_dzongkhag,
+                        'father_name': active_agency.father_name,
+                        'mother_name': active_agency.mother_name,
+                        'parent_occupation': active_agency.parent_occupation,
+                        'guardian_name': active_agency.guardian_name,
+                        'guardian_occupation': active_agency.guardian_occupation,
+                        'parent_status': active_agency.parent_status,
+                        'current_living_with': active_agency.current_living_with,
+                        'agency_code': active_agency.agency_code,
+                        'user_role_agency': active_agency.user_role_agency,
+                        'agency_name': active_agency.agency_name,
+                        'user_class': active_agency.user_class,
+                        'user_sub_class': active_agency.user_sub_class,
+                        'academy_code': active_agency.academy_code,
+                        'status': active_agency.status,
+                    }
+            except Exception as e:
+                logger.error(
+                    'Exception while fetching active agency: %s', str(e))
+
+            logger.info('User data: %s', user_data)
+            logger.info('Active agency data: %s', active_agency_data)
+
+            return Response({"user": user_data, "active_agency": active_agency_data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error('Exception while fetching user details: %s', str(e))
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PasswordResetRequestView(APIView):
@@ -722,11 +559,11 @@ def verify_pre_recorded_user(request):
 @csrf_exempt
 def register_pre_recorded_user(request):
     try:
-        print("Received request to register pre-recorded user.")
+        logger.info("Received request to register pre-recorded user.")
 
         # Get user data from the request data
         user_data = request.data
-        print(f"Received user data: {user_data}")
+        logger.debug(f"Received user data: {user_data}")
 
         # If password is not provided in the data, set it to an empty string
         password = user_data.get('password', '')
@@ -762,13 +599,15 @@ def register_pre_recorded_user(request):
             # Create instances of the models and validate them
             user_serializer = CustomUserSerializer(data=user_creation_data)
             if not user_serializer.is_valid():
-                print(f"User serializer errors: {user_serializer.errors}")
+                logger.error(
+                    f"User serializer errors: {user_serializer.errors}")
                 return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             # Save the user instance
             user_instance = user_serializer.save()
 
-            print(f"Session data after pre-recorded user registration: {request.session.items()}")
+            logger.info(
+                f"Pre-recorded user registered successfully: {user_instance.username}")
 
             # Return the user ID in the response
             response_data = {'userId': user_instance.id}
@@ -776,9 +615,8 @@ def register_pre_recorded_user(request):
 
     except Exception as e:
         # Log the exception details
-        print(f"Error registering pre-recorded user: {str(e)}")
+        logger.exception(f"Error registering pre-recorded user: {str(e)}")
         response_data = {'error': 'Error registering pre-recorded user'}
-        print(f"Response data: {response_data}")
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -820,7 +658,8 @@ def register_pre_recorded_agency(request):
         # Use Django's transaction.atomic for atomic operations
         with transaction.atomic():
             # Create and validate the agency serializer
-            agency_serializer = PreRecordedAgencySerializer(data=agency_data, context=serializer_context)
+            agency_serializer = PreRecordedAgencySerializer(
+                data=agency_data, context=serializer_context)
             agency_serializer.is_valid(raise_exception=True)
 
             # Save the agency instance
@@ -838,6 +677,7 @@ def register_pre_recorded_agency(request):
         logger.exception(f"Error registering pre-recorded agency: {str(e)}")
         response_data = {'error': 'Error registering pre-recorded agency'}
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['POST'])
 @csrf_exempt
