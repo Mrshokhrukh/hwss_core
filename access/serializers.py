@@ -7,11 +7,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = [
-            'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number', 
-            'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth', 
-            'gender', 'email', 'mob_number', 'father_name', 'mother_name', 
-            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag', 
-            'profile_picture', 'active_agency', 'academy_code', 'date_joined', 
+            'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
+            'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
+            'gender', 'email', 'mob_number', 'father_name', 'mother_name',
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
+            'profile_picture', 'active_agency', 'academy_code', 'date_joined',
             'password',  'role'
         ]
         extra_kwargs = {
@@ -26,10 +26,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
             instance.save()
         return instance
 
+
 class AgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Agency
-        fields = ['agency_code', 'agency_name']
+        fields = ['id', 'agency_code', 'agency_name']
 
     def create(self, validated_data):
         # Create the agency instance
@@ -42,11 +43,12 @@ class AgencySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class UserAgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAgency
         fields = [
-            'user', 'agency', 'user_code', 'user_role_agency', 'user_class', 'user_sub_class', 
+            'user', 'agency', 'user_code', 'user_role_agency', 'user_class', 'user_sub_class',
             'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
             'parent_occupation', 'guardian_name', 'guardian_occupation', 'parent_status', 'current_living_with',
         ]
@@ -78,40 +80,25 @@ class UserAgencySerializer(serializers.ModelSerializer):
 
         return instance
 
-class PreRecordedAgencySerializer(serializers.ModelSerializer):
+
+class PreRecordedUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
     class Meta:
-        model = Agency
+        model = CustomUser
         fields = [
-            'user_code', 'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
-            'father_name', 'mother_name', 'parent_occupation', 'guardian_name',
-            'guardian_occupation', 'parent_status', 'current_living_with',
-            'agency_code', 'user_role_agency', 'agency_name', 'user_class',
-            'user_sub_class', 'academy_code', 'status',
+            'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
+            'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
+            'gender', 'email', 'mob_number', 'father_name', 'mother_name',
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
+            'profile_picture', 'active_agency', 'academy_code', 'date_joined',
+            'password',  'role'
         ]
 
     def create(self, validated_data):
-        # Retrieve 'user_id' from the context
-        user_id = self.context.get('user_id')
-
-        if user_id:
-            try:
-                # Fetch the user instance based on the user ID
-                user_instance = CustomUser.objects.get(id=user_id)
-
-                # Set the 'user' field with the correct user instance
-                validated_data['user'] = user_instance
-
-                # Create the Agency instance
-                agency = Agency.objects.create(**validated_data)
-                return agency
-            except CustomUser.DoesNotExist:
-                raise serializers.ValidationError("User does not exist")
-        else:
-            raise serializers.ValidationError(
-                "User ID is required for creating an Agency.")
-
-    def update(self, instance, validated_data):
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        instance.save()
+        password = validated_data.pop('password', None)
+        instance = super().create(validated_data)
+        if password:
+            instance.set_password(password)
+            instance.save()
         return instance

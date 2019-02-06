@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetails
+from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetails, UpdateGyalsungDetails
 from . import views
 
 urlpatterns = [
@@ -23,8 +23,7 @@ urlpatterns = [
          name='verify_pre_recorded_user'),
     path('register-pre-recorded-user/', views. register_pre_recorded_user,
          name=' register_pre_recorded_user'),
-    path('register-pre-recorded-agency/', views.register_pre_recorded_agency,
-         name='register_pre_recorded_agency'),
     path('get-user-details/', GetUserDetails.as_view(), name='get_user_details'),
     path('user-logout/', views.user_logout, name='user_logout'),
+    path('update-gyalsung-user/<int:pk>/', UpdateGyalsungDetails.as_view(), name='update_gyalsung_details'),
 ]
