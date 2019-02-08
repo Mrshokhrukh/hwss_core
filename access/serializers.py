@@ -15,7 +15,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'password',  'role'
         ]
         extra_kwargs = {
-            'password': {'write_only': True},  # Ensure password is write-only
+            'password': {'write_only': True},
         }
 
     def create(self, validated_data):

@@ -91,7 +91,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
     email = models.EmailField(unique=True, null=True)
-    mob_number = models.CharField(max_length=15, null=True)
+    mob_number = models.CharField(max_length=15, null=True, blank=True)
     father_name = models.CharField(max_length=100, blank=True, null=True)
     mother_name = models.CharField(max_length=100, blank=True, null=True)
     perm_add_village = models.CharField(max_length=100)

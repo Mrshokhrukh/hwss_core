@@ -109,40 +109,6 @@ def generate_token():
         return read_global()['accessToken']
 
 
-def fetch_citizen_details(request, cid):
-    try:
-        token = 'Bearer ' + generate_token()
-        headers = {'Authorization': token}
-        api_url = settings.CREDENTIALS['API_URL']
-        response = requests.get(
-            f'{api_url}{cid}', headers=headers, verify=False)
-
-        if response.status_code == 200:
-            citizen_detail = response.json().get('citizenDetailsResponse', {}
-                                                 ).get('citizenDetail', [None])[0]
-
-            # Map user data
-            mapped_user_data = map_user_data(citizen_detail)
-
-            print(f"User Data from Step 2: {citizen_detail}")
-
-            # Store user data in the Django session
-            request.session['user_data'] = mapped_user_data
-
-            # Debugging print statement
-            print(f"User Data from Step 1: {mapped_user_data}")
-
-            return JsonResponse(citizen_detail, safe=False)
-        else:
-            print(
-                f"Response error. Status code: {response.status_code}, Response body: {response.text}")
-            return JsonResponse({'error': 'Error fetching citizen details'}, status=response.status_code)
-
-    except RequestException as e:
-        print(f"Request Exception: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500)
-
-
 def map_user_data(citizen_detail):
     # Map the relevant data from citizen_detail to user model fields
     mapped_data = {
@@ -189,6 +155,40 @@ def mapNationality(country):
     return country
 
 
+def fetch_citizen_details(request, cid):
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        api_url = settings.CREDENTIALS['API_URL']
+        response = requests.get(
+            f'{api_url}{cid}', headers=headers, verify=False)
+
+        if response.status_code == 200:
+            citizen_detail = response.json().get('citizenDetailsResponse', {}
+                                                 ).get('citizenDetail', [None])[0]
+
+            # Map user data
+            mapped_user_data = map_user_data(citizen_detail)
+
+            print(f"User Data from Step 2: {citizen_detail}")
+
+            # Store user data in the Django session
+            request.session['user_data'] = mapped_user_data
+
+            # Debugging print statement
+            print(f"User Data from Step 1: {mapped_user_data}")
+
+            return JsonResponse(citizen_detail, safe=False)
+        else:
+            print(
+                f"Response error. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching citizen details'}, status=response.status_code)
+
+    except RequestException as e:
+        print(f"Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 def map_rcsc_data_to_agency_model(rcsc_data):
     # Map the relevant data from rcsc_data to Agency model fields
     agency_data = {
@@ -197,12 +197,12 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     }
 
     # Map user roles based on user_role_agency
-    if 'clinical counsellor' in rcsc_data.get('positionTitle', '').lower():
+    if 'clinical counselor' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_CLINICAL_COUNSELOR
     elif 'it officer' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_ADMIN
-    elif 'school counsellor' in rcsc_data.get('positionTitle', '').lower():
-        user_role = CustomUser.ROLE_SCHOOL_COUNSELLOR
+    elif 'school_counselor' in rcsc_data.get('positionTitle', '').lower():
+        user_role = CustomUser.ROLE_SCHOOL_COUNSELOR
     elif 'student' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_STUDENT
     else:
@@ -262,6 +262,152 @@ def fetch_rcsc_details(request, cid, reg_email):
 
     except RequestException as e:
         print(f"RCSC API Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def map_emis_data_to_agency_models(emis_data):
+    student_detail = emis_data.get('studentDetails', {}).get('studentDetail', [])[
+        0] if emis_data.get('studentDetails', {}).get('studentDetail') else {}
+
+    # Check the living situation based on guardian and parents' status
+    if student_detail.get('guardian'):
+        current_living_with = 'Guardian'
+    else:
+        father_name = student_detail.get('father', '')
+        mother_name = student_detail.get('mother', '')
+        if 'late' in father_name.lower() or 'lt' in father_name.lower():
+            current_living_with = 'Mother'
+        elif 'late' in mother_name.lower() or 'lt' in mother_name.lower():
+            current_living_with = 'Father'
+        else:
+            current_living_with = 'Parents'
+
+    # Map the relevant data from student_detail to Agency model fields
+    agency_data = {
+        'agency_code': student_detail.get('AgencyCode', ''),
+        'agency_name': student_detail.get('school', ''),
+    }
+
+    # Map the relevant data to UserAgency model fields
+    user_agency_data = {
+        'user_code': student_detail.get('student_code', ''),
+        'ps_add_village': student_detail.get('present_village', ''),
+        'ps_add_gewog': student_detail.get('present_geog', ''),
+        'ps_add_dzongkhag': student_detail.get('present_dzongkhag', ''),
+        'parent_occupation': f"{student_detail.get('father_occupation', '')}/{student_detail.get('mother_occupation', '')}",
+        'guardian_name': student_detail.get('guardian', ''),
+        'guardian_occupation': student_detail.get('guardian_occupation', ''),
+        'parent_status': '',  # Not provided in the studentDetail
+        'current_living_with': current_living_with,
+        'user_role_agency': 'student',
+        'user_class': student_detail.get('class', ''),
+        'user_sub_class': student_detail.get('stream', '')
+    }
+
+    # Return the mapped data
+    return agency_data, user_agency_data
+
+
+@csrf_exempt
+def get_emis_student_details(request, student_code, dob, reg_email):
+    print(
+        f"Received request for EMIS details of Student Code: {student_code}, DoB: {dob}, with reg_email: {reg_email}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        emis_student_api_url = settings.CREDENTIALS['EMIS_STUDENT_API']
+        request_url = f'{emis_student_api_url}{student_code}/{dob}'
+
+        print(f"Making request to EMIS Student API: {request_url}")
+
+        # Step 2: Proceed with EMIS API request
+        response = requests.get(request_url, headers=headers, verify=False)
+
+        if response.status_code == 200:
+            emis_details = response.json()
+            print(f"EMIS Details Response Data: {emis_details}")
+
+            # Map the EMIS data to Agency and UserAgency models
+            agency_data, user_agency_data = map_emis_data_to_agency_models(
+                emis_details)
+
+            # Proceed with saving the data or any other operations as needed
+            return JsonResponse({'agency_data': agency_data, 'user_agency_data': user_agency_data}, safe=False)
+        else:
+            print(
+                f"Response error from EMIS API. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching EMIS student details'}, status=response.status_code)
+
+    except RequestException as e:
+        print(f"EMIS API Request Exception: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def map_emis_staff_data_to_agency_models(emis_data):
+    staff_detail = emis_data.get('staffDetails', {}).get('staffDetail', [])[
+        0] if emis_data.get('staffDetails', {}).get('staffDetail') else {}
+
+    # Map the relevant data from staff_detail to Agency model fields
+    agency_data = {
+        'agency_code': staff_detail.get('AgencyCode', ''),
+        'agency_name': staff_detail.get('working_address', ''),
+    }
+
+    # Map the relevant data to UserAgency model fields
+    user_agency_data = {
+        'user_code': staff_detail.get('emp_id', ''),
+        'ps_add_village': staff_detail.get('present_village', ''),
+        'ps_add_gewog': staff_detail.get('present_gewog', ''),
+        # Not provided in the staffDetail
+        'ps_add_dzongkhag': staff_detail.get('present_dzongkhag', ''),
+        'parent_occupation': '',  # Not applicable for staffDetail
+        'guardian_name': '',  # Not applicable for staffDetail
+        'guardian_occupation': '',  # Not applicable for staffDetail
+        'parent_status': '',  # Not applicable for staffDetail
+        'current_living_with': '',  # Not applicable for staffDetail
+        'user_role_agency': 'school_counselor',
+        'user_class': '',  # Not applicable for staffDetail
+        'user_sub_class': '',  # Not applicable for staffDetail
+    }
+
+    # Return the mapped data
+    return agency_data, user_agency_data
+
+
+@csrf_exempt
+def get_emis_staff_details(request, emp_id, reg_email):
+    print(
+        f"Received request for EMIS details of Employee ID: {emp_id} with reg_email: {reg_email}")
+
+    try:
+        token = 'Bearer ' + generate_token()
+        headers = {'Authorization': token}
+        emis_staff_api_url = settings.CREDENTIALS['EMIS_STAFF_API']
+        request_url = f'{emis_staff_api_url}{emp_id}'
+
+        print(f"Making request to EMIS Staff API: {request_url}")
+
+        # Proceed with EMIS API request
+        response = requests.get(request_url, headers=headers, verify=False)
+
+        if response.status_code == 200:
+            emis_details = response.json()
+            print(f"EMIS Staff Details Response Data: {emis_details}")
+
+            # Map the EMIS data to Agency and UserAgency models
+            agency_data, user_agency_data = map_emis_staff_data_to_agency_models(
+                emis_details)
+
+            # Proceed with saving the data or any other operations as needed
+            return JsonResponse({'agency_data': agency_data, 'user_agency_data': user_agency_data}, safe=False)
+        else:
+            print(
+                f"Response error from EMIS API. Status code: {response.status_code}, Response body: {response.text}")
+            return JsonResponse({'error': 'Error fetching EMIS staff details'}, status=response.status_code)
+
+    except RequestException as e:
+        print(f"EMIS API Request Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -412,13 +558,13 @@ class UpdateGyalsungDetails(APIView):
             user.is_gyalsung = data['is_gyalsung']
         if 'academy_code' in data:
             user.academy_code = data['academy_code']
-        
+
         user.save()
 
         # Serialize the updated user object
         serializer = CustomUserSerializer(user)
         return Response(serializer.data)
-    
+
 
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
@@ -529,8 +675,6 @@ class GetUserDetails(APIView):
         except Exception as e:
             logger.error(f"Error occurred: {str(e)}")
             return Response({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 
 class PasswordResetRequestView(APIView):
@@ -655,7 +799,6 @@ def verify_pre_recorded_user(request):
         return JsonResponse({'success': False, 'message': 'Internal Server Error'}, status=500)
 
 
-
 # Step 1: Register pre-recorded user
 @api_view(['POST'])
 @csrf_exempt
@@ -699,7 +842,8 @@ def register_pre_recorded_user(request):
 
         # Update the is_registered field to True for the pre-recorded user
         pre_recorded_user_identity_number = user_data.get('identity_number')
-        PreRecordedUser.objects.filter(identity_number=pre_recorded_user_identity_number).update(is_registered=True)
+        PreRecordedUser.objects.filter(
+            identity_number=pre_recorded_user_identity_number).update(is_registered=True)
 
         # Return the user ID in the response
         response_data = {'userId': user_instance.id}

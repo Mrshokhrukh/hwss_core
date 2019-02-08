@@ -1,3 +1,5 @@
+from asyncio import format_helpers
+from django.utils.html import format_html
 import csv
 from django.contrib import admin
 from django.http import HttpResponse
@@ -69,7 +71,7 @@ class PreRecordedUserAdmin(admin.ModelAdmin):
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role', 'active_agency')
+    list_display = ('username', 'email', 'role', 'active_agency', 'display_profile_picture')
     inlines = [UserAgencyInline]
 
     fieldsets = (
@@ -85,6 +87,9 @@ class CustomUserAdmin(admin.ModelAdmin):
         ('Gyalsuung Information', {
             'fields': ('is_gyalsung', 'academy_code'),
         }),
+        ('Profile Picture', {
+            'fields': ('profile_picture',),
+        }),
     )
 
     def active_agency(self, obj):
@@ -94,7 +99,9 @@ class CustomUserAdmin(admin.ModelAdmin):
         except AttributeError:
             return None
 
-    active_agency.short_description = 'Active Agency'
+    def display_profile_picture(self, obj):
+        return format_html('<img src="{}" style="max-height: 100px; max-width: 100px;" />'.format(obj.profile_picture.url)) if obj.profile_picture else None
+    display_profile_picture.short_description = 'Profile Picture'
 
 
 class AgencyAdmin(admin.ModelAdmin):
