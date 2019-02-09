@@ -130,8 +130,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = "static/"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'access.CustomUser'
@@ -146,11 +144,11 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
-    'x-csrftoken', 
-    'content-type', 
-    'accept', 
-    'origin', 
-    'authorization', 
+    'x-csrftoken',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
     'x-requested-with',
     'x-csrftoken',
 ]
@@ -162,6 +160,16 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:5173',
-]  # or 'Lax'
+]
+
+
+STATIC_URL = "static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'profile_pictures'),
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
