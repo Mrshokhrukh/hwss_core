@@ -15,6 +15,10 @@ class AppConfig(models.Model):
     helpline_number_1 = models.CharField(max_length=20)
     helpline_number_2 = models.CharField(max_length=20)
     response_service_logo = models.ImageField(upload_to='logos/')
+    cluster_test_title = models.CharField(max_length=50, null=True, blank=True)
+    cluster_test_content = models.TextField(max_length=500, null=True, blank=True)
+    cluster_test_disclaimer = models.TextField(max_length=500, null=True, blank=True)
+    cluster_test_icon = models.ImageField(upload_to='icons/', null=True, blank=True)
 
     def __str__(self):
         return self.app_name
@@ -48,3 +52,10 @@ class AppConfig(models.Model):
             return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.response_service_logo.url)
         else:
             return 'No Image'
+
+    def cluster_test_icon_preview(self):
+        if self.response_service_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.cluster_test_icon.url)
+        else:
+            return 'No Image'
+
