@@ -15,8 +15,28 @@ class AppConfigAdmin(admin.ModelAdmin):
         }),
     )
     # List of fields to be displayed on the admin list page
-    list_display = ('app_name', 'tagline',)
+    list_display = ('app_name', 'tagline', 'show_login_logo', 'show_registration_logo', 'show_landing_page_logo', 'show_dashboard_logo', 'show_response_service_logo')
     # Search fields for the admin list page
     search_fields = ('app_name', 'tagline',)
+
+    def show_login_logo(self, obj):
+        return obj.login_logo_preview()
+    show_login_logo.short_description = 'Login Logo'
+
+    def show_registration_logo(self, obj):
+        return obj.registration_logo_preview()
+    show_registration_logo.short_description = 'Registration Logo'
+
+    def show_landing_page_logo(self, obj):
+        return obj.landing_page_logo_preview()
+    show_landing_page_logo.short_description = 'Landing Page Logo'
+
+    def show_dashboard_logo(self, obj):
+        return obj.dashboard_logo_preview()
+    show_dashboard_logo.short_description = 'Dashboard Logo'
+
+    def show_response_service_logo(self, obj):
+        return obj.response_service_logo_preview()
+    show_response_service_logo.short_description = 'Response Service Logo'
 
 admin.site.register(AppConfig, AppConfigAdmin)

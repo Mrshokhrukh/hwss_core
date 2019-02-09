@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.html import format_html
 
 class AppConfig(models.Model):
     login_logo = models.ImageField(upload_to='logos/')
@@ -17,3 +18,33 @@ class AppConfig(models.Model):
 
     def __str__(self):
         return self.app_name
+    
+    def login_logo_preview(self):
+        if self.login_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.login_logo.url)
+        else:
+            return 'No Image'
+
+    def registration_logo_preview(self):
+        if self.registration_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.registration_logo.url)
+        else:
+            return 'No Image'
+
+    def landing_page_logo_preview(self):
+        if self.landing_page_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.landing_page_logo.url)
+        else:
+            return 'No Image'
+
+    def dashboard_logo_preview(self):
+        if self.dashboard_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.dashboard_logo.url)
+        else:
+            return 'No Image'
+
+    def response_service_logo_preview(self):
+        if self.response_service_logo:
+            return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.response_service_logo.url)
+        else:
+            return 'No Image'
