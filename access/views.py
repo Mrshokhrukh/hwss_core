@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 from requests.exceptions import RequestException
 from django.conf import settings
 
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
@@ -42,6 +42,7 @@ from . import models
 logger = logging.getLogger(__name__)
 
 
+@permission_classes([AllowAny])
 def read_json(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -50,21 +51,25 @@ def read_json(file_path):
         return {}
 
 
+@permission_classes([AllowAny])
 def write_json(file_path, data):
     with open(file_path, 'w') as file:
         json.dump(data, file)
 
 
+@permission_classes([AllowAny])
 def read_global():
     with open(GLOBAL_FILE_PATH, 'r') as file:
         return json.load(file)
 
 
+@permission_classes([AllowAny])
 def write_global(data):
     with open(GLOBAL_FILE_PATH, 'w') as file:
         json.dump(data, file)
 
 
+@permission_classes([AllowAny])
 def get_authorization_code():
     auth_key = 'ScC63jo40LjxifHweyLUR6IVto0a'
     auth_secret = 'jk6jLebfES42oYmf8YuFNuMFpTUa'
@@ -72,6 +77,7 @@ def get_authorization_code():
     return base64.b64encode(auth_code.encode()).decode()
 
 
+@permission_classes([AllowAny])
 def global_session():
     data = read_global()
     if data['accessToken'] != "" and data['expiryTime'] > time.time():
@@ -79,6 +85,7 @@ def global_session():
     return False
 
 
+@permission_classes([AllowAny])
 def generate_token():
     request_url = 'oauth2/token'
     if not global_session():
@@ -110,6 +117,7 @@ def generate_token():
         return read_global()['accessToken']
 
 
+@permission_classes([AllowAny])
 def map_user_data(citizen_detail):
     # Map the relevant data from citizen_detail to user model fields
     mapped_data = {
@@ -140,22 +148,26 @@ def map_user_data(citizen_detail):
     return mapped_data
 
 
+@permission_classes([AllowAny])
 def formatDOB(dob):
     date_object = datetime.strptime(dob, '%d/%m/%Y')
     formatted_date = date_object.strftime('%Y-%m-%d')
     return formatted_date
 
 
+@permission_classes([AllowAny])
 def mapGender(gender):
     return 'Female' if gender == 'F' else 'Male'
 
 
+@permission_classes([AllowAny])
 def mapNationality(country):
     if not country or country.strip() == '':
         return 'Bhutanese'
     return country
 
 
+@permission_classes([AllowAny])
 def fetch_citizen_details(request, cid):
     try:
         token = 'Bearer ' + generate_token()
@@ -190,6 +202,7 @@ def fetch_citizen_details(request, cid):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@permission_classes([AllowAny])
 def map_rcsc_data_to_agency_model(rcsc_data):
     # Map the relevant data from rcsc_data to Agency model fields
     agency_data = {
@@ -231,6 +244,7 @@ def map_rcsc_data_to_agency_model(rcsc_data):
 
 # views.py - Step 3 (fetch_rcsc_details function)
 @csrf_exempt
+@permission_classes([AllowAny])
 def fetch_rcsc_details(request, cid, reg_email):
     print(
         f"Received request for RCSC details of CID: {cid} with reg_email: {reg_email}")
@@ -266,6 +280,7 @@ def fetch_rcsc_details(request, cid, reg_email):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@permission_classes([AllowAny])
 def map_emis_data_to_agency_models(emis_data):
     student_detail = emis_data.get('studentDetails', {}).get('studentDetail', [])[
         0] if emis_data.get('studentDetails', {}).get('studentDetail') else {}
@@ -310,6 +325,7 @@ def map_emis_data_to_agency_models(emis_data):
 
 
 @csrf_exempt
+@permission_classes([AllowAny])
 def get_emis_student_details(request, student_code, dob, reg_email):
     print(
         f"Received request for EMIS details of Student Code: {student_code}, DoB: {dob}, with reg_email: {reg_email}")
@@ -345,6 +361,7 @@ def get_emis_student_details(request, student_code, dob, reg_email):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@permission_classes([AllowAny])
 def map_emis_staff_data_to_agency_models(emis_data):
     staff_detail = emis_data.get('staffDetails', {}).get('staffDetail', [])[
         0] if emis_data.get('staffDetails', {}).get('staffDetail') else {}
@@ -377,6 +394,7 @@ def map_emis_staff_data_to_agency_models(emis_data):
 
 
 @csrf_exempt
+@permission_classes([AllowAny])
 def get_emis_staff_details(request, emp_id, reg_email):
     print(
         f"Received request for EMIS details of Employee ID: {emp_id} with reg_email: {reg_email}")
@@ -415,6 +433,7 @@ def get_emis_staff_details(request, emp_id, reg_email):
 @api_view(['POST'])
 @csrf_exempt
 @transaction.atomic
+@permission_classes([AllowAny])
 def register_user(request):
     try:
         print("Received request to register user.")
@@ -568,6 +587,8 @@ class UpdateGyalsungDetails(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request, *args, **kwargs):
         try:
             username = request.data.get('username')
@@ -585,10 +606,14 @@ class LoginView(APIView):
                 # Get the user's role
                 user_role = user.role
 
+                # Get the user's ID
+                user_id = user.id
+
                 logger.info(
                     'Login response sent - Token: %s, User Role: %s', token.key, user_role)
 
-                return Response({"token": token.key, "user_role": user_role}, status=status.HTTP_200_OK)
+                print('returning token is:', token.key)
+                return Response({"token": token.key, "user_role": user_role, "user_id": user_id}, status=status.HTTP_200_OK)
             else:
                 logger.warning(
                     'Authentication failed for username: %s', username)
@@ -599,79 +624,88 @@ class LoginView(APIView):
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET','POST'])
-@permission_classes([IsAuthenticated])
-def get_user_details(request):
-    try:
-        logger.info('User details request received')
 
+# @api_view(['GET','POST'])
+# @permission_classes([IsAuthenticated])
+# def get_user_details(request):
+#     try:
+#         logger.info('User details request received')
+
+#         user = request.user
+
+#         # Retrieve user data
+#         user_data = {
+#             'id': user.id,
+#             'username': user.username,
+#             'is_staff': user.is_staff,
+#             'is_active': user.is_active,
+#             'identity_number': user.identity_number,
+#             'nationality': user.nationality,
+#             'first_name': user.first_name,
+#             'middle_name': user.middle_name,
+#             'last_name': user.last_name,
+#             'date_of_birth': user.date_of_birth,
+#             'gender': user.gender,
+#             'email': user.email,
+#             'mob_number': user.mob_number,
+#             'father_name': user.father_name,
+#             'mother_name': user.mother_name,
+#             'perm_add_village': user.perm_add_village,
+#             'perm_add_gewog': user.perm_add_gewog,
+#             'perm_add_dzongkhag': user.perm_add_dzongkhag,
+#             'profile_picture': user.profile_picture.url if user.profile_picture else None,
+#             'active_agency': None,
+#             'is_gyalsung': user.is_gyalsung,
+#             'academy_code': user.academy_code,
+#             'date_joined': user.date_joined,
+#             'role': user.role,
+#             'access_level': user.access_level,
+#         }
+
+#         # Retrieve agency data
+#         if user.active_agency:
+#             agency_serializer = AgencySerializer(user.active_agency)
+#             agency_data = agency_serializer.data
+#         else:
+#             agency_data = {}
+
+#         # Retrieve user agency data
+#         try:
+#             user_agency = UserAgency.objects.get(user=user)
+#             user_agency_data = {
+#                 'user_code': user_agency.user_code,
+#                 'ps_add_village': user_agency.ps_add_village,
+#                 'ps_add_gewog': user_agency.ps_add_gewog,
+#                 'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
+#                 'parent_occupation': user_agency.parent_occupation,
+#                 'guardian_name': user_agency.guardian_name,
+#                 'guardian_occupation': user_agency.guardian_occupation,
+#                 'parent_status': user_agency.parent_status,
+#                 'current_living_with': user_agency.current_living_with,
+#                 'user_role_agency': user_agency.user_role_agency,
+#                 'user_class': user_agency.user_class,
+#                 'user_sub_class': user_agency.user_sub_class,
+#             }
+#         except UserAgency.DoesNotExist:
+#             user_agency_data = {}
+
+#         return Response({
+#             "user": user_data,
+#             "agency": agency_data,
+#             "userAgency": user_agency_data,
+#         }, status=status.HTTP_200_OK)
+
+#     except Exception as e:
+#         logger.error(f"Error occurred: {str(e)}")
+#         return Response({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class GetUserDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
         user = request.user
-
-        # Retrieve user data
-        user_data = {
-            'id': user.id,
-            'username': user.username,
-            'is_staff': user.is_staff,
-            'is_active': user.is_active,
-            'identity_number': user.identity_number,
-            'nationality': user.nationality,
-            'first_name': user.first_name,
-            'middle_name': user.middle_name,
-            'last_name': user.last_name,
-            'date_of_birth': user.date_of_birth,
-            'gender': user.gender,
-            'email': user.email,
-            'mob_number': user.mob_number,
-            'father_name': user.father_name,
-            'mother_name': user.mother_name,
-            'perm_add_village': user.perm_add_village,
-            'perm_add_gewog': user.perm_add_gewog,
-            'perm_add_dzongkhag': user.perm_add_dzongkhag,
-            'profile_picture': user.profile_picture.url if user.profile_picture else None,
-            'active_agency': None,
-            'is_gyalsung': user.is_gyalsung,
-            'academy_code': user.academy_code,
-            'date_joined': user.date_joined,
-            'role': user.role,
-            'access_level': user.access_level,
-        }
-
-        # Retrieve agency data
-        if user.active_agency:
-            agency_serializer = AgencySerializer(user.active_agency)
-            agency_data = agency_serializer.data
-        else:
-            agency_data = {}
-
-        # Retrieve user agency data
-        try:
-            user_agency = UserAgency.objects.get(user=user)
-            user_agency_data = {
-                'user_code': user_agency.user_code,
-                'ps_add_village': user_agency.ps_add_village,
-                'ps_add_gewog': user_agency.ps_add_gewog,
-                'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
-                'parent_occupation': user_agency.parent_occupation,
-                'guardian_name': user_agency.guardian_name,
-                'guardian_occupation': user_agency.guardian_occupation,
-                'parent_status': user_agency.parent_status,
-                'current_living_with': user_agency.current_living_with,
-                'user_role_agency': user_agency.user_role_agency,
-                'user_class': user_agency.user_class,
-                'user_sub_class': user_agency.user_sub_class,
-            }
-        except UserAgency.DoesNotExist:
-            user_agency_data = {}
-
-        return Response({
-            "user": user_data,
-            "agency": agency_data,
-            "userAgency": user_agency_data,
-        }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        logger.error(f"Error occurred: {str(e)}")
-        return Response({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PasswordResetRequestView(APIView):
@@ -712,6 +746,7 @@ class PasswordResetView(APIView):
 
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def verify_pre_recorded_user(request):
     cid = request.GET.get('cid')
 
@@ -800,6 +835,7 @@ def verify_pre_recorded_user(request):
 @api_view(['POST'])
 @csrf_exempt
 @transaction.atomic
+@permission_classes([AllowAny])
 def register_pre_recorded_user(request):
     try:
         print("Received request to register user.")
@@ -857,6 +893,7 @@ def register_pre_recorded_user(request):
 
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def user_logout(request):
     response = JsonResponse({'message': 'Logout successful'})
     response.delete_cookie('sessionid')  # Clear session cookie

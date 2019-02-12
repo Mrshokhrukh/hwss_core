@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, UpdateGyalsungDetails
+from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails
 from . import views
 
 urlpatterns = [
@@ -16,7 +16,7 @@ urlpatterns = [
          name='verify_pre_recorded_user'),
     path('register-pre-recorded-user/', views. register_pre_recorded_user,
          name=' register_pre_recorded_user'),
-    path('get-user-details/', views.get_user_details, name='get_user_details'),
+    path('get-user-details/', GetUserDetailsView.as_view(), name='get_user_details'),
     path('user-logout/', views.user_logout, name='user_logout'),
     path('update-gyalsung-user/<int:pk>/',
          UpdateGyalsungDetails.as_view(), name='update_gyalsung_details'),

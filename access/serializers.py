@@ -3,31 +3,6 @@ from django.contrib.auth.hashers import make_password
 from .models import CustomUser, Agency, UserAgency
 
 
-class CustomUserSerializer(serializers.ModelSerializer):
-    active_agency = 'AgencySerializer'(read_only=True)
-    class Meta:
-        model = CustomUser
-        fields = [
-            'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
-            'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
-            'gender', 'email', 'mob_number', 'father_name', 'mother_name',
-            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
-            'profile_picture', 'active_agency', 'academy_code', 'date_joined',
-            'password',  'role'
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
-
-    def create(self, validated_data):
-        password = validated_data.pop('password', None)
-        instance = super().create(validated_data)
-        if password:
-            instance.set_password(password)
-            instance.save()
-        return instance
-
-
 class AgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Agency
@@ -46,6 +21,9 @@ class AgencySerializer(serializers.ModelSerializer):
 
 
 class UserAgencySerializer(serializers.ModelSerializer):
+    # Assuming you have an AgencySerializer
+    agency = AgencySerializer(read_only=True)
+
     class Meta:
         model = UserAgency
         fields = '__all__'
@@ -75,6 +53,33 @@ class UserAgencySerializer(serializers.ModelSerializer):
             user_instance.active_agency = agency_instance
             user_instance.save()
 
+        return instance
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    active_agency = AgencySerializer(read_only=True)
+    agency_details = UserAgencySerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
+            'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
+            'gender', 'email', 'mob_number', 'father_name', 'mother_name',
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
+            'profile_picture', 'active_agency', 'academy_code', 'date_joined',
+            'password',  'role', 'agency_details'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        instance = super().create(validated_data)
+        if password:
+            instance.set_password(password)
+            instance.save()
         return instance
 
 
