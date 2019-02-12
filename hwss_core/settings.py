@@ -48,11 +48,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # apps module
     'access',
     'measurement',
     'reporting',
     'monitoring',
     'settings_module',
+    
+    # 3rd party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -140,6 +143,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5173',
     'http://localhost:5173',
     'http://localhost:8000',
+    'http://172.30.3.164',
+    'http://172.30.3.5',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -155,11 +160,15 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://172.30.3.164',
 ]
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:5173',
+    'http://172.30.3.164',
+    'http://172.30.3.5',
+    
 ]
 
 

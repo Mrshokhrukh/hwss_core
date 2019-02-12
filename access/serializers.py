@@ -4,6 +4,7 @@ from .models import CustomUser, Agency, UserAgency
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    active_agency = 'AgencySerializer'(read_only=True)
     class Meta:
         model = CustomUser
         fields = [
@@ -47,11 +48,7 @@ class AgencySerializer(serializers.ModelSerializer):
 class UserAgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAgency
-        fields = [
-            'user', 'agency', 'user_code', 'user_role_agency', 'user_class', 'user_sub_class',
-            'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
-            'parent_occupation', 'guardian_name', 'guardian_occupation', 'parent_status', 'current_living_with',
-        ]
+        fields = '__all__'
 
     def create(self, validated_data):
         # Create the user-agency instance
