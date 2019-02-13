@@ -16,7 +16,7 @@ class AppConfigAdmin(admin.ModelAdmin):
             'fields': ('cluster_test_title', 'cluster_test_content', 'cluster_test_disclaimer', 'cluster_test_icon',)
         }),
         ('Copyright Information', {
-            'fields': ('copyright_message',) 
+            'fields': ('copyright_message',) ,
         }),
         ('Mobile App Store Links', {
             'fields': ('google_play_link', 'apple_appstore_link',)  
