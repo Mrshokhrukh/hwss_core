@@ -22,12 +22,13 @@ from django.conf import settings
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import authenticate
 from .models import CustomUser, Agency, PreRecordedUser, UserAgency
 from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedUserSerializer, UserAgencySerializer
@@ -625,88 +626,91 @@ class LoginView(APIView):
 
 
 
-# @api_view(['GET','POST'])
-# @permission_classes([IsAuthenticated])
-# def get_user_details(request):
-#     try:
-#         logger.info('User details request received')
+class CustomJSONEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Agency):
+            return {
+                'id': obj.id,
+                'agency_code': obj.agency_code,
+                'agency_name': obj.agency_name,
+            }
+        return super().default(obj)
+    
 
-#         user = request.user
-
-#         # Retrieve user data
-#         user_data = {
-#             'id': user.id,
-#             'username': user.username,
-#             'is_staff': user.is_staff,
-#             'is_active': user.is_active,
-#             'identity_number': user.identity_number,
-#             'nationality': user.nationality,
-#             'first_name': user.first_name,
-#             'middle_name': user.middle_name,
-#             'last_name': user.last_name,
-#             'date_of_birth': user.date_of_birth,
-#             'gender': user.gender,
-#             'email': user.email,
-#             'mob_number': user.mob_number,
-#             'father_name': user.father_name,
-#             'mother_name': user.mother_name,
-#             'perm_add_village': user.perm_add_village,
-#             'perm_add_gewog': user.perm_add_gewog,
-#             'perm_add_dzongkhag': user.perm_add_dzongkhag,
-#             'profile_picture': user.profile_picture.url if user.profile_picture else None,
-#             'active_agency': None,
-#             'is_gyalsung': user.is_gyalsung,
-#             'academy_code': user.academy_code,
-#             'date_joined': user.date_joined,
-#             'role': user.role,
-#             'access_level': user.access_level,
-#         }
-
-#         # Retrieve agency data
-#         if user.active_agency:
-#             agency_serializer = AgencySerializer(user.active_agency)
-#             agency_data = agency_serializer.data
-#         else:
-#             agency_data = {}
-
-#         # Retrieve user agency data
-#         try:
-#             user_agency = UserAgency.objects.get(user=user)
-#             user_agency_data = {
-#                 'user_code': user_agency.user_code,
-#                 'ps_add_village': user_agency.ps_add_village,
-#                 'ps_add_gewog': user_agency.ps_add_gewog,
-#                 'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
-#                 'parent_occupation': user_agency.parent_occupation,
-#                 'guardian_name': user_agency.guardian_name,
-#                 'guardian_occupation': user_agency.guardian_occupation,
-#                 'parent_status': user_agency.parent_status,
-#                 'current_living_with': user_agency.current_living_with,
-#                 'user_role_agency': user_agency.user_role_agency,
-#                 'user_class': user_agency.user_class,
-#                 'user_sub_class': user_agency.user_sub_class,
-#             }
-#         except UserAgency.DoesNotExist:
-#             user_agency_data = {}
-
-#         return Response({
-#             "user": user_data,
-#             "agency": agency_data,
-#             "userAgency": user_agency_data,
-#         }, status=status.HTTP_200_OK)
-
-#     except Exception as e:
-#         logger.error(f"Error occurred: {str(e)}")
-#         return Response({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GetUserDetailsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        user = request.user
-        serializer = CustomUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            logger.info('User details request received')
 
+            user = request.user
+
+            # Retrieve user data
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'is_staff': user.is_staff,
+                'is_active': user.is_active,
+                'identity_number': user.identity_number,
+                'nationality': user.nationality,
+                'first_name': user.first_name,
+                'middle_name': user.middle_name,
+                'last_name': user.last_name,
+                'date_of_birth': user.date_of_birth,
+                'gender': user.gender,
+                'email': user.email,
+                'mob_number': user.mob_number,
+                'father_name': user.father_name,
+                'mother_name': user.mother_name,
+                'perm_add_village': user.perm_add_village,
+                'perm_add_gewog': user.perm_add_gewog,
+                'perm_add_dzongkhag': user.perm_add_dzongkhag,
+                'profile_picture': user.profile_picture.url if user.profile_picture else None,
+                'active_agency': None,
+                'is_gyalsung': user.is_gyalsung,
+                'academy_code': user.academy_code,
+                'date_joined': user.date_joined,
+                'role': user.role,
+                'access_level': user.access_level,
+            }
+
+            # Retrieve agency data
+            agency_data = {}
+            if user.active_agency:
+                agency_data = {
+                    'id': user.active_agency.id,
+                    'agency_code': user.active_agency.agency_code,
+                    'agency_name': user.active_agency.agency_name,
+                }
+
+            # Retrieve user agency data
+            user_agency_data = {}
+            try:
+                user_agency = UserAgency.objects.get(user=user)
+                user_agency_data = {
+                    'user_code': user_agency.user_code,
+                    'ps_add_village': user_agency.ps_add_village,
+                    'ps_add_gewog': user_agency.ps_add_gewog,
+                    'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
+                    'parent_occupation': user_agency.parent_occupation,
+                    'guardian_name': user_agency.guardian_name,
+                    'guardian_occupation': user_agency.guardian_occupation,
+                    'parent_status': user_agency.parent_status,
+                    'current_living_with': user_agency.current_living_with,
+                    'user_role_agency': user_agency.user_role_agency,
+                    'user_class': user_agency.user_class,
+                    'user_sub_class': user_agency.user_sub_class,
+                }
+            except UserAgency.DoesNotExist:
+                pass
+
+            return JsonResponse({"user": user_data, "agency": agency_data, "userAgency": user_agency_data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error occurred: {str(e)}")
+            return JsonResponse({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PasswordResetRequestView(APIView):
     def post(self, request, *args, **kwargs):

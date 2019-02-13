@@ -13,19 +13,27 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['172.30.3.5', 'localhost', '127.0.0.1']
 
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+        'file': {
+            'level': 'DEBUG',  
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(PROJECT_DIR, 'logfile.log'), 
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',  # Adjust the level as needed
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',  
+            'propagate': True,
+        },
     },
 }
+
 
 
 CREDENTIALS = {

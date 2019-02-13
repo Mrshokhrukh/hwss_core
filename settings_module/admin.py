@@ -1,9 +1,7 @@
 from django.contrib import admin
 from .models import AppConfig
 
-
 class AppConfigAdmin(admin.ModelAdmin):
-    # Define fieldsets to group related fields together
     fieldsets = (
         ('Logos', {
             'fields': ('login_logo', 'registration_logo', 'landing_page_logo', 'dashboard_logo',)
@@ -17,11 +15,13 @@ class AppConfigAdmin(admin.ModelAdmin):
         ('Cluster Test Information', {
             'fields': ('cluster_test_title', 'cluster_test_content', 'cluster_test_disclaimer', 'cluster_test_icon',)
         }),
+        ('Copyright Information', {
+            'fields': ('copyright_message',)  # Add the copyright_message field here
+        }),
     )
-    # List of fields to be displayed on the admin list page
     list_display = ('app_name', 'tagline', 'show_login_logo', 'show_registration_logo',
-                    'show_landing_page_logo', 'show_dashboard_logo', 'show_response_service_logo')
-    # Search fields for the admin list page
+                    'show_landing_page_logo', 'show_dashboard_logo', 'show_response_service_logo',
+                    'copyright_message')  # Add copyright_message
     search_fields = ('app_name', 'tagline',)
 
     def show_login_logo(self, obj):
@@ -43,6 +43,5 @@ class AppConfigAdmin(admin.ModelAdmin):
     def show_response_service_logo(self, obj):
         return obj.response_service_logo_preview()
     show_response_service_logo.short_description = 'Response Service Logo'
-
 
 admin.site.register(AppConfig, AppConfigAdmin)

@@ -19,6 +19,8 @@ class AppConfig(models.Model):
     cluster_test_content = models.TextField(max_length=500, null=True, blank=True)
     cluster_test_disclaimer = models.TextField(max_length=500, null=True, blank=True)
     cluster_test_icon = models.ImageField(upload_to='icons/', null=True, blank=True)
+    copyright_message = models.CharField(max_length=255, null=True, blank=True)
+
 
     def __str__(self):
         return self.app_name
