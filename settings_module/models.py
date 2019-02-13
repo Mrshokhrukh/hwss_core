@@ -4,7 +4,9 @@ from django.utils.html import format_html
 class AppConfig(models.Model):
     login_logo = models.ImageField(upload_to='logos/')
     registration_logo = models.ImageField(upload_to='logos/')
-    landing_page_logo = models.ImageField(upload_to='logos/')
+    landing_page_logo = models.ImageField(upload_to='logos/', null=True, blank=True)
+    landing_img_bg = models.ImageField(upload_to='logos/', null=True, blank=True)
+    landing_tag_line = models.CharField(max_length=255, null=True, blank=True)
     dashboard_logo = models.ImageField(upload_to='logos/')
     carousel_image_1 = models.ImageField(upload_to='carousel/', null=True, blank=True)
     carousel_image_2 = models.ImageField(upload_to='carousel/', null=True, blank=True)
@@ -20,6 +22,8 @@ class AppConfig(models.Model):
     cluster_test_disclaimer = models.TextField(max_length=500, null=True, blank=True)
     cluster_test_icon = models.ImageField(upload_to='icons/', null=True, blank=True)
     copyright_message = models.CharField(max_length=255, null=True, blank=True)
+    google_play_link = models.CharField(max_length=255, null=True, blank=True)
+    apple_appstore_link = models.CharField(max_length=255, null=True, blank=True)
 
 
     def __str__(self):

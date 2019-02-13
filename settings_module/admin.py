@@ -4,19 +4,22 @@ from .models import AppConfig
 class AppConfigAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Logos', {
-            'fields': ('login_logo', 'registration_logo', 'landing_page_logo', 'dashboard_logo',)
+            'fields': ('login_logo', 'registration_logo', 'landing_page_logo', 'dashboard_logo','landing_img_bg',)
         }),
         ('Carousel Images', {
             'fields': ('carousel_image_1', 'carousel_image_2', 'carousel_image_3', 'carousel_image_4',)
         }),
         ('Application Information', {
-            'fields': ('app_name', 'tagline', 'helpline_number_1', 'helpline_number_2', 'response_service_logo',)
+            'fields': ('app_name', 'tagline', 'helpline_number_1', 'helpline_number_2', 'response_service_logo', 'landing_tag_line',)
         }),
         ('Cluster Test Information', {
             'fields': ('cluster_test_title', 'cluster_test_content', 'cluster_test_disclaimer', 'cluster_test_icon',)
         }),
         ('Copyright Information', {
-            'fields': ('copyright_message',)  # Add the copyright_message field here
+            'fields': ('copyright_message',) 
+        }),
+        ('Mobile App Store Links', {
+            'fields': ('google_play_link', 'apple_appstore_link',)  
         }),
     )
     list_display = ('app_name', 'tagline', 'show_login_logo', 'show_registration_logo',
