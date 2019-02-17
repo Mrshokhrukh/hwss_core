@@ -20,20 +20,19 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'file': {
-            'level': 'DEBUG',  
+            'level': 'WARN',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(PROJECT_DIR, 'logfile.log'), 
+            'filename': os.path.join(PROJECT_DIR, 'logfile.log'),
         },
     },
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',  
+            'level': 'WARN',
             'propagate': True,
         },
     },
 }
-
 
 
 CREDENTIALS = {
@@ -50,6 +49,8 @@ CREDENTIALS = {
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_interface',
+    'colorfield',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -62,12 +63,15 @@ INSTALLED_APPS = [
     'reporting',
     'monitoring',
     'settings_module',
-    
+
     # 3rd party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
 ]
+
+X_FRAME_OPTIONS = "SAMEORIGIN"
+SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -178,7 +182,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:5173',
     'http://172.30.3.164',
     'http://172.30.3.5',
-    
+
 ]
 
 
@@ -189,3 +193,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+ASGI_APPLICATION = 'hwss_core.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
