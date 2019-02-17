@@ -66857,3 +66857,5 @@ Internal Server Error: /api/v1/access/register-user/
 "POST /api/v1/access/register-user/ HTTP/1.1" 500 34
 Internal Server Error: /api/v1/access/register-pre-recorded-user/
 "POST /api/v1/access/register-pre-recorded-user/ HTTP/1.1" 500 34
+Bad Request: /api/v1/access/verify-pre-recorded-user/
+"GET /api/v1/access/verify-pre-recorded-user/?cid=11201003758 HTTP/1.1" 400 73
