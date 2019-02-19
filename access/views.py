@@ -26,6 +26,8 @@ from django.views.decorators.csrf import csrf_exempt
 from requests.exceptions import RequestException
 from django.conf import settings
 
+
+from django.middleware.csrf import get_token
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -54,6 +56,16 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------//
 # ------ AUTH TOKEN PART OF THE VIEWS ----------//
 # ----------------------------------------------//
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_csrf_token(request):
+    """
+    API endpoint to retrieve CSRF token.
+    """
+    csrf_token = get_token(request)
+    return Response({'csrf_token': csrf_token})
+
 
 @permission_classes([AllowAny])
 def read_json(file_path):
@@ -489,9 +501,12 @@ def register_user(request):
     except Exception as e:
         print(f"Error registering user: {str(e)}")
         traceback.print_exc()
-        response_data = {'error': 'Error registering user'}
+        error_message = str(e)
+        response_data = {'error': error_message}
         print(f"Response data: {response_data}")
+
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class UserCreate(generics.CreateAPIView):

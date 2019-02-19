@@ -21,6 +21,8 @@ urlpatterns = [
     path('update-gyalsung-user/<int:pk>/',
          UpdateGyalsungDetails.as_view(), name='update_gyalsung_details'),
 
+    path('get_csrf_token/', views.get_csrf_token, name='get_csrf_token'),
+
     # API CALLS
     path('get-citizen-details/<str:cid>/',
          views.fetch_citizen_details, name='get_citizen_details'),

@@ -66859,3 +66859,41 @@ Internal Server Error: /api/v1/access/register-pre-recorded-user/
 "POST /api/v1/access/register-pre-recorded-user/ HTTP/1.1" 500 34
 Bad Request: /api/v1/access/verify-pre-recorded-user/
 "GET /api/v1/access/verify-pre-recorded-user/?cid=11201003758 HTTP/1.1" 400 73
+Internal Server Error: /api/v1/access/get-rcsc-details/1150600590/caelen@gmail.com/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\hwss_core\access\views.py", line 186, in fetch_rcsc_details
+    rcsc_details = response.json().get(
+                   ^^^^^^^^^^^^^^^^^^^^
+IndexError: list index out of range
+"GET /api/v1/access/get-rcsc-details/1150600590/caelen@gmail.com/ HTTP/1.1" 500 85735
+Internal Server Error: /api/v1/access/get-rcsc-details/1150600590/caelen@gmail.com/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\HWSS_backend\hwss_core\access\views.py", line 186, in fetch_rcsc_details
+    rcsc_details = response.json().get(
+                   ^^^^^^^^^^^^^^^^^^^^
+IndexError: list index out of range
+"GET /api/v1/access/get-rcsc-details/1150600590/caelen@gmail.com/ HTTP/1.1" 500 85735
+Not Found: /
+"GET / HTTP/1.1" 404 2545
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2596
+Unauthorized: /api/v1/access/get_csrf_token/
+"GET /api/v1/access/get_csrf_token/ HTTP/1.1" 401 5174
