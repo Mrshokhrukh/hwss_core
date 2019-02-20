@@ -18,6 +18,7 @@ from django.db.models import F
 from datetime import datetime
 import token
 
+
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.urls import reverse
@@ -25,6 +26,8 @@ from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from requests.exceptions import RequestException
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
 
 
 from django.middleware.csrf import get_token
@@ -45,7 +48,6 @@ from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_mod
 from django.contrib.auth.tokens import default_token_generator
 
 from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
-
 from django.db import transaction
 from django.http import QueryDict
 from . import models
@@ -1018,4 +1020,43 @@ def user_logout(request):
     return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateUserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
+    def post(self, request, *args, **kwargs):
+        user = request.user  # Authenticated user
+
+        # Extracting fields from the request
+        mother_name = request.data.get('mother_name')
+        father_name = request.data.get('father_name')
+        parent_status = request.data.get('parent_status')
+        guardian_name = request.data.get('guardian_name')
+        guardian_occupation = request.data.get('guardian_occupation')
+        current_living_with = request.data.get('current_living_with')
+        ps_add_dzongkhag = request.data.get('ps_add_dzongkhag')
+
+        # Update CustomUser fields if provided
+        if mother_name:
+            user.mother_name = mother_name
+        if father_name:
+            user.father_name = father_name
+        user.save()
+
+        # Check if UserAgency instance exists and then update its fields
+        if hasattr(user, 'agency_details'):  # Use the correct related_name
+            user_agency = user.agency_details
+            if parent_status:
+                user_agency.parent_status = parent_status
+            if guardian_name:
+                user_agency.guardian_name = guardian_name
+            if guardian_occupation:
+                user_agency.guardian_occupation = guardian_occupation
+            if current_living_with:
+                user_agency.current_living_with = current_living_with
+            if ps_add_dzongkhag:
+                user_agency.ps_add_dzongkhag = ps_add_dzongkhag
+            user_agency.save()
+
+        return Response({"message": "User information updated successfully"}, status=status.HTTP_200_OK)

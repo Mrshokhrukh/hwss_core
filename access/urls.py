@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails
+from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, UpdateUserInfoView
 from . import views
 
 urlpatterns = [
@@ -36,4 +36,5 @@ urlpatterns = [
          views.get_emis_student_details, name='get_emis_student_details'),
     path('get-emis-staff-details/<str:emp_id>/<str:reg_email>/',
          views.get_emis_staff_details, name='get_emis_staff_details'),
+    path('update-user-info/', UpdateUserInfoView.as_view(), name='update-user-info'),
 ]
