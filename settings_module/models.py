@@ -65,3 +65,12 @@ class AppConfig(models.Model):
         else:
             return 'No Image'
 
+
+class MenuItem(models.Model):
+    name = models.CharField(max_length=100)
+    route = models.CharField(max_length=100)
+    icon_class = models.CharField(max_length=100)
+    roles = models.ManyToManyField('auth.Group', related_name='menu_items')
+
+    def __str__(self):
+        return self.name
