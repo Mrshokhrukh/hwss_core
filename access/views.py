@@ -1026,37 +1026,32 @@ class UpdateUserInfoView(APIView):
     authentication_classes = [TokenAuthentication]
 
     def post(self, request, *args, **kwargs):
-        user = request.user  # Authenticated user
+        user = request.user
 
-        # Extracting fields from the request
-        mother_name = request.data.get('mother_name')
-        father_name = request.data.get('father_name')
-        parent_status = request.data.get('parent_status')
-        guardian_name = request.data.get('guardian_name')
-        guardian_occupation = request.data.get('guardian_occupation')
-        current_living_with = request.data.get('current_living_with')
-        ps_add_dzongkhag = request.data.get('ps_add_dzongkhag')
+        # Log the received data for debugging
+        logger.info(f"Received update request for user {user.username}: {request.data}")
 
-        # Update CustomUser fields if provided
-        if mother_name:
-            user.mother_name = mother_name
-        if father_name:
-            user.father_name = father_name
+        # List of fields that should not be updated directly
+        protected_fields = ['id', 'is_authenticated', 'is_staff', 'is_active', 'date_joined']
+
+        # Convert camelCase to snake_case
+        def camel_to_snake(camel_str):
+            return ''.join(['_' + c.lower() if c.isupper() else c for c in camel_str]).lstrip('_')
+
+        # Update user fields, skipping protected fields
+        for field, value in request.data.items():
+            snake_case_field = camel_to_snake(field)
+            if snake_case_field in protected_fields or snake_case_field.startswith('_'):
+                logger.info(f"Skipping protected or non-model field: {snake_case_field}")
+                continue
+
+            if hasattr(user, snake_case_field):
+                logger.info(f"Updating {snake_case_field} to {value} for user {user.username}")
+                setattr(user, snake_case_field, value)
+            else:
+                logger.warning(f"Field {snake_case_field} does not exist on CustomUser model")
+
         user.save()
-
-        # Check if UserAgency instance exists and then update its fields
-        if hasattr(user, 'agency_details'):  # Use the correct related_name
-            user_agency = user.agency_details
-            if parent_status:
-                user_agency.parent_status = parent_status
-            if guardian_name:
-                user_agency.guardian_name = guardian_name
-            if guardian_occupation:
-                user_agency.guardian_occupation = guardian_occupation
-            if current_living_with:
-                user_agency.current_living_with = current_living_with
-            if ps_add_dzongkhag:
-                user_agency.ps_add_dzongkhag = ps_add_dzongkhag
-            user_agency.save()
+        logger.info(f"User information updated successfully for user {user.username}")
 
         return Response({"message": "User information updated successfully"}, status=status.HTTP_200_OK)
