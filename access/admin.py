@@ -9,6 +9,7 @@ from .models import CustomUser, Agency, UserAgency, PreRecordedUser
 class UserAgencyInline(admin.TabularInline):
     model = UserAgency
 
+# just a test for test
 
 class PreRecordedUserAdmin(admin.ModelAdmin):
     list_display = ('identity_number', 'first_name', 'last_name',
