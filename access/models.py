@@ -49,27 +49,31 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username, email, password=password, **extra_fields)
 
 
-
 class Agency(models.Model):
     id = models.AutoField(primary_key=True)
     agency_code = models.CharField(max_length=100, unique=True)
     agency_name = models.CharField(max_length=100)
+    agency_parent = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.agency_name
 
+
 class UserAgency(models.Model):
-    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, related_name='agency_details')
+    user = models.OneToOneField(
+        'CustomUser', on_delete=models.CASCADE, related_name='agency_details')
     agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
     user_code = models.CharField(max_length=100)
-    ps_add_village = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
+    # ps_add_village = models.CharField(max_length=100, blank=True, null=True)
+    # ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
+    # ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
-    guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
+    guardian_occupation = models.CharField(
+        max_length=100, blank=True, null=True)
     parent_status = models.CharField(max_length=100, blank=True, null=True)
-    current_living_with = models.CharField(max_length=100, blank=True, null=True)
+    current_living_with = models.CharField(
+        max_length=100, blank=True, null=True)
     user_role_agency = models.CharField(max_length=100)
     user_class = models.CharField(max_length=100, blank=True, null=True)
     user_sub_class = models.CharField(max_length=100, blank=True, null=True)
@@ -97,8 +101,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     perm_add_village = models.CharField(max_length=100)
     perm_add_gewog = models.CharField(max_length=100)
     perm_add_dzongkhag = models.CharField(max_length=100)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    active_agency = models.ForeignKey('Agency', on_delete=models.SET_NULL, null=True, blank=True)
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/', null=True, blank=True)
+    active_agency = models.ForeignKey(
+        'Agency', on_delete=models.SET_NULL, null=True, blank=True)
+    ps_add_village = models.CharField(max_length=100, blank=True, null=True)
+    ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
+    ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -121,7 +130,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     access_level = models.IntegerField(default=1)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth', 'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth',
+                       'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
 
     objects = CustomUserManager()
 
@@ -152,13 +162,15 @@ class PreRecordedUser(models.Model):
     perm_add_village = models.CharField(max_length=100)
     perm_add_gewog = models.CharField(max_length=100)
     perm_add_dzongkhag = models.CharField(max_length=100)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/', null=True, blank=True)
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
     role = models.CharField(max_length=100, blank=True, null=True)
     access_level = models.CharField(max_length=100, blank=True, null=True)
-    is_registered = models.BooleanField(default=False)  # New field to indicate registration status
+    # New field to indicate registration status
+    is_registered = models.BooleanField(default=False)
 
     # New fields to match user_data and agency_data
     agency_name = models.CharField(max_length=100, blank=True, null=True)
@@ -171,9 +183,11 @@ class PreRecordedUser(models.Model):
     ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
-    guardian_occupation = models.CharField(max_length=100, blank=True, null=True)
+    guardian_occupation = models.CharField(
+        max_length=100, blank=True, null=True)
     parent_status = models.CharField(max_length=100, blank=True, null=True)
-    current_living_with = models.CharField(max_length=100, blank=True, null=True)
+    current_living_with = models.CharField(
+        max_length=100, blank=True, null=True)
     user_role_agency = models.CharField(max_length=100, blank=True, null=True)
     user_class = models.CharField(max_length=100, blank=True, null=True)
     user_sub_class = models.CharField(max_length=100, blank=True, null=True)

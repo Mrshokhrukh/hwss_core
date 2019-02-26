@@ -9,6 +9,7 @@ from .models import CustomUser, Agency, UserAgency, PreRecordedUser
 class UserAgencyInline(admin.TabularInline):
     model = UserAgency
 
+
 class PreRecordedUserAdmin(admin.ModelAdmin):
     list_display = ('identity_number', 'first_name', 'last_name',
                     'date_of_birth', 'gender', 'is_registered')
@@ -30,11 +31,13 @@ class PreRecordedUserAdmin(admin.ModelAdmin):
         csv_writer = csv.writer(response)
 
         # Write header row
-        csv_writer.writerow(['identity_number', 'first_name', 'last_name', 'date_of_birth', 'gender', 'is_registered'])
+        csv_writer.writerow(['identity_number', 'first_name',
+                            'last_name', 'date_of_birth', 'gender', 'is_registered'])
 
         # Write data rows
         for user in queryset:
-            csv_writer.writerow([user.identity_number, user.first_name, user.last_name, user.date_of_birth, user.gender, user.is_registered])
+            csv_writer.writerow([user.identity_number, user.first_name, user.last_name,
+                                user.date_of_birth, user.gender, user.is_registered])
 
         return response
     export_users.short_description = "Export selected users as CSV"
@@ -71,7 +74,8 @@ class PreRecordedUserAdmin(admin.ModelAdmin):
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role', 'active_agency', 'display_profile_picture')
+    list_display = ('username', 'email', 'role',
+                    'active_agency', 'display_profile_picture')
     inlines = [UserAgencyInline]
 
     fieldsets = (
@@ -82,7 +86,7 @@ class CustomUserAdmin(admin.ModelAdmin):
             'fields': ('first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender', 'identity_number', 'nationality', 'mob_number', 'father_name', 'mother_name'),
         }),
         ('Address Information', {
-            'fields': ('perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'),
+            'fields': ('perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag'),
         }),
         ('Gyalsuung Information', {
             'fields': ('is_gyalsung', 'academy_code'),

@@ -473,7 +473,8 @@ def register_user(request):
         with transaction.atomic():
             # Check if the agency exists, if not, create it
             agency_code = agency_data.get('agency_code')
-            agency, created = Agency.objects.get_or_create(agency_code=agency_code, defaults=agency_data)
+            agency, created = Agency.objects.get_or_create(
+                agency_code=agency_code, defaults=agency_data)
 
             # Create the user
             user = CustomUser.objects.create_user(
@@ -481,6 +482,7 @@ def register_user(request):
                 email=user_data.get('email'),
                 identity_number=user_data.get('identity_number'),
                 first_name=user_data.get('first_name'),
+                middle_name=user_data.get('middle_name'),
                 last_name=user_data.get('last_name'),
                 date_of_birth=user_data.get('date_of_birth'),
                 gender=user_data.get('gender'),
@@ -488,6 +490,12 @@ def register_user(request):
                 perm_add_village=user_data.get('perm_add_village'),
                 perm_add_gewog=user_data.get('perm_add_gewog'),
                 perm_add_dzongkhag=user_data.get('perm_add_dzongkhag'),
+                nationality=user_data.get('nationality'),
+                father_name=user_data.get('father_name'),
+                mother_name=user_data.get('mother_name'),
+                ps_add_village=user_data.get('ps_add_village'),
+                ps_add_gewog=user_data.get('ps_add_gewog'),
+                ps_add_dzongkhag=user_data.get('ps_add_dzongkhag'),
                 password=user_data.get('password'),
                 role=user_data.get('role')
             )
@@ -497,7 +505,8 @@ def register_user(request):
             user_agency_data['agency'] = agency
             UserAgency.objects.create(**user_agency_data)
 
-            response_data = {'userId': user.id, 'message': 'User registered successfully.'}
+            response_data = {'userId': user.id,
+                             'message': 'User registered successfully.'}
             return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -508,7 +517,6 @@ def register_user(request):
         print(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class UserCreate(generics.CreateAPIView):
@@ -559,6 +567,7 @@ class UserUpdate(generics.UpdateAPIView):
 
 
 class UserList(ListAPIView):
+    permission_classes = [permissions.AllowAny]
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
 
@@ -826,7 +835,7 @@ class GetUserDetailsView(APIView):
 #             instance.set_password(password)
 #             instance.save()
 #         return instance
-    
+
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -971,7 +980,8 @@ def register_pre_recorded_user(request):
         with transaction.atomic():
             # Check if the agency exists, if not, create it
             agency_code = agency_data.get('agency_code')
-            agency, created = Agency.objects.get_or_create(agency_code=agency_code, defaults=agency_data)
+            agency, created = Agency.objects.get_or_create(
+                agency_code=agency_code, defaults=agency_data)
 
             # Create the user
             user = CustomUser.objects.create_user(
@@ -996,11 +1006,13 @@ def register_pre_recorded_user(request):
             UserAgency.objects.create(**user_agency_data)
 
             # Update the PreRecordedUser model
-            pre_recorded_user_identity_number = user_data.get('identity_number')
+            pre_recorded_user_identity_number = user_data.get(
+                'identity_number')
             PreRecordedUser.objects.filter(
                 identity_number=pre_recorded_user_identity_number).update(is_registered=True)
 
-            response_data = {'userId': user.id, 'message': 'Pre-recorded user registered successfully.'}
+            response_data = {
+                'userId': user.id, 'message': 'Pre-recorded user registered successfully.'}
             return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -1029,10 +1041,12 @@ class UpdateUserInfoView(APIView):
         user = request.user
 
         # Log the received data for debugging
-        logger.info(f"Received update request for user {user.username}: {request.data}")
+        logger.info(
+            f"Received update request for user {user.username}: {request.data}")
 
         # List of fields that should not be updated directly
-        protected_fields = ['id', 'is_authenticated', 'is_staff', 'is_active', 'date_joined']
+        protected_fields = ['id', 'is_authenticated',
+                            'is_staff', 'is_active', 'date_joined']
 
         # Convert camelCase to snake_case
         def camel_to_snake(camel_str):
@@ -1042,16 +1056,20 @@ class UpdateUserInfoView(APIView):
         for field, value in request.data.items():
             snake_case_field = camel_to_snake(field)
             if snake_case_field in protected_fields or snake_case_field.startswith('_'):
-                logger.info(f"Skipping protected or non-model field: {snake_case_field}")
+                logger.info(
+                    f"Skipping protected or non-model field: {snake_case_field}")
                 continue
 
             if hasattr(user, snake_case_field):
-                logger.info(f"Updating {snake_case_field} to {value} for user {user.username}")
+                logger.info(
+                    f"Updating {snake_case_field} to {value} for user {user.username}")
                 setattr(user, snake_case_field, value)
             else:
-                logger.warning(f"Field {snake_case_field} does not exist on CustomUser model")
+                logger.warning(
+                    f"Field {snake_case_field} does not exist on CustomUser model")
 
         user.save()
-        logger.info(f"User information updated successfully for user {user.username}")
+        logger.info(
+            f"User information updated successfully for user {user.username}")
 
         return Response({"message": "User information updated successfully"}, status=status.HTTP_200_OK)

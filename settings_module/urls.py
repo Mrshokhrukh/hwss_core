@@ -3,5 +3,6 @@ from .views import AppConfigListView, MenuItemsAPIView  # Import MenuItemsAPIVie
 
 urlpatterns = [
     path('appconfig/', AppConfigListView.as_view(), name='appconfig-list'),
-    path('menuItem/', MenuItemsAPIView.as_view(), name='menu-item-list'),  # Add this line
+    path('menuItem/', MenuItemsAPIView.as_view(),
+         name='menu-item-list'),  # Add this line
 ]

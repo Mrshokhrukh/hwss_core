@@ -67167,3 +67167,66 @@ Not Found: /api/v1/settings/menuItems
 Not Found: /favicon.ico
 Not Found: /favicon.ico
 "GET /favicon.ico HTTP/1.1" 404 2596
+Not Found: /
+"GET / HTTP/1.1" 404 2545
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2596
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2596
+Unauthorized: /api/v1/access/users/
+"GET /api/v1/access/users/ HTTP/1.1" 401 5105
+Unauthorized: /api/v1/access/users/
+"GET /api/v1/access/users/ HTTP/1.1" 401 5105
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2596
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Not Found: /favicon.ico
+Not Found: /media/media/profile_pictures/IMG_0800.JPG
+"GET /media/media/profile_pictures/IMG_0800.JPG HTTP/1.1" 404 2912
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 99
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 64
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 71
