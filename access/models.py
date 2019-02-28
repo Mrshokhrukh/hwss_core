@@ -54,6 +54,9 @@ class Agency(models.Model):
     agency_code = models.CharField(max_length=100, unique=True)
     agency_name = models.CharField(max_length=100)
     agency_parent = models.CharField(max_length=100, null=True, blank=True)
+    present_dzongkhag = models.CharField(max_length=100, null=True, blank=True)
+    present_gewog = models.CharField(max_length=100, null=True, blank=True)
+    present_village = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.agency_name
@@ -64,9 +67,6 @@ class UserAgency(models.Model):
         'CustomUser', on_delete=models.CASCADE, related_name='agency_details')
     agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
     user_code = models.CharField(max_length=100)
-    # ps_add_village = models.CharField(max_length=100, blank=True, null=True)
-    # ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
-    # ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
     guardian_occupation = models.CharField(
@@ -76,6 +76,7 @@ class UserAgency(models.Model):
         max_length=100, blank=True, null=True)
     user_role_agency = models.CharField(max_length=100)
     user_class = models.CharField(max_length=100, blank=True, null=True)
+    user_stream = models.CharField(max_length=100, blank=True, null=True)
     user_sub_class = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
