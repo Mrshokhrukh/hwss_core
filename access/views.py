@@ -349,11 +349,12 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     agency_data = {
         'agency_code': rcsc_data.get('agencyID', ''),
         'agency_name': rcsc_data.get('agencyName', ''),
+        'agency_parent': rcsc_data.get('parentAgency', ''),
     }
 
     if 'clinical counselor' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_CLINICAL_COUNSELOR
-    elif 'it officer' in rcsc_data.get('positionTitle', '').lower():
+    elif 'ict officer' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_ADMIN
     elif 'school_counselor' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_SCHOOL_COUNSELOR
@@ -365,9 +366,6 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     user_agency_data = {
         'user_role_agency': rcsc_data.get('positionTitle', ''),
         'user_code': rcsc_data.get('employeeNumber', ''),
-        # 'ps_add_village': rcsc_data.get('village', ''),
-        # 'ps_add_gewog': rcsc_data.get('gewog', ''),
-        # 'ps_add_dzongkhag': rcsc_data.get('dzongkhag', ''),
         'parent_occupation': rcsc_data.get('parentOccupation', ''),
         'guardian_name': rcsc_data.get('guardianName', ''),
         'guardian_occupation': rcsc_data.get('guardianOccupation', ''),
@@ -383,42 +381,48 @@ def map_rcsc_data_to_agency_model(rcsc_data):
 
 @permission_classes([AllowAny])
 def map_emis_data_to_agency_models(emis_data):
-    student_detail = emis_data.get('studentDetails', {}).get('studentDetail', [])[
-        0] if emis_data.get('studentDetails', {}).get('studentDetail') else {}
+    def roman_to_int(s):
+        roman_numerals = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+                          'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11, 'XII': 12}
+        return roman_numerals.get(s, 0)
 
-    if student_detail.get('guardian'):
-        current_living_with = 'Guardian'
-    else:
+    student_detail = emis_data.get('studentDetails', {}).get('studenDetail', [])[
+        0] if emis_data.get('studentDetails', {}).get('studenDetail') else {}
+    if student_detail:
+        current_living_with = 'Guardian' if student_detail.get(
+            'guardian') else 'Parents'
         father_name = student_detail.get('father', '')
         mother_name = student_detail.get('mother', '')
         if 'late' in father_name.lower() or 'lt' in father_name.lower():
             current_living_with = 'Mother'
         elif 'late' in mother_name.lower() or 'lt' in mother_name.lower():
             current_living_with = 'Father'
-        else:
-            current_living_with = 'Parents'
+        agency_data = {
+            'agency_code': student_detail.get('AgencyCode', ''),
+            'agency_name': student_detail.get('school', ''),
+            'present_dzongkhag': student_detail.get('present_dzongkhag', ''),
+            'present_gewog': student_detail.get('present_gewog', ''),
+            'present_village': student_detail.get('present_village', ''),
+        }
+        user_class = student_detail.get('class', '')
+        user_class_int = roman_to_int(
+            user_class.upper()) if user_class != 'PP' else user_class
+        user_agency_data = {
+            'user_code': student_detail.get('student_code', ''),
+            'parent_occupation': f"{student_detail.get('father_occupation', '')}/{student_detail.get('mother_occupation', '')}",
+            'guardian_name': student_detail.get('guardian', 'Not Provided'),
+            'guardian_occupation': student_detail.get('guardian_occupation', 'Not Provided'),
+            'current_living_with': current_living_with,
+            'user_role_agency': 'student',
+            'user_class': user_class_int,
+            'user_stream': student_detail.get('stream', ''),
+            'user_sub_class': student_detail.get('section', ''),
+            'parent_status': student_detail.get('MaritialStatus', ''),
+        }
+    else:
+        agency_data = {}
+        user_agency_data = {}
 
-    agency_data = {
-        'agency_code': student_detail.get('AgencyCode', ''),
-        'agency_name': student_detail.get('school', ''),
-    }
-
-    user_agency_data = {
-        'user_code': student_detail.get('student_code', ''),
-        # 'ps_add_village': student_detail.get('present_village', ''),
-        # 'ps_add_gewog': student_detail.get('present_geog', ''),
-        # 'ps_add_dzongkhag': student_detail.get('present_dzongkhag', ''),
-        'parent_occupation': f"{student_detail.get('father_occupation', '')}/{student_detail.get('mother_occupation', '')}",
-        'guardian_name': student_detail.get('guardian', ''),
-        'guardian_occupation': student_detail.get('guardian_occupation', ''),
-        'parent_status': '',
-        'current_living_with': current_living_with,
-        'user_role_agency': 'student',
-        'user_class': student_detail.get('class', ''),
-        'user_sub_class': student_detail.get('stream', '')
-    }
-
-    # Return the mapped data
     return agency_data, user_agency_data
 
 
@@ -430,13 +434,13 @@ def map_emis_staff_data_to_agency_models(emis_data):
     agency_data = {
         'agency_code': staff_detail.get('AgencyCode', ''),
         'agency_name': staff_detail.get('working_address', ''),
+        'present_dzongkhag': staff_detail.get('present_dzongkhag', ''),
+        'present_gewog': staff_detail.get('present_gewog', ''),
+        'present_village': staff_detail.get('present_village', ''),
     }
 
     user_agency_data = {
         'user_code': staff_detail.get('emp_id', ''),
-        # 'ps_add_village': staff_detail.get('present_village', ''),
-        # 'ps_add_gewog': staff_detail.get('present_gewog', ''),
-        # 'ps_add_dzongkhag': staff_detail.get('present_dzongkhag', ''),
         'parent_occupation': '',
         'guardian_name': '',
         'guardian_occupation': '',
@@ -669,6 +673,7 @@ class GetUserDetailsView(APIView):
 
             user = request.user
 
+            # Ensure to convert date and datetime fields to string (e.g., user.date_of_birth.isoformat() if user.date_of_birth else None)
             user_data = {
                 'id': user.id,
                 'username': user.username,
@@ -677,9 +682,9 @@ class GetUserDetailsView(APIView):
                 'identity_number': user.identity_number,
                 'nationality': user.nationality,
                 'first_name': user.first_name,
-                'middle_name': user.middle_name,
+                'middle_name': user.middle_name or '',
                 'last_name': user.last_name,
-                'date_of_birth': user.date_of_birth,
+                'date_of_birth': user.date_of_birth.isoformat() if user.date_of_birth else None,
                 'gender': user.gender,
                 'email': user.email,
                 'mob_number': user.mob_number,
@@ -688,12 +693,15 @@ class GetUserDetailsView(APIView):
                 'perm_add_village': user.perm_add_village,
                 'perm_add_gewog': user.perm_add_gewog,
                 'perm_add_dzongkhag': user.perm_add_dzongkhag,
+                'ps_add_village': user.ps_add_village,
+                'ps_add_gewog': user.ps_add_gewog,
+                'ps_add_dzongkhag': user.ps_add_dzongkhag,
                 'profile_picture': user.profile_picture.url if user.profile_picture else None,
-                'active_agency': None,
                 'is_gyalsung': user.is_gyalsung,
                 'academy_code': user.academy_code,
-                'date_joined': user.date_joined,
-                'role': user.role,
+                'date_joined': user.date_joined.isoformat() if user.date_joined else None,
+                # Use get_FOO_display() for ChoiceField to get the readable value
+                'role': user.get_role_display(),
                 'access_level': user.access_level,
             }
 
@@ -703,16 +711,17 @@ class GetUserDetailsView(APIView):
                     'id': user.active_agency.id,
                     'agency_code': user.active_agency.agency_code,
                     'agency_name': user.active_agency.agency_name,
+                    'agency_parent': user.active_agency.agency_parent,
+                    'present_dzongkhag': user.active_agency.present_dzongkhag,
+                    'present_gewog': user.active_agency.present_gewog,
+                    'present_village': user.active_agency.present_village,
                 }
 
             user_agency_data = {}
-            try:
-                user_agency = UserAgency.objects.get(user=user)
+            user_agency = UserAgency.objects.filter(user=user).first()
+            if user_agency:
                 user_agency_data = {
                     'user_code': user_agency.user_code,
-                    'ps_add_village': user_agency.ps_add_village,
-                    'ps_add_gewog': user_agency.ps_add_gewog,
-                    'ps_add_dzongkhag': user_agency.ps_add_dzongkhag,
                     'parent_occupation': user_agency.parent_occupation,
                     'guardian_name': user_agency.guardian_name,
                     'guardian_occupation': user_agency.guardian_occupation,
@@ -720,12 +729,16 @@ class GetUserDetailsView(APIView):
                     'current_living_with': user_agency.current_living_with,
                     'user_role_agency': user_agency.user_role_agency,
                     'user_class': user_agency.user_class,
+                    'user_stream': user_agency.user_stream,
                     'user_sub_class': user_agency.user_sub_class,
-                }
-            except UserAgency.DoesNotExist:
-                pass
+                },
 
-            return JsonResponse({"user": user_data, "agency": agency_data, "userAgency": user_agency_data}, status=status.HTTP_200_OK)
+            response_data = {"user": user_data,
+                             "agency": agency_data, "userAgency": user_agency_data}
+
+            logger.info(f"Returning response data: {json.dumps(response_data)}")
+
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(f"Error occurred: {str(e)}")
