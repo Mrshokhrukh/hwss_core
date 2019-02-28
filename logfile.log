@@ -67230,3 +67230,8 @@ Internal Server Error: /api/v1/access/register-user/
 "POST /api/v1/access/register-user/ HTTP/1.1" 500 64
 Internal Server Error: /api/v1/access/register-user/
 "POST /api/v1/access/register-user/ HTTP/1.1" 500 71
+Not Found: /
+"GET / HTTP/1.1" 404 2545
+Not Found: /favicon.ico
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 111

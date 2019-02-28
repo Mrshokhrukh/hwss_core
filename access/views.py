@@ -365,9 +365,9 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     user_agency_data = {
         'user_role_agency': rcsc_data.get('positionTitle', ''),
         'user_code': rcsc_data.get('employeeNumber', ''),
-        'ps_add_village': rcsc_data.get('village', ''),
-        'ps_add_gewog': rcsc_data.get('gewog', ''),
-        'ps_add_dzongkhag': rcsc_data.get('dzongkhag', ''),
+        # 'ps_add_village': rcsc_data.get('village', ''),
+        # 'ps_add_gewog': rcsc_data.get('gewog', ''),
+        # 'ps_add_dzongkhag': rcsc_data.get('dzongkhag', ''),
         'parent_occupation': rcsc_data.get('parentOccupation', ''),
         'guardian_name': rcsc_data.get('guardianName', ''),
         'guardian_occupation': rcsc_data.get('guardianOccupation', ''),
@@ -405,9 +405,9 @@ def map_emis_data_to_agency_models(emis_data):
 
     user_agency_data = {
         'user_code': student_detail.get('student_code', ''),
-        'ps_add_village': student_detail.get('present_village', ''),
-        'ps_add_gewog': student_detail.get('present_geog', ''),
-        'ps_add_dzongkhag': student_detail.get('present_dzongkhag', ''),
+        # 'ps_add_village': student_detail.get('present_village', ''),
+        # 'ps_add_gewog': student_detail.get('present_geog', ''),
+        # 'ps_add_dzongkhag': student_detail.get('present_dzongkhag', ''),
         'parent_occupation': f"{student_detail.get('father_occupation', '')}/{student_detail.get('mother_occupation', '')}",
         'guardian_name': student_detail.get('guardian', ''),
         'guardian_occupation': student_detail.get('guardian_occupation', ''),
@@ -434,9 +434,9 @@ def map_emis_staff_data_to_agency_models(emis_data):
 
     user_agency_data = {
         'user_code': staff_detail.get('emp_id', ''),
-        'ps_add_village': staff_detail.get('present_village', ''),
-        'ps_add_gewog': staff_detail.get('present_gewog', ''),
-        'ps_add_dzongkhag': staff_detail.get('present_dzongkhag', ''),
+        # 'ps_add_village': staff_detail.get('present_village', ''),
+        # 'ps_add_gewog': staff_detail.get('present_gewog', ''),
+        # 'ps_add_dzongkhag': staff_detail.get('present_dzongkhag', ''),
         'parent_occupation': '',
         'guardian_name': '',
         'guardian_occupation': '',
