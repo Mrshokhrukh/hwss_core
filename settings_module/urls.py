@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AppConfigListView, MenuItemsAPIView  # Import MenuItemsAPIView
+from .views import AppConfigListView, MenuItemsAPIView
 
 urlpatterns = [
     path('appconfig/', AppConfigListView.as_view(), name='appconfig-list'),
