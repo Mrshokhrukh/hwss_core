@@ -1,27 +1,33 @@
 from django.contrib import admin
-from .models import Submission, Diagnosis
+from .models import UserSubmission, TestType, QuestionSet, Submission, Diagnosis
 
-@admin.register(Submission)
+class SubmissionInline(admin.StackedInline):
+    model = Submission
+    extra = 0
+    readonly_fields = ['created_at']
+    can_delete = False
+
+class QuestionSetInline(admin.StackedInline):
+    model = QuestionSet
+    extra = 0
+
+class TestTypeInline(admin.StackedInline):
+    model = TestType
+    extra = 0
+
+class UserSubmissionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'created_at']
+    search_fields = ['user__username']
+    readonly_fields = ['created_at']
+    inlines = [SubmissionInline, QuestionSetInline, TestTypeInline]
+
+admin.site.register(UserSubmission, UserSubmissionAdmin)
+
+
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ('test_type_name', 'question_set_name', 'user', 'created_at')
-    search_fields = ('test_type_name', 'question_set_name', 'user__username')
-    list_filter = ('test_type_name', 'question_set_name', 'created_at')  # Corrected 'list_filter'
-    readonly_fields = ('created_at',)  # Corrected 'readonly_fields'
+    list_display = ['user_submission', 'question', 'answer', 'diagnosis', 'substance', 'specify', 'score', 'question_set', 'created_at']
+    search_fields = ['user_submission__user__username', 'question', 'answer', 'diagnosis', 'substance', 'specify', 'question_set__name']
+    readonly_fields = ['created_at']
+    list_filter = ['user_submission__user']
 
-    def save_model(self, request, obj, form, change):
-        if not obj.pk:
-            obj.user = request.user
-        super().save_model(request, obj, form, change)
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if not request.user.is_superuser:
-            qs = qs.filter(user=request.user)
-        return qs
-
-
-@admin.register(Diagnosis)
-class DiagnosisAdmin(admin.ModelAdmin):
-    list_display = ('user', 'gad_diagnosis', 'phq_diagnosis', 'assist_diagnosis')
-    search_fields = ('user__username',)
-    list_filter = ('gad_diagnosis', 'phq_diagnosis', 'assist_diagnosis')
+admin.site.register(Submission, SubmissionAdmin)
