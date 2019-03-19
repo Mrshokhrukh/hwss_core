@@ -1,0 +1,15 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools %}
+  {{ block.super }}
+  {% if show_filters %}
+    <div style="margin-top: 20px; display: flex; align-items: center;">
+      <h2 style="margin-right: 20px;">Filters:</h2>
+      {% for spec in cl.filter_specs %}
+        <div style="margin-right: 20px;">
+          {% admin_list_filter cl spec %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}
