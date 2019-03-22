@@ -76864,3 +76864,54 @@ Not Found: /api/v1/measurement/get-assisnt-measurement/
 "GET /api/v1/measurement/get-assisnt-measurement/ HTTP/1.1" 404 3538
 Not Found: /favicon.ico
 Not Found: /favicon.ico
+Not Found: /favicon.ico
+Internal Server Error: /api/v1/measurement/submit-screening/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\measurement\views.py", line 49, in save_submission
+    test_type, _ = TestType.objects.get_or_create(name=test_type_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 946, in get_or_create
+    return self.get(**kwargs), False
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 650, in get
+    raise self.model.MultipleObjectsReturned(
+measurement.models.TestType.MultipleObjectsReturned: get() returned more than one TestType -- it returned 2!
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 500 101887
+Internal Server Error: /api/v1/measurement/submit-screening/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\measurement\views.py", line 49, in save_submission
+    test_type, _ = TestType.objects.get_or_create(name=test_type_name)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 946, in get_or_create
+    return self.get(**kwargs), False
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 650, in get
+    raise self.model.MultipleObjectsReturned(
+measurement.models.TestType.MultipleObjectsReturned: get() returned more than one TestType -- it returned 2!
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 500 101887
+Bad Request: /api/v1/measurement/submit-screening/
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
