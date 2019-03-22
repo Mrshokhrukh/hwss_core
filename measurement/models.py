@@ -38,8 +38,8 @@ class Submission(models.Model):
     question = models.TextField()
     answer = models.TextField()
     score = models.IntegerField(null=True, blank=True)
-    substance = models.CharField(max_length=100)  # Add substance field
-    specify = models.CharField(max_length=100)  # Add specify field
+    substance = models.CharField(max_length=100)
+    specify = models.CharField(max_length=100) 
     diagnosis = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -118,7 +118,7 @@ class Measurement(models.Model):
     gad_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('severe', 'Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
     gad_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
+        ('red', 'Red'), ('yellow', 'Yellow'), ('blue', 'Blue'), ('green', 'Green')])
     phq_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('severe', 'Severe'), ('moderately severe', 'Moderately Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
     phq_flag = models.CharField(max_length=10, blank=True, null=True, choices=[

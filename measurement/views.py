@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.http import JsonResponse
+from rest_framework.response import Response
 import json
 from .models import CustomUser, UserSubmission, TestType, QuestionSet, Submission, Measurement, MeasurementAssist
 from django.views.decorators.csrf import csrf_exempt
@@ -7,9 +8,11 @@ import datetime
 from django.db.models import ObjectDoesNotExist
 import logging
 import re
+from itertools import groupby
+from operator import itemgetter
 from collections import defaultdict
 from rest_framework import generics
-from .serializers import MeasurementSerializer, MeasurementAssistSerializer
+from .serializers import CustomUserSerializer, MeasurementSerializer, MeasurementAssistSerializer, SubmissionSerializer, TestTypeSerializer, UserSubmissionSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import generics, status, permissions
@@ -102,13 +105,13 @@ def save_submission(request):
                             )
 
             logger.info('Submissions saved successfully')
-            exec_measurement(user, user_submission)  # Pass user_submission object to exec_measurement
+            # Pass user_submission object to exec_measurement
+            exec_measurement(user, user_submission)
             return JsonResponse({'message': 'Submissions saved successfully'}, status=201)
 
     else:
         logger.error('Only POST requests are allowed')
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
-
 
 
 def calculate_score(submission, set_name):
@@ -403,7 +406,8 @@ def process_substance_measurement(user, age, user_submission):
         if submission.substance:
             substance_scores[submission.substance].append(submission.score)
             if submission.score is None:
-                null_score_substances.append(submission.substance)  # Add substance with NULL score to the list
+                # Add substance with NULL score to the list
+                null_score_substances.append(submission.substance)
 
     repeated_substances = {substance: scores for substance,
                            scores in substance_scores.items() if len(scores) > 1}
@@ -419,14 +423,15 @@ def process_substance_measurement(user, age, user_submission):
     else:
         other_name = None  # If no NULL score substances, set other_name to None
 
-    logger.info('Substances with NULL score: %s', null_score_substances)  # Print substances with NULL score
+    # Print substances with NULL score
+    logger.info('Substances with NULL score: %s', null_score_substances)
 
     substance_risk_levels = calculate_substance_risk(age, substance_scores)
     logger.info('Substance risk levels: %s', substance_risk_levels)
 
     measurement_assist, created = MeasurementAssist.objects.get_or_create(
         user=user,
-        user_submission=user_submission    
+        user_submission=user_submission
     )
 
     measurement_assist.other_name = other_name  # Update other_name field
@@ -454,14 +459,144 @@ def process_substance_measurement(user, age, user_submission):
             'Measurement assist updated and old record overridden successfully')
 
 
-
-
 class MeasurementListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
 
+    def list(self, request, *args, **kwargs):
+        # Default return method with user details
+        return self.get_default_format()
+
+    def get_default_format(self):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Fetch all measurements
+        measurements = MeasurementSerializer(queryset, many=True).data
+
+        # Include custom user details
+        user_ids = queryset.values_list('user_id', flat=True).distinct()
+        users = CustomUser.objects.filter(id__in=user_ids)
+        user_details = CustomUserSerializer(users, many=True).data
+
+        # Pair each measurement with its respective user
+        paired_data = []
+        for measurement, user_detail in zip(measurements, user_details):
+            paired_data.append({
+                'measurement': measurement,
+                'user_details': user_detail
+            })
+
+        return Response(paired_data)
+
+
 class MeasurementAssistListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = MeasurementAssist.objects.all()
     serializer_class = MeasurementAssistSerializer
+
+    def list(self, request, *args, **kwargs):
+        # Default return method with user details
+        return self.get_default_format()
+
+    def get_default_format(self):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Fetch all measurement assists
+        measurement_assists = MeasurementAssistSerializer(queryset, many=True).data
+
+        # Include custom user details
+        user_ids = queryset.values_list('user_id', flat=True).distinct()
+        users = CustomUser.objects.filter(id__in=user_ids)
+        user_details = CustomUserSerializer(users, many=True).data
+
+        # Pair each measurement assist with its respective user
+        paired_data = []
+        for assist, user_detail in zip(measurement_assists, user_details):
+            paired_data.append({
+                'measurement_assist': assist,
+                'user_details': user_detail
+            })
+
+        return Response(paired_data)
+
+
+class SubmissionListView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    queryset = Submission.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        # Fetch query parameters from the request
+        user_id = self.request.query_params.get('user_id')
+        user_submission_id = self.request.query_params.get(
+            'user_submission_id')
+
+        # If parameters are provided, return submissions based on the parameters
+        if user_id or user_submission_id:
+            return self.get_filtered_submissions(user_id, user_submission_id)
+        else:
+            # If no parameters are provided, return the default format with user details
+            return self.get_default_format()
+
+    def get_filtered_submissions(self, user_id, user_submission_id):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Apply filters if provided in the request
+        if user_id:
+            queryset = queryset.filter(user_submission__user_id=user_id)
+        if user_submission_id:
+            queryset = queryset.filter(user_submission_id=user_submission_id)
+
+        # Serialize the queryset
+        serializer = SubmissionSerializer(queryset, many=True)
+
+        # Fetch user IDs from user_submissions
+        user_submission_ids = queryset.values_list(
+            'user_submission__user_id', flat=True).distinct()
+
+        # Filter CustomUser queryset based on user IDs from user_submissions
+        users = CustomUser.objects.filter(id__in=user_submission_ids)
+        user_details = CustomUserSerializer(users, many=True).data
+
+        # Combine submissions and user details into a single dictionary
+        data = {
+            'user_details': user_details,
+            'submissions': serializer.data,
+        }
+
+        return Response(data)
+
+    def get_default_format(self):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Fetch all test types
+        test_types = TestTypeSerializer(TestType.objects.all(), many=True).data
+
+        # Fetch all user submissions
+        user_submissions = UserSubmissionSerializer(
+            UserSubmission.objects.all(), many=True).data
+
+        # Include custom user details
+        user_submission_ids = UserSubmission.objects.values_list(
+            'user_id', flat=True).distinct()
+        users = CustomUser.objects.filter(id__in=user_submission_ids)
+        user_details = CustomUserSerializer(users, many=True).data
+
+        # Group submissions by user_submission
+        submissions = {}
+        for submission in queryset:
+            user_submission_id = submission.user_submission_id
+            if user_submission_id not in submissions:
+                submissions[user_submission_id] = []
+            submissions[user_submission_id].append(
+                SubmissionSerializer(submission).data)
+
+        # Combine all data into a single dictionary
+        data = {
+            'test_types': test_types,
+            'user_submissions': user_submissions,
+            'user_details': user_details,  # Include user details
+            'submissions': submissions,
+        }
+
+        return Response(data)

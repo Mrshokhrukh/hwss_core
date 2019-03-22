@@ -125,11 +125,10 @@ DATABASES = {
         'NAME': 'hwss_core',
         'USER': 'root',
         'PASSWORD': 'password',
-        'HOST': 'localhost',   
-        'PORT': '3306',        
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
-
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -150,7 +149,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Thimphu"
 
 USE_I18N = True
 
@@ -202,7 +201,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 
 ASGI_APPLICATION = 'hwss_core.asgi.application'
 
