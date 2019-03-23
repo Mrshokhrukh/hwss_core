@@ -77097,3 +77097,17 @@ Internal Server Error: /api/v1/access/register-counselor-user/
 "POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
 Internal Server Error: /api/v1/access/register-counselor-user/
 "POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 88
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 88
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 88
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 88
