@@ -28,6 +28,7 @@ from requests.exceptions import RequestException
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 from django.middleware.csrf import get_token
@@ -48,7 +49,7 @@ from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_mod
 from django.contrib.auth.tokens import default_token_generator
 
 from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import QueryDict
 from . import models
 
@@ -523,6 +524,146 @@ def register_user(request):
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def registerCounselorUser(request):
+    try:
+        print("Received request to register counselor user.")
+
+        # Extract data from request
+        user_data = request.data.get('userData', {})
+        agency_data = request.data.get('agencyData', {})
+        user_agency_data = request.data.get('userAgencyData', {})
+
+        # Get clientFullName from user_data, default to empty string if not present
+        full_name = user_data.get('clientFullName', '')
+
+        # Split the full name into first, middle, and last names
+        if full_name:
+            name_parts = full_name.split()
+            if len(name_parts) == 1:
+                first_name, middle_names, last_name = name_parts[0], '', ''
+            elif len(name_parts) == 2:
+                first_name, last_name = name_parts
+                middle_names = ''
+            else:
+                first_name, *middle_names, last_name = name_parts
+        else:
+            first_name, middle_names, last_name = '', '', ''
+
+        # Begin a transaction to ensure atomicity
+        with transaction.atomic():
+            # Check if the agency exists, if not, create it
+            agency_code = agency_data.get('agency_code')
+            agency, created = Agency.objects.get_or_create(
+                agency_code=agency_code, defaults=agency_data)
+
+            # Check if the user already exists based on some criteria (e.g., username)
+            existing_user = CustomUser.objects.filter(
+                identity_number=user_data.get('CID')).first()
+
+            if existing_user:
+                # User exists, ask for confirmation
+                confirm = request.data.get('confirmation', False)
+
+                if confirm:
+                    # Proceed with existing user data
+                    user = existing_user
+                    response_data = {'userId': user.id,
+                                     'message': 'Existing user confirmed.'}
+                    return Response(response_data, status=status.HTTP_201_CREATED)
+                else:
+                    # User opted not to proceed with existing data, continue with registration
+                    user = CustomUser.objects.create_user(
+                        username=user_data.get('username'),
+                        email=user_data.get('email'),
+                        identity_number=user_data.get('CID'),
+                        first_name=first_name,
+                        middle_name=' '.join(middle_names),
+                        last_name=last_name,
+                        date_of_birth=user_data.get('DOB'),
+                        gender=user_data.get('gender'),
+                        mob_number=user_data.get('phoneNumber'),
+                        perm_add_village=user_data.get('currentAddress'),
+                        # Assuming gewog is part of the address
+                        perm_add_gewog=user_data.get('currentAddress'),
+                        perm_add_dzongkhag=user_data.get('dzongkhag'),
+                        nationality='Bhutanese',
+                        ps_add_village=user_data.get('currentAddress'),
+                        # Assuming gewog is part of the address
+                        ps_add_gewog=user_data.get('currentAddress'),
+                        ps_add_dzongkhag=user_data.get('dzongkhag'),
+                        role='student'
+                    )
+            else:
+                # User does not exist, proceed with registration
+                user = CustomUser.objects.create_user(
+                    username=user_data.get('username'),
+                    email=user_data.get('email'),
+                    identity_number=user_data.get('CID'),
+                    first_name=first_name,
+                    middle_name=' '.join(middle_names),
+                    last_name=last_name,
+                    date_of_birth=user_data.get('DOB'),
+                    gender=user_data.get('gender'),
+                    mob_number=user_data.get('phoneNumber'),
+                    perm_add_village=user_data.get('currentAddress'),
+                    # Assuming gewog is part of the address
+                    perm_add_gewog=user_data.get('currentAddress'),
+                    perm_add_dzongkhag=user_data.get('dzongkhag'),
+                    nationality='Bhutanese',
+                    ps_add_village=user_data.get('currentAddress'),
+                    # Assuming gewog is part of the address
+                    ps_add_gewog=user_data.get('currentAddress'),
+                    ps_add_dzongkhag=user_data.get('dzongkhag'),
+                    role='student'
+                )
+
+            # Create the UserAgency link
+            user_agency_data['user'] = user
+            user_agency_data['agency'] = agency
+            UserAgency.objects.create(**user_agency_data)
+
+            response_data = {'userId': user.id,
+                             'message': 'Counselor user registered successfully.'}
+            return Response(response_data, status=status.HTTP_201_CREATED)
+
+    except IntegrityError as e:
+        print(f"Database Integrity Error: {str(e)}")
+        traceback.print_exc()
+        error_message = str(e)
+        response_data = {'error': error_message}
+
+        # Check if the error is due to duplicate entry
+        if 'duplicate entry' in error_message.lower():
+            confirm = request.data.get('confirmation', False)
+
+            if confirm:
+                # Proceed with existing user data
+                user = existing_user
+                response_data = {'userId': user.id,
+                                 'message': 'Existing user confirmed.'}
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                # User opted not to proceed with existing data, return error
+                return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            # Other integrity errors, return 500 Internal Server Error
+            print(f"Response data: {response_data}")
+            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception as e:
+        # Handle other exceptions
+        print(f"Error registering counselor user: {str(e)}")
+        traceback.print_exc()
+        error_message = str(e)
+        response_data = {'error': error_message}
+        print(f"Response data: {response_data}")
+
+        return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class UserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -736,7 +877,8 @@ class GetUserDetailsView(APIView):
             response_data = {"user": user_data,
                              "agency": agency_data, "userAgency": user_agency_data}
 
-            logger.info(f"Returning response data: {json.dumps(response_data)}")
+            logger.info(
+                f"Returning response data: {json.dumps(response_data)}")
 
             return JsonResponse(response_data, status=status.HTTP_200_OK)
 

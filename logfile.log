@@ -76915,3 +76915,185 @@ measurement.models.TestType.MultipleObjectsReturned: get() returned more than on
 "POST /api/v1/measurement/submit-screening/ HTTP/1.1" 500 101887
 Bad Request: /api/v1/measurement/submit-screening/
 "POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 68
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 43
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 42
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 42
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 42
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 42
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 42
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 63
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 63
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 70
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.IntegrityError: (1062, "Duplicate entry '33' for key 'access_customuser.identity_number'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 561, in registerCounselorUser
+    user = CustomUser.objects.create_user(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\models.py", line 31, in create_user
+    user.save(using=self._db)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\auth\base_user.py", line 77, in save
+    super().save(*args, **kwargs)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.IntegrityError: (1062, "Duplicate entry '33' for key 'access_customuser.identity_number'")
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 594, in registerCounselorUser
+    user_id = CustomUser.objects.get(identity_number=user_data.get('identity_number')).id
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 647, in get
+    raise self.model.DoesNotExist(
+access.models.CustomUser.DoesNotExist: CustomUser matching query does not exist.
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 272154
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 593
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 87
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 593
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 91
+Bad Request: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 400 91
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 35
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 593
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 611
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 611
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
+Internal Server Error: /api/v1/access/register-counselor-user/
+"POST /api/v1/access/register-counselor-user/ HTTP/1.1" 500 88
