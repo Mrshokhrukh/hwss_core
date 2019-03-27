@@ -503,7 +503,8 @@ class MeasurementAssistListView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
 
         # Fetch all measurement assists
-        measurement_assists = MeasurementAssistSerializer(queryset, many=True).data
+        measurement_assists = MeasurementAssistSerializer(
+            queryset, many=True).data
 
         # Include custom user details
         user_ids = queryset.values_list('user_id', flat=True).distinct()
@@ -600,3 +601,67 @@ class SubmissionListView(generics.ListAPIView):
         }
 
         return Response(data)
+
+
+class CombinedListView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def list(self, request, *args, **kwargs):
+        # Default return method with user details
+        return self.get_default_format()
+
+    def get_default_format(self):
+        # Fetch queryset based on serializer class
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if queryset is None:
+            return Response([])  # Return empty response if queryset is None
+
+        # Determine serializer class
+        serializer_class = self.get_serializer_class()
+
+        # Fetch all data
+        data = serializer_class(queryset, many=True).data
+
+        # Include custom user details
+        user_ids = queryset.values_list('user_id', flat=True).distinct()
+        users = CustomUser.objects.filter(id__in=user_ids)
+        user_details = CustomUserSerializer(users, many=True).data
+
+        # Pair each data with its respective user
+        paired_data = []
+        for item, user_detail in zip(data, user_details):
+            paired_data.append({
+                self.item_name: item,
+                'user_details': user_detail
+            })
+
+        return Response(paired_data)
+
+    def get_queryset(self):
+        # Define queryset based on view name
+        if 'measurement' in self.kwargs.get('view_name', ''):
+            return Measurement.objects.all()
+        elif 'assist' in self.kwargs.get('view_name', ''):
+            return MeasurementAssist.objects.all()
+        else:
+            return None
+
+    def get_serializer_class(self):
+        # Define serializer class based on view name
+        if 'measurement' in self.kwargs.get('view_name', ''):
+            return MeasurementSerializer
+        elif 'assist' in self.kwargs.get('view_name', ''):
+            return MeasurementAssistSerializer
+        else:
+            return None
+
+    @property
+    def item_name(self):
+        # Define the name for the item based on view name
+        if 'measurement' in self.kwargs.get('view_name', ''):
+            return 'measurement'
+        elif 'assist' in self.kwargs.get('view_name', ''):
+            return 'measurement_assist'
+        else:
+            return 'item'
