@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from .models import AppConfig, MenuItem
+from .models import AppConfig, MenuItem, Video
 
 
 class AppConfigAdmin(admin.ModelAdmin):
@@ -59,6 +59,11 @@ class MenuItemAdmin(admin.ModelAdmin):
         return ", ".join([role.name for role in obj.roles.all()])
     list_roles.short_description = 'Roles'
 
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ('title', 'topic', 'description', 'video_link', 'video_file')
+    search_fields = ['title', 'topic']
+    list_filter = ['topic']
 
+admin.site.register(Video, VideoAdmin)
 admin.site.register(MenuItem, MenuItemAdmin)
 admin.site.register(AppConfig, AppConfigAdmin)

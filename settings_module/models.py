@@ -1,34 +1,45 @@
 from django.db import models
 from django.utils.html import format_html
+from access.models import CustomUser
+
 
 class AppConfig(models.Model):
     login_logo = models.ImageField(upload_to='logos/')
     registration_logo = models.ImageField(upload_to='logos/')
-    landing_page_logo = models.ImageField(upload_to='logos/', null=True, blank=True)
-    landing_img_bg = models.ImageField(upload_to='logos/', null=True, blank=True)
+    landing_page_logo = models.ImageField(
+        upload_to='logos/', null=True, blank=True)
+    landing_img_bg = models.ImageField(
+        upload_to='logos/', null=True, blank=True)
     landing_tag_line = models.CharField(max_length=255, null=True, blank=True)
     dashboard_logo = models.ImageField(upload_to='logos/')
-    carousel_image_1 = models.ImageField(upload_to='carousel/', null=True, blank=True)
-    carousel_image_2 = models.ImageField(upload_to='carousel/', null=True, blank=True)
-    carousel_image_3 = models.ImageField(upload_to='carousel/', null=True, blank=True)
-    carousel_image_4 = models.ImageField(upload_to='carousel/', null=True, blank=True)
+    carousel_image_1 = models.ImageField(
+        upload_to='carousel/', null=True, blank=True)
+    carousel_image_2 = models.ImageField(
+        upload_to='carousel/', null=True, blank=True)
+    carousel_image_3 = models.ImageField(
+        upload_to='carousel/', null=True, blank=True)
+    carousel_image_4 = models.ImageField(
+        upload_to='carousel/', null=True, blank=True)
     app_name = models.CharField(max_length=100)
     tagline = models.CharField(max_length=255)
     helpline_number_1 = models.CharField(max_length=50)
     helpline_number_2 = models.CharField(max_length=50)
     response_service_logo = models.ImageField(upload_to='logos/')
     cluster_test_title = models.CharField(max_length=50, null=True, blank=True)
-    cluster_test_content = models.TextField(max_length=500, null=True, blank=True)
-    cluster_test_disclaimer = models.TextField(max_length=500, null=True, blank=True)
-    cluster_test_icon = models.ImageField(upload_to='icons/', null=True, blank=True)
+    cluster_test_content = models.TextField(
+        max_length=500, null=True, blank=True)
+    cluster_test_disclaimer = models.TextField(
+        max_length=500, null=True, blank=True)
+    cluster_test_icon = models.ImageField(
+        upload_to='icons/', null=True, blank=True)
     copyright_message = models.CharField(max_length=255, null=True, blank=True)
     google_play_link = models.CharField(max_length=255, null=True, blank=True)
-    apple_appstore_link = models.CharField(max_length=255, null=True, blank=True)
-
+    apple_appstore_link = models.CharField(
+        max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.app_name
-    
+
     def login_logo_preview(self):
         if self.login_logo:
             return format_html('<img src="{}" style="max-height: 100px; max-width: 150px;" />', self.login_logo.url)
@@ -74,3 +85,29 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Video(models.Model):
+    title = models.CharField(max_length=100)
+    thumbnail = models.ImageField(upload_to='thumbnails/')
+    topic = models.CharField(max_length=100)
+    description = models.TextField()
+    video_link = models.URLField(blank=True)
+    video_file = models.FileField(upload_to='videos/', blank=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Notification(models.Model):
+    sender = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='sent_notifications')
+    recipient = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='received_notifications')
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    # New field for read/unread status
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.message

@@ -114,17 +114,25 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
 
     ROLE_STUDENT = 'student'
+    ROLE_PUBLIC = 'general_public'
     ROLE_CLINICAL_COUNSELOR = 'clinical_counselor'
+    ROLE_GYALSUNG_COUNSELOR = 'gyalsung_counselor'
     ROLE_SCHOOL_COUNSELOR = 'school_counselor'
-    ROLE_ADMIN = 'admin'
+    ROLE_ADMIN = 'mh_admin'
     ROLE_RD_ADMIN = 'rd_admin'
+    ROLE_SUD_ADMIN = 'sud_admin'
+    ROLE_AAA_ADMIN = 'aaa_admin'
 
     ROLE_CHOICES = [
         (ROLE_STUDENT, 'Student'),
+        (ROLE_PUBLIC, 'General Public'),
         (ROLE_CLINICAL_COUNSELOR, 'Clinical Counselor'),
+        (ROLE_GYALSUNG_COUNSELOR, 'Gyalsung Counselor'),
         (ROLE_SCHOOL_COUNSELOR, 'School Counselor'),
-        (ROLE_ADMIN, 'Administrator'),
-        (ROLE_RD_ADMIN, 'R&D Administrator'),
+        (ROLE_ADMIN, 'Mental Health Care Admin'),
+        (ROLE_RD_ADMIN, 'R&D Admin'),
+        (ROLE_SUD_ADMIN, 'SUD Admin'),
+        (ROLE_AAA_ADMIN, 'AAA Admin'),
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'reporting',
     'monitoring',
     'settings_module',
+    'screening',
 
     # 3rd party apps
     'rest_framework',

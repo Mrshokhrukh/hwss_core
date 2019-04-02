@@ -8,6 +8,9 @@ urlpatterns = [
     path('api/v1/access/', include('access.urls')),
     path('api/v1/settings/', include('settings_module.urls')),
     path('api/v1/measurement/', include('measurement.urls')),
+    path('api/v1/monitoring/', include('monitoring.urls')),
+    path('api/v1/reporting/', include('reporting.urls')),
+    path('api/v1/screening/', include('screening.urls')),
 ]
 
 if settings.DEBUG:

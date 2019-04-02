@@ -3,6 +3,8 @@
 # ----------------------------------------------//
 
 from rest_framework import serializers
+
+from screening.models import CaseScreening
 from .models import CustomUser, Agency, UserAgency
 from django.contrib.auth.hashers import make_password
 from pathlib import Path
@@ -15,7 +17,7 @@ import requests
 import traceback
 from django.utils import timezone
 from django.db.models import F
-from datetime import datetime
+from datetime import date, datetime
 import token
 
 
@@ -535,68 +537,37 @@ def registerCounselorUser(request):
         agency_data = request.data.get('agencyData', {})
         user_agency_data = request.data.get('userAgencyData', {})
 
-        # Get clientFullName from user_data, default to empty string if not present
-        full_name = user_data.get('clientFullName', '')
-
-        # Split the full name into first, middle, and last names
-        if full_name:
-            name_parts = full_name.split()
-            if len(name_parts) == 1:
-                first_name, middle_names, last_name = name_parts[0], '', ''
-            elif len(name_parts) == 2:
-                first_name, last_name = name_parts
-                middle_names = ''
-            else:
-                first_name, *middle_names, last_name = name_parts
-        else:
-            first_name, middle_names, last_name = '', '', ''
-
         # Begin a transaction to ensure atomicity
         with transaction.atomic():
-            # Check if the agency exists, if not, create it
+
+            # Get clientFullName from user_data, default to empty string if not present
             agency_code = agency_data.get('agency_code')
             agency, created = Agency.objects.get_or_create(
                 agency_code=agency_code, defaults=agency_data)
 
-            # Check if the user already exists based on some criteria (e.g., username)
+            full_name = user_data.get('clientFullName', '')
+
+            # Split the full name into first, middle, and last names
+            if full_name:
+                name_parts = full_name.split()
+                if len(name_parts) == 1:
+                    first_name, middle_names, last_name = name_parts[0], '', ''
+                elif len(name_parts) == 2:
+                    first_name, last_name = name_parts
+                    middle_names = ''
+                else:
+                    first_name, *middle_names, last_name = name_parts
+            else:
+                first_name, middle_names, last_name = '', '', ''
+
+            # Check if the user already exists based on some criteria (e.g., CID)
             existing_user = CustomUser.objects.filter(
                 identity_number=user_data.get('CID')).first()
 
             if existing_user:
-                # User exists, ask for confirmation
-                confirm = request.data.get('confirmation', False)
-
-                if confirm:
-                    # Proceed with existing user data
-                    user = existing_user
-                    response_data = {'userId': user.id,
-                                     'message': 'Existing user confirmed.'}
-                    return Response(response_data, status=status.HTTP_201_CREATED)
-                else:
-                    # User opted not to proceed with existing data, continue with registration
-                    user = CustomUser.objects.create_user(
-                        username=user_data.get('username'),
-                        email=user_data.get('email'),
-                        identity_number=user_data.get('CID'),
-                        first_name=first_name,
-                        middle_name=' '.join(middle_names),
-                        last_name=last_name,
-                        date_of_birth=user_data.get('DOB'),
-                        gender=user_data.get('gender'),
-                        mob_number=user_data.get('phoneNumber'),
-                        perm_add_village=user_data.get('currentAddress'),
-                        # Assuming gewog is part of the address
-                        perm_add_gewog=user_data.get('currentAddress'),
-                        perm_add_dzongkhag=user_data.get('dzongkhag'),
-                        nationality='Bhutanese',
-                        ps_add_village=user_data.get('currentAddress'),
-                        # Assuming gewog is part of the address
-                        ps_add_gewog=user_data.get('currentAddress'),
-                        ps_add_dzongkhag=user_data.get('dzongkhag'),
-                        role='student'
-                    )
+                # User exists, proceed with existing data
+                user = existing_user
             else:
-                # User does not exist, proceed with registration
                 user = CustomUser.objects.create_user(
                     username=user_data.get('username'),
                     email=user_data.get('email'),
@@ -608,16 +579,24 @@ def registerCounselorUser(request):
                     gender=user_data.get('gender'),
                     mob_number=user_data.get('phoneNumber'),
                     perm_add_village=user_data.get('currentAddress'),
-                    # Assuming gewog is part of the address
                     perm_add_gewog=user_data.get('currentAddress'),
                     perm_add_dzongkhag=user_data.get('dzongkhag'),
                     nationality='Bhutanese',
                     ps_add_village=user_data.get('currentAddress'),
-                    # Assuming gewog is part of the address
                     ps_add_gewog=user_data.get('currentAddress'),
                     ps_add_dzongkhag=user_data.get('dzongkhag'),
                     role='student'
                 )
+
+            # Create the CaseScreening object
+            case_screening = CaseScreening.objects.create(
+                user=user,
+                case_name=user_data.get('caseName'),
+                purpose=user_data.get('purpose'),
+                dzongkhag=user_data.get('dzongkhag'),
+                counselor=user_data.get('counselorName'),
+                date=date.today()
+            )
 
             # Create the UserAgency link
             user_agency_data['user'] = user
@@ -628,33 +607,7 @@ def registerCounselorUser(request):
                              'message': 'Counselor user registered successfully.'}
             return Response(response_data, status=status.HTTP_201_CREATED)
 
-    except IntegrityError as e:
-        print(f"Database Integrity Error: {str(e)}")
-        traceback.print_exc()
-        error_message = str(e)
-        response_data = {'error': error_message}
-
-        # Check if the error is due to duplicate entry
-        if 'duplicate entry' in error_message.lower():
-            confirm = request.data.get('confirmation', False)
-
-            if confirm:
-                # Proceed with existing user data
-                user = existing_user
-                response_data = {'userId': user.id,
-                                 'message': 'Existing user confirmed.'}
-                return Response(response_data, status=status.HTTP_201_CREATED)
-            else:
-                # User opted not to proceed with existing data, return error
-                return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-        else:
-            # Other integrity errors, return 500 Internal Server Error
-            print(f"Response data: {response_data}")
-            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
     except Exception as e:
-        # Handle other exceptions
         print(f"Error registering counselor user: {str(e)}")
         traceback.print_exc()
         error_message = str(e)
@@ -842,7 +795,7 @@ class GetUserDetailsView(APIView):
                 'academy_code': user.academy_code,
                 'date_joined': user.date_joined.isoformat() if user.date_joined else None,
                 # Use get_FOO_display() for ChoiceField to get the readable value
-                'role': user.get_role_display(),
+                'role': user.role,
                 'access_level': user.access_level,
             }
 

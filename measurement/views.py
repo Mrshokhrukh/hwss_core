@@ -1,8 +1,9 @@
 from django.db import transaction
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 import json
-from .models import CustomUser, UserSubmission, TestType, QuestionSet, Submission, Measurement, MeasurementAssist
+from .models import ActiveUser, CustomUser, LifetimeUser, MeasurementSubstance, UserSubmission, TestType, QuestionSet, Submission, Measurement, MeasurementAssist
 from django.views.decorators.csrf import csrf_exempt
 import datetime
 from django.db.models import ObjectDoesNotExist
@@ -16,10 +17,110 @@ from .serializers import CustomUserSerializer, MeasurementSerializer, Measuremen
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import generics, status, permissions
+from monitoring.models import Rescreening
 
 from django.db.models import Count
 
 logger = logging.getLogger(__name__)
+
+moderate_threshold = 14
+
+# @csrf_exempt
+# def save_submission(request):
+#     if request.method == 'POST':
+#         try:
+#             logger.info('Received submission data: %s', request.body)
+#             submission_data = json.loads(request.body)
+#         except json.JSONDecodeError as e:
+#             logger.error('Error decoding JSON: %s', str(e))
+#             return JsonResponse({'error': 'Invalid JSON format in request body'}, status=400)
+
+#         user_id = submission_data.get('user')
+#         logger.debug('Extracted user ID: %s', user_id)
+
+#         if user_id is None:
+#             logger.error('User ID is required')
+#             return JsonResponse({'error': 'User ID is required'}, status=400)
+
+#         try:
+#             user = CustomUser.objects.get(pk=user_id)
+#         except CustomUser.DoesNotExist:
+#             logger.error('User with ID %s does not exist', user_id)
+#             return JsonResponse({'error': f'User with ID {user_id} does not exist'}, status=400)
+
+#         test_type_name = submission_data.get('test_type_name')
+#         test_type, _ = TestType.objects.get_or_create(name=test_type_name)
+
+#         with transaction.atomic():
+#             existing_submissions = UserSubmission.objects.filter(
+#                 user=user, test_type=test_type)
+
+#             if existing_submissions.exists():
+#                 if submission_data.get('confirmation'):
+#                     logger.info(
+#                         'User %s confirmed submission for test type %s again', user_id, test_type_name)
+#                     # Remove existing submissions for the same test type
+#                     existing_submissions.delete()
+#                 else:
+#                     logger.warning(
+#                         'User %s has already submitted for test type %s', user_id, test_type_name)
+#                     return JsonResponse({'error': f'User {user_id} has already submitted for test type {test_type_name}'}, status=400)
+
+#             user_submission, created = UserSubmission.objects.get_or_create(
+#                 user=user, test_type=test_type)
+
+#             if not created:
+#                 logger.warning(
+#                     'User %s has already submitted for test type %s', user_id, test_type_name)
+#                 return JsonResponse({'error': f'User {user_id} has already submitted for test type {test_type_name}'}, status=400)
+
+#             for key, value in submission_data.items():
+#                 # Check if the key represents a question
+#                 if key.endswith('_question_1'):
+#                     question_set_name = value['question_set_name']
+#                     question_set = None
+
+#                     # Iterate through all questions in the submission data
+#                     for question_key, question_value in submission_data.items():
+#                         if question_key.startswith(question_set_name):
+#                             question = question_value['question']
+#                             answer = question_value['answer']
+#                             score = question_value['score']
+#                             substance = question_value['substance']
+#                             specify = question_value['specify']
+#                             diagnosis = question_value['diagnosis']
+
+#                             # Create or get the question set
+#                             if question_set is None:
+#                                 question_set, _ = QuestionSet.objects.get_or_create(
+#                                     name=question_set_name, test_type=test_type, user_submission=user_submission)
+
+#                             # Create the submission for each question in the set
+#                             Submission.objects.create(
+#                                 user_submission=user_submission,
+#                                 question=question,
+#                                 answer=answer,
+#                                 score=score,
+#                                 substance=substance,
+#                                 specify=specify,
+#                                 diagnosis=diagnosis,
+#                                 question_set=question_set
+#                             )
+
+#             logger.info('Submissions saved successfully')
+#             # Pass user_submission object to exec_measurement
+#             user_submission_instance = exec_measurement(user, user_submission)
+
+#             # Check if any substance or measurement calculation flags for moderate and above
+#             if substance and score is not None and score >= moderate_threshold:
+#                 # If flags exist, save the record for monitoring rescreening
+#                 save_rescreening_record(user, user_submission_instance)
+
+#             return JsonResponse({'message': 'Submissions saved successfully'}, status=201)
+
+#     else:
+#         logger.error('Only POST requests are allowed')
+#         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 @csrf_exempt
@@ -71,47 +172,115 @@ def save_submission(request):
                     'User %s has already submitted for test type %s', user_id, test_type_name)
                 return JsonResponse({'error': f'User {user_id} has already submitted for test type {test_type_name}'}, status=400)
 
-            for key, value in submission_data.items():
-                # Check if the key represents a question
-                if key.endswith('_question_1'):
-                    question_set_name = value['question_set_name']
-                    question_set = None
+            # Check eligibility for LifetimeUser
+            if is_eligible_for_lifetime_user(submission_data):
+                register_lifetime_user(user, user_submission, submission_data)
+            else:
+                normal_saving_process(
+                    user, user_submission, submission_data, test_type)
 
-                    # Iterate through all questions in the submission data
-                    for question_key, question_value in submission_data.items():
-                        if question_key.startswith(question_set_name):
-                            question = question_value['question']
-                            answer = question_value['answer']
-                            score = question_value['score']
-                            substance = question_value['substance']
-                            specify = question_value['specify']
-                            diagnosis = question_value['diagnosis']
-
-                            # Create or get the question set
-                            if question_set is None:
-                                question_set, _ = QuestionSet.objects.get_or_create(
-                                    name=question_set_name, test_type=test_type, user_submission=user_submission)
-
-                            # Create the submission for each question in the set
-                            Submission.objects.create(
-                                user_submission=user_submission,
-                                question=question,
-                                answer=answer,
-                                score=score,
-                                substance=substance,
-                                specify=specify,
-                                diagnosis=diagnosis,
-                                question_set=question_set
-                            )
-
-            logger.info('Submissions saved successfully')
-            # Pass user_submission object to exec_measurement
-            exec_measurement(user, user_submission)
             return JsonResponse({'message': 'Submissions saved successfully'}, status=201)
 
     else:
         logger.error('Only POST requests are allowed')
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
+
+
+def is_eligible_for_lifetime_user(submission_data):
+    """
+    Checks if the user is eligible for LifetimeUser based on the specific question criteria.
+    """
+    all_never_used = all(value['score'] == 0 for key, value in submission_data.items(
+    ) if key.endswith('_question_1'))
+    return all_never_used
+
+
+def register_lifetime_user(user, user_submission, submission_data):
+    """
+    Registers the user as a LifetimeUser and saves the submission.
+    """
+    lifetime_user = LifetimeUser.objects.create(
+        user=user, user_submission=user_submission)
+    for key, value in submission_data.items():
+        if key.endswith('_question_1'):
+            substance_name = value['substance']
+            substance, _ = MeasurementAssist.objects.get_or_create(
+                name=substance_name)
+            lifetime_user.substances_used.add(substance)
+    logger.info('User registered as LifetimeUser')
+
+
+def normal_saving_process(user, user_submission, submission_data, test_type):
+    """
+    Proceeds with the normal saving process and registers the user as an ActiveUser.
+    """
+    for key, value in submission_data.items():
+        # Check if the key represents a question
+        if key.endswith('_question_1'):
+            question_set_name = value['question_set_name']
+            question_set = None
+
+            # Iterate through all questions in the submission data
+            for question_key, question_value in submission_data.items():
+                if question_key.startswith(question_set_name):
+                    question = question_value['question']
+                    answer = question_value['answer']
+                    score = question_value['score']
+                    substance = question_value['substance']
+                    specify = question_value['specify']
+                    diagnosis = question_value['diagnosis']
+
+                    # Create or get the question set
+                    if question_set is None:
+                        question_set, _ = QuestionSet.objects.get_or_create(
+                            name=question_set_name, test_type=test_type, user_submission=user_submission)
+
+                    # Create the submission for each question in the set
+                    Submission.objects.create(
+                        user_submission=user_submission,
+                        question=question,
+                        answer=answer,
+                        score=score,
+                        substance=substance,
+                        specify=specify,
+                        diagnosis=diagnosis,
+                        question_set=question_set
+                    )
+
+    logger.info('Submissions saved successfully')
+
+    # Pass user_submission object to exec_measurement
+    user_submission_instance = exec_measurement(user, user_submission)
+
+    # Check if any substance or measurement calculation flags for moderate and above
+    if substance and score is not None and score >= moderate_threshold:
+        # If flags exist, save the record for monitoring rescreening
+        save_rescreening_record(user, user_submission_instance)
+
+    # Register user as ActiveUser
+    if not LifetimeUser.objects.filter(user=user, user_submission=user_submission).exists():
+        active_user = ActiveUser.objects.create(
+            user=user, user_submission=user_submission)
+        logger.info('User registered as ActiveUser')
+
+
+def save_rescreening_record(user, user_submission):
+    """
+    Save a record for monitoring rescreening.
+    """
+    try:
+        submission_diagnosis = Submission.objects.get(
+            user_submission=user_submission, question_set__name='Diagnosis')
+        measurement = Measurement.objects.get(user_submission=user_submission)
+        measurement_assist = MeasurementAssist.objects.get(
+            user_submission=user_submission)
+        Rescreening.objects.create(user=user, submission_diagnosis=submission_diagnosis,
+                                   measurement=measurement, measurement_assist=measurement_assist)
+        logger.info(
+            'Rescreening record saved successfully for user: %s', user.username)
+    except ObjectDoesNotExist:
+        logger.error(
+            'Failed to save rescreening record for user: %s', user.username)
 
 
 def calculate_score(submission, set_name):
@@ -299,7 +468,9 @@ def calculate_substance_risk(age, substance_scores):
         score = max([substance_scores[s]
                     for s in matched_substances], default=0)
 
-        if age > 17 and score <= low_risk:
+        if substance.lower() == 'any drug' and score != 0:
+            risk_levels[substance] = 'high risk'
+        elif age > 17 and score <= low_risk:
             risk_levels[substance] = 'low risk'
         elif score >= high_risk:
             risk_levels[substance] = 'high risk'
@@ -435,6 +606,15 @@ def process_substance_measurement(user, age, user_submission):
     )
 
     measurement_assist.other_name = other_name  # Update other_name field
+
+    # Check for "Any Drug" substance and set its flag to "high risk" if the score is not null or 0
+    if 'Any Drug' in substance_risk_levels and substance_scores.get('Any Drug', 0) != 0:
+        measurement_assist.injection_measurement = 'high risk'
+        measurement_assist.injection_flag = 'red'
+    else:
+        measurement_assist.injection_measurement = 'no risk'
+        measurement_assist.injection_flag = 'green'
+
     measurement_assist.save()
 
     if created:
@@ -665,3 +845,73 @@ class CombinedListView(generics.ListAPIView):
             return 'measurement_assist'
         else:
             return 'item'
+
+
+def check_and_save_lifetime_user(request):
+    # Get all users
+    users = CustomUser.objects.all()
+
+    # Loop through each user
+    for user in users:
+        # Get the user's submissions under the ASSIST question_set
+        submissions = Submission.objects.filter(
+            user_submission__user=user,
+            question_set__name='ASSIST',
+            question='In the past three months, how often have you used?',
+            score=0
+        )
+
+        if submissions.exists():
+            # Get or create a user submission object
+            user_submission, created = UserSubmission.objects.get_or_create(user=user)
+
+            # Create or get the LifetimeUser instance for the user
+            lifetime_user, created = LifetimeUser.objects.get_or_create(user=user, user_submission=user_submission)
+
+            # Iterate through submissions and associate substances used with each occurrence
+            for submission in submissions:
+                for substance_name in submission.substance.split(', '):
+                    substance, created = MeasurementSubstance.objects.get_or_create(name=substance_name)
+                    if created:
+                        substance.save()
+                    lifetime_user.substances_used.add(substance)
+
+            # Save the LifetimeUser instance
+            lifetime_user.save()
+
+    return JsonResponse({'message': 'Lifetime users created successfully'})
+
+
+def get_lifetime_and_active_users(request):
+    # Retrieve all records from LifetimeUser and ActiveUser models
+    lifetime_users = LifetimeUser.objects.all()
+    active_users = ActiveUser.objects.all()
+
+    # Serialize the data
+    lifetime_users_data = [{'user_id': user.user_id, 'username': user.user.username, 'substances_used': [
+        substance.name for substance in user.substances_used.all()]} for user in lifetime_users]
+    active_users_data = [{'user_id': user.user_id, 'username': user.user.username, 'substances_used': [
+        substance.name for substance in user.substances_used.all()]} for user in active_users]
+
+    # Create response data
+    response_data = {
+        'lifetime_users': lifetime_users_data,
+        'active_users': active_users_data
+    }
+
+    return JsonResponse(response_data, safe=False)
+
+
+def main_composer(request):
+    # Get all users 
+    users = CustomUser.objects.all()
+
+    # Loop through each user
+    for user in users:
+        # Call the check_and_save_lifetime_user function for each user
+        check_and_save_lifetime_user(request)
+
+    # Once all users are processed, call the get_lifetime_and_active_users function
+    response = get_lifetime_and_active_users(request)
+
+    return response

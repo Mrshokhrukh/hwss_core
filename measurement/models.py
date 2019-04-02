@@ -13,7 +13,7 @@ class TestType(models.Model):
 class UserSubmission(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     test_type = models.ForeignKey(
-        TestType, on_delete=models.CASCADE, related_name='submissions')
+        TestType, on_delete=models.CASCADE, related_name='usersubmissions')
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -25,7 +25,7 @@ class QuestionSet(models.Model):
     name = models.CharField(max_length=100)
     test_type = models.ForeignKey(TestType, on_delete=models.CASCADE)
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE)
+        UserSubmission, on_delete=models.CASCADE, related_name='questionsets')
 
     def __str__(self):
         return self.name
@@ -34,12 +34,13 @@ class QuestionSet(models.Model):
 class Submission(models.Model):
     user_submission = models.ForeignKey(
         UserSubmission, on_delete=models.CASCADE, related_name='submissions')
-    question_set = models.ForeignKey(QuestionSet, on_delete=models.CASCADE)
+    question_set = models.ForeignKey(
+        QuestionSet, on_delete=models.CASCADE, related_name='submissions')
     question = models.TextField()
     answer = models.TextField()
     score = models.IntegerField(null=True, blank=True)
     substance = models.CharField(max_length=100)
-    specify = models.CharField(max_length=100) 
+    specify = models.CharField(max_length=100)
     diagnosis = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -61,7 +62,7 @@ class MeasurementAssist(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='measurementassist')
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE)
+        UserSubmission, on_delete=models.CASCADE, related_name='measurementassist')
     alcoholic_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
     alcoholic_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
@@ -98,11 +99,15 @@ class MeasurementAssist(models.Model):
         ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
     opioids_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
+    injection_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
+        ('high risk', 'High Risk')])
+    injection_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
+        ('red', 'Red')])
     other_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
     other_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    other_name = models.CharField(max_length=100, blank=True)
+    other_name = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(
         default=timezone.now)
 
@@ -114,7 +119,7 @@ class Measurement(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='measurement')
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE)
+        UserSubmission, on_delete=models.CASCADE, related_name='measurements')  # Add this field
     gad_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('severe', 'Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
     gad_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
@@ -140,3 +145,27 @@ class Measurement(models.Model):
 
     def __str__(self):
         return f'Measurement for {self.user.username}'
+
+
+class LifetimeUser(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name='lifetime_user')
+    user_submission = models.ForeignKey(
+        UserSubmission, on_delete=models.CASCADE, related_name='lifetime_users')
+    substances_used = models.ManyToManyField(
+        MeasurementSubstance, blank=True)
+
+    def __str__(self):
+        return f'Lifetime User: {self.user.username}'
+
+
+class ActiveUser(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name='active_user')
+    user_submission = models.ForeignKey(
+        UserSubmission, on_delete=models.CASCADE, related_name='active_users')
+    substances_used = models.ManyToManyField(
+        MeasurementSubstance, blank=True)
+
+    def __str__(self):
+        return f'Active User: {self.user.username}'

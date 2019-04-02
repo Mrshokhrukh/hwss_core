@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserSubmission, Submission, Measurement, MeasurementAssist, MeasurementSubstance, TestType, QuestionSet
+from .models import ActiveUser, LifetimeUser, UserSubmission, Submission, Measurement, MeasurementAssist, MeasurementSubstance, TestType, QuestionSet
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from access.models import CustomUser
 
@@ -36,5 +36,15 @@ class UserSubmissionAdmin(admin.ModelAdmin):
 
 class CustomUserAdmin(BaseUserAdmin):
     inlines = [MeasurementAssistInline, MeasurementInline]
+
+@admin.register(LifetimeUser)
+class LifetimeUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user_submission')
+    list_filter = ('user_submission',)
+
+@admin.register(ActiveUser)
+class ActiveUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user_submission')
+    list_filter = ('user_submission',)
 
 admin.site.site_header = "Your Admin Panel Header"
