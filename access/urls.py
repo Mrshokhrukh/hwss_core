@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, UpdateUserInfoView, registerCounselorUser
+from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, UpdateUserInfoView, registerCounselorUser, CustomTokenAuthentication
 from . import views
 
 urlpatterns = [
@@ -38,4 +38,5 @@ urlpatterns = [
     path('get-emis-staff-details/<str:emp_id>/<str:reg_email>/',
          views.get_emis_staff_details, name='get_emis_staff_details'),
     path('update-user-info/', UpdateUserInfoView.as_view(), name='update-user-info'),
+    path('authenticate-token/', CustomTokenAuthentication.as_view(), name='authenticate-token'),
 ]

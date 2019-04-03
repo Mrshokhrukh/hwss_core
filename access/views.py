@@ -53,7 +53,9 @@ from django.contrib.auth.tokens import default_token_generator
 from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
 from django.db import IntegrityError, transaction
 from django.http import QueryDict
-from . import models
+from .models import CustomUser
+from rest_framework import authentication
+from rest_framework.exceptions import AuthenticationFailed
 
 logger = logging.getLogger(__name__)
 
@@ -461,6 +463,31 @@ def map_emis_staff_data_to_agency_models(emis_data):
 # ------ AUTH FUNCTIONS PART OF THE VIEWS ------//
 # ----------------------------------------------//
 
+class CustomTokenAuthentication(APIView):
+    authentication_classes = [TokenAuthentication]
+
+    def post(self, request, format=None):  # Change to accept POST requests
+        auth_token = request.META.get('HTTP_AUTHORIZATION')
+
+        if not auth_token:
+            raise AuthenticationFailed('Invalid token header. No credentials provided.')
+
+        try:
+            token_type, token_key = auth_token.split(' ')
+        except ValueError:
+            raise AuthenticationFailed('Invalid token header format.')
+
+        if token_type.lower() != 'token':
+            raise AuthenticationFailed('Invalid token type. Only "Token" authentication is supported.')
+
+        try:
+            token = Token.objects.get(key=token_key)
+        except Token.DoesNotExist:
+            raise AuthenticationFailed('Invalid token.')
+
+        return Response({"valid": True})
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
@@ -725,7 +752,7 @@ class LoginView(APIView):
 
             user = authenticate(username=username, password=password)
 
-            if user:
+            if user is not None:
                 token, created = Token.objects.get_or_create(user=user)
 
                 user_role = user.role
@@ -738,9 +765,17 @@ class LoginView(APIView):
                 print('returning token is:', token.key)
                 return Response({"token": token.key, "user_role": user_role, "user_id": user_id}, status=status.HTTP_200_OK)
             else:
-                logger.warning(
-                    'Authentication failed for username: %s', username)
-                return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+                # Check if the user exists with the given username
+                if CustomUser.objects.filter(username=username).exists():
+                    # User exists, but the password is wrong
+                    logger.warning(
+                        'Authentication failed for username: %s - Wrong password', username)
+                    return Response({"error": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # User with the given username does not exist
+                    logger.warning(
+                        'User with username: %s not found', username)
+                    return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             logger.error('Exception during login: %s', str(e))

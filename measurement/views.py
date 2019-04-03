@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import generics, status, permissions
 from monitoring.models import Rescreening
-
+from django.contrib.auth import get_user_model
 from django.db.models import Count
 
 logger = logging.getLogger(__name__)
@@ -863,15 +863,18 @@ def check_and_save_lifetime_user(request):
 
         if submissions.exists():
             # Get or create a user submission object
-            user_submission, created = UserSubmission.objects.get_or_create(user=user)
+            user_submission, created = UserSubmission.objects.get_or_create(
+                user=user)
 
             # Create or get the LifetimeUser instance for the user
-            lifetime_user, created = LifetimeUser.objects.get_or_create(user=user, user_submission=user_submission)
+            lifetime_user, created = LifetimeUser.objects.get_or_create(
+                user=user, user_submission=user_submission)
 
             # Iterate through submissions and associate substances used with each occurrence
             for submission in submissions:
                 for substance_name in submission.substance.split(', '):
-                    substance, created = MeasurementSubstance.objects.get_or_create(name=substance_name)
+                    substance, created = MeasurementSubstance.objects.get_or_create(
+                        name=substance_name)
                     if created:
                         substance.save()
                     lifetime_user.substances_used.add(substance)
@@ -887,11 +890,27 @@ def get_lifetime_and_active_users(request):
     lifetime_users = LifetimeUser.objects.all()
     active_users = ActiveUser.objects.all()
 
+    # Get the CustomUser model
+    CustomUser = get_user_model()
+
     # Serialize the data
-    lifetime_users_data = [{'user_id': user.user_id, 'username': user.user.username, 'substances_used': [
-        substance.name for substance in user.substances_used.all()]} for user in lifetime_users]
-    active_users_data = [{'user_id': user.user_id, 'username': user.user.username, 'substances_used': [
-        substance.name for substance in user.substances_used.all()]} for user in active_users]
+    lifetime_users_data = [{'user_id': user.user_id, 'username': user.user.username,
+                            'full_name': f"{user.user.first_name} {user.user.last_name}",
+                            'age': calculate_age(user.user.date_of_birth),
+                            'sex': user.user.gender,
+                            'ps_dzongkhag': user.user.ps_add_dzongkhag,
+                            'cid': user.user.identity_number,
+                            'substances_used': [substance.name for substance in user.substances_used.all()]}
+                           for user in lifetime_users]
+
+    active_users_data = [{'user_id': user.user_id, 'username': user.user.username,
+                          'full_name': f"{user.user.first_name} {user.user.last_name}",
+                          'age': calculate_age(user.user.date_of_birth),
+                          'sex': user.user.gender,
+                          'ps_dzongkhag': user.user.ps_add_dzongkhag,
+                          'cid': user.user.identity_number,
+                          'substances_used': [substance.name for substance in user.substances_used.all()]}
+                         for user in active_users]
 
     # Create response data
     response_data = {
@@ -902,8 +921,13 @@ def get_lifetime_and_active_users(request):
     return JsonResponse(response_data, safe=False)
 
 
+def calculate_age(born):
+    today = datetime.date.today()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+
 def main_composer(request):
-    # Get all users 
+    # Get all users
     users = CustomUser.objects.all()
 
     # Loop through each user
