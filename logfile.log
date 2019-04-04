@@ -95578,3 +95578,15 @@ Not Found: /api/v1/access/password-reset-request/
 "POST /api/v1/access/password-reset-request/ HTTP/1.1" 404 28
 Bad Request: /api/v1/access/login/
 "POST /api/v1/access/login/ HTTP/1.1" 400 26
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 97
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 89
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 89
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 89
