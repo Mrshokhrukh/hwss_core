@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, UpdateUserInfoView, registerCounselorUser, CustomTokenAuthentication
+from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, update_user_info, registerCounselorUser, CustomTokenAuthentication
 from . import views
 
 urlpatterns = [
@@ -12,7 +12,8 @@ urlpatterns = [
     path('password-reset/<str:token>/',
          PasswordResetView.as_view(), name='password-reset'),
     path('register-user/', views.register_user, name='register_user'),
-    path('register-counselor-user/', views.registerCounselorUser, name='register_counselor_user'),
+    path('register-counselor-user/', views.registerCounselorUser,
+         name='register_counselor_user'),
     path('verify-pre-recorded-user/', views.verify_pre_recorded_user,
          name='verify_pre_recorded_user'),
     path('register-pre-recorded-user/', views. register_pre_recorded_user,
@@ -37,6 +38,8 @@ urlpatterns = [
          views.get_emis_student_details, name='get_emis_student_details'),
     path('get-emis-staff-details/<str:emp_id>/<str:reg_email>/',
          views.get_emis_staff_details, name='get_emis_staff_details'),
-    path('update-user-info/', UpdateUserInfoView.as_view(), name='update-user-info'),
-    path('authenticate-token/', CustomTokenAuthentication.as_view(), name='authenticate-token'),
+    path('update-user-info/', update_user_info, name='update_user_info'),
+    path('change-password/', change_password, name='change_password'),
+    path('authenticate-token/', CustomTokenAuthentication.as_view(),
+         name='authenticate-token'),
 ]

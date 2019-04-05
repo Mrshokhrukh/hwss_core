@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from .models import EventScreening
+from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -61,12 +62,11 @@ def create_event_screening(request):
 @permission_classes([AllowAny])
 def get_counselor_info(request, counselor_name):
     try:
-        events = EventScreening.objects.filter(counselor=counselor_name).order_by('-start_date')
+        # Get the last event for the counselor
+        latest_event = EventScreening.objects.filter(counselor=counselor_name).last()
 
-        if not events.exists():
+        if not latest_event:
             return JsonResponse({'message': 'Counselor information not available'}, status=200)
-
-        latest_event = events.first()
 
         counselor_info = {
             'event_name': latest_event.event_name,

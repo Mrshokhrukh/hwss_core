@@ -95590,3 +95590,27 @@ Internal Server Error: /api/v1/access/register-user/
 "POST /api/v1/access/register-user/ HTTP/1.1" 500 89
 Internal Server Error: /api/v1/access/register-user/
 "POST /api/v1/access/register-user/ HTTP/1.1" 500 89
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 97
+Bad Request: /api/v1/measurement/submit-screening/
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
+Not Found: /
+"GET / HTTP/1.1" 404 3016
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3067
+Not Found: /api/v1/access/change-password/
+"POST /api/v1/access/change-password/ HTTP/1.1" 404 7745
+Not Found: /api/v1/access/change-password/
+"POST /api/v1/access/change-password/ HTTP/1.1" 404 7745
+Unauthorized: /api/v1/access/change-password/
+"POST /api/v1/access/change-password/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/change-password/
+"POST /api/v1/access/change-password/ HTTP/1.1" 401 58
+Bad Request: /api/v1/access/change-password/
+"POST /api/v1/access/change-password/ HTTP/1.1" 400 42
+Bad Request: /api/v1/access/update-user-info/
+"POST /api/v1/access/update-user-info/ HTTP/1.1" 400 62
+Bad Request: /api/v1/access/update-user-info/
+"POST /api/v1/access/update-user-info/ HTTP/1.1" 400 62
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26

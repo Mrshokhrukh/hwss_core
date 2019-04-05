@@ -1175,44 +1175,78 @@ def user_logout(request):
     return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UpdateUserInfoView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
-
-    def post(self, request, *args, **kwargs):
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_user_info(request):
+    try:
+        # Get the authenticated user
         user = request.user
 
-        # Log the received data for debugging
-        logger.info(
-            f"Received update request for user {user.username}: {request.data}")
+        # Log the request data for debugging
+        logger.debug(f"Request data: {request.data}")
 
-        # List of fields that should not be updated directly
-        protected_fields = ['id', 'is_authenticated',
-                            'is_staff', 'is_active', 'date_joined']
+        # Update the user details based on the request data
+        user_fields = [
+            'first_name', 'last_name', 'email', 'mob_number', 'father_name', 'mother_name',
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
+        ]
+        for field in user_fields:
+            setattr(user, field, request.data.get(field, getattr(user, field)))
 
-        # Convert camelCase to snake_case
-        def camel_to_snake(camel_str):
-            return ''.join(['_' + c.lower() if c.isupper() else c for c in camel_str]).lstrip('_')
-
-        # Update user fields, skipping protected fields
-        for field, value in request.data.items():
-            snake_case_field = camel_to_snake(field)
-            if snake_case_field in protected_fields or snake_case_field.startswith('_'):
-                logger.info(
-                    f"Skipping protected or non-model field: {snake_case_field}")
-                continue
-
-            if hasattr(user, snake_case_field):
-                logger.info(
-                    f"Updating {snake_case_field} to {value} for user {user.username}")
-                setattr(user, snake_case_field, value)
-            else:
-                logger.warning(
-                    f"Field {snake_case_field} does not exist on CustomUser model")
-
+        # Save the updated user details
         user.save()
-        logger.info(
-            f"User information updated successfully for user {user.username}")
 
-        return Response({"message": "User information updated successfully"}, status=status.HTTP_200_OK)
+        # Update the UserAgency details if it exists
+        user_agency = getattr(user, 'agency_details', None)
+        if user_agency:
+            user_agency.parent_occupation = request.data.get('parent_occupation', user_agency.parent_occupation)
+            user_agency.guardian_name = request.data.get('guardian_name', user_agency.guardian_name)
+            user_agency.guardian_occupation = request.data.get('guardian_occupation', user_agency.guardian_occupation)
+            user_agency.parent_status = request.data.get('parent_status', user_agency.parent_status)
+            user_agency.current_living_with = request.data.get('current_living_with', user_agency.current_living_with)
+            user_agency.save()
+
+        # Log the successful update
+        logger.info(f"User details updated successfully for user ID: {user.id}")
+
+        # Return success response
+        return Response({'message': 'User details updated successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        # Log the error
+        logger.exception("Error updating user details")
+
+        # Return error response
+        return Response({'message': 'Failed to update user details. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST'])
+@csrf_exempt
+def change_password(request):
+    User = get_user_model()
+
+    # Retrieve user ID from authentication token
+    user_id = request.user.id
+
+    # Retrieve current password, new password, and confirm new password from request data
+    current_password = request.data.get('current_password')
+    new_password = request.data.get('new_password')
+    confirm_password = request.data.get('confirm_password')
+
+    # Check if new password matches the confirmation
+    if new_password != confirm_password:
+        return Response({'error': 'New password and confirm password do not match.'}, status=400)
+
+    # Retrieve the user object
+    user = User.objects.get(pk=user_id)
+
+    # Check if the current password provided matches the user's current password
+    if not user.check_password(current_password):
+        return Response({'error': 'Current password is incorrect.'}, status=400)
+
+    # Set the user's new password
+    user.set_password(new_password)
+    user.save()
+
+    return Response({'message': 'Password changed successfully.'}, status=200)
