@@ -75,24 +75,57 @@ class Referral(models.Model):
     referral_status = models.CharField(
         max_length=20, choices=REFERRAL_STATUS_CHOICES, default='Awaiting')
     referral_remarks = models.TextField(null=True, blank=True)
-    service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE, related_name='referrals', null=True, blank=True)
+    service_and_treatment = models.ForeignKey(
+        ServiceAndTreatment, on_delete=models.CASCADE, related_name='referrals', null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.referred_to:
             self.referred_to_name = f"{self.referred_to.first_name} {self.referred_to.middle_name} {self.referred_to.last_name}"
         super().save(*args, **kwargs)
 
+class Substance(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
 
 class Rescreening(models.Model):
-    date = models.DateField(default=timezone.now)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,)
-    submission_diagnosis = models.CharField(max_length=255)
-    measurement = models.JSONField()  
-    measurement_assist = models.JSONField()
-    service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE, related_name='rescreenings', null=True, blank=True)
-    
-    # New field to track rescreening count
-    rescreening_count = models.PositiveIntegerField(default=0)
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='rescreenings')
+    gad_data = models.JSONField(null=True, blank=True)
+    gad_score = models.IntegerField(null=True, blank=True)
+    gad_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of GAD score")
+    phq_data = models.JSONField(null=True, blank=True)
+    phq_score = models.IntegerField(null=True, blank=True)
+    phq_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of PHQ score")
+    ace_data = models.JSONField(null=True, blank=True)
+    ace_score = models.IntegerField(null=True, blank=True)
+    ace_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
+    school_env_data = models.JSONField(null=True, blank=True)
+    rescreened = models.BooleanField(default=False)
+    rescreening_count = models.IntegerField(default=0)
+    submission_date = models.DateTimeField(auto_now_add=True)
+    service_and_treatment = models.ForeignKey(
+        'ServiceAndTreatment', on_delete=models.SET_NULL, related_name='rescreenings', null=True, blank=True)
+    referral = models.ForeignKey(
+        'Referral', on_delete=models.SET_NULL, related_name='rescreenings', null=True, blank=True)
 
     def __str__(self):
         return f"Rescreening for {self.user.username}"
+
+
+class SubstanceRiskMeasurement(models.Model):
+    substance = models.ForeignKey(
+        Substance, on_delete=models.CASCADE, related_name='risk_measurements')
+    rescreening = models.ForeignKey(
+        Rescreening, on_delete=models.CASCADE, related_name='substance_risk_measurements')
+    measurement = models.FloatField(help_text="Measurement value for the substance")
+    risk_flag = models.CharField(max_length=250, help_text="Risk flag based on measurement")
+    total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  # Add a new field for total score
+
+    def __str__(self):
+        return f"Risk Measurement for {self.substance} in Rescreening for {self.rescreening.user.username}"

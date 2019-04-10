@@ -32,7 +32,7 @@ class QuestionSetInline(admin.StackedInline):
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(admin.ModelAdmin):
     inlines = [SubmissionInline, MeasurementInline, MeasurementAssistInline, QuestionSetInline]
-    list_display = ['user', 'created_at']
+    list_display = ['user', 'created_at', 'rescreened']
 
 class CustomUserAdmin(BaseUserAdmin):
     inlines = [MeasurementAssistInline, MeasurementInline]

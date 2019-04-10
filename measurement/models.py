@@ -13,8 +13,9 @@ class TestType(models.Model):
 class UserSubmission(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     test_type = models.ForeignKey(
-        TestType, on_delete=models.CASCADE, related_name='usersubmissions')
+        TestType, on_delete=models.CASCADE, related_name='usersubmission')
     created_at = models.DateTimeField(default=timezone.now)
+    rescreened = models.BooleanField(default=False)  # New field to track rescreening
 
     def __str__(self):
         unique_string = f'{self.user.username}_{self.test_type.name}_{self.created_at.strftime("%Y-%m-%d_%H")}'
@@ -25,7 +26,7 @@ class QuestionSet(models.Model):
     name = models.CharField(max_length=100)
     test_type = models.ForeignKey(TestType, on_delete=models.CASCADE)
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE, related_name='questionsets')
+        UserSubmission, on_delete=models.CASCADE, related_name='questionset')
 
     def __str__(self):
         return self.name
@@ -33,9 +34,9 @@ class QuestionSet(models.Model):
 
 class Submission(models.Model):
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE, related_name='submissions')
+        UserSubmission, on_delete=models.CASCADE, related_name='submission')
     question_set = models.ForeignKey(
-        QuestionSet, on_delete=models.CASCADE, related_name='submissions')
+        QuestionSet, on_delete=models.CASCADE, related_name='submission')
     question = models.TextField()
     answer = models.TextField()
     score = models.IntegerField(null=True, blank=True)
@@ -96,7 +97,7 @@ class MeasurementAssist(models.Model):
     hallucinogens_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
     opioids_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
+        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Ris,k')])
     opioids_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
     injection_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
@@ -119,7 +120,7 @@ class Measurement(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='measurement')
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE, related_name='measurements')  # Add this field
+        UserSubmission, on_delete=models.CASCADE, related_name='measurement')  # Add this field
     gad_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('severe', 'Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
     gad_flag = models.CharField(max_length=10, blank=True, null=True, choices=[

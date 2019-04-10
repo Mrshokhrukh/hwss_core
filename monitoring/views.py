@@ -1,187 +1,262 @@
-from datetime import datetime
+from datetime import date
 from django.http import JsonResponse
 from django.db.models import Q
-from measurement.models import Measurement, MeasurementAssist, UserSubmission
+from django.shortcuts import get_object_or_404
+from measurement.models import Measurement, MeasurementAssist, Submission, UserSubmission
 from django.views.decorators.csrf import csrf_exempt
-from access.models import CustomUser
-from .models import Rescreening, ServiceAndTreatment, Referral
+from access.models import CustomUser, UserAgency
+from .models import Rescreening, ServiceAndTreatment, Referral, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import json
+from django.views.decorators.http import require_GET
+from django.forms.models import model_to_dict
+from django.db import transaction
+from datetime import date
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
-def save_to_rescreening(request):
-    users = CustomUser.objects.all()
+def submit_rescreening(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('userId')
 
-    for user in users:
-        submissions = UserSubmission.objects.filter(user=user)
+        # Retrieve the CustomUser instance using the provided user_id
+        user = get_object_or_404(CustomUser, id=user_id)
 
-        for submission in submissions:
-            measurement_entry = Measurement.objects.filter(
-                Q(phq_flag='yellow') | Q(gad_flag='yellow'), user_submission=submission).first()
-            assist_entry = MeasurementAssist.objects.filter(
-                Q(alcoholic_flag='yellow') | Q(tobacco_flag='yellow') | Q(cannabis_flag='yellow') | Q(
-                    cocaine_flag='yellow') | Q(amphetamine_flag='yellow') | Q(inhalants_flag='yellow') | Q(
-                    sedatives_flag='yellow') | Q(hallucinogens_flag='yellow') | Q(opioids_flag='yellow') | Q(
-                    other_flag='yellow'), user_submission=submission).first()
+        # Calculate the age of the user
+        age = calculate_age(user.date_of_birth)
 
-            if measurement_entry or assist_entry:
-                submission_data = {
-                    'submission_id': submission.id,
-                    'submission_date': submission.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'diagnosis': submission.submissions.first().diagnosis if submission.submissions.exists() else None
+        assist_data_json = request.POST.get('assistRiskSeverity')  # Updated key to match the sent data
+        assist_data = json.loads(assist_data_json) if assist_data_json else {}
+
+        # Start transaction to ensure data consistency
+        with transaction.atomic():
+            # Create or update the Rescreening instance
+            rescreening, created = Rescreening.objects.update_or_create(
+                user=user,
+                defaults={
+                    'gad_data': request.POST.get('gadData', {}),
+                    'gad_score': json.loads(request.POST.get('gadData', '{}')).get('totalScore', 0),
+                    'phq_data': request.POST.get('phqData', {}),
+                    'phq_score': json.loads(request.POST.get('phqData', '{}')).get('totalScore', 0),
+                    'ace_data': request.POST.get('aceData', {}),
+                    'ace_score': json.loads(request.POST.get('aceData', '{}')).get('totalScore', 0),
+                    'school_env_data': request.POST.get('schoolEnvData', {}),
+                    'rescreened': True
                 }
+            )
 
-                measurement_data = {
-                    'phq_measurement': measurement_entry.phq_measurement if measurement_entry else None,
-                    'phq_flag': measurement_entry.phq_flag if measurement_entry else None,
-                    'gad_measurement': measurement_entry.gad_measurement if measurement_entry else None,
-                    'gad_flag': measurement_entry.gad_flag if measurement_entry else None,
-                }
+            # Save substance risk measurements
+            for substance, risk_level in assist_data.items():
+                # Extract total score and risk flag from the risk level string
+                total_score_str = risk_level.split()[1]  # Get the part after the space
+                total_score = float(total_score_str.strip('()'))  # Remove parentheses and convert to float
+                risk_flag = risk_level.split()[0]  # Get the part before the space
 
-                measurement_assist_data = {
-                    'alcoholic_measurement': assist_entry.alcoholic_measurement if assist_entry else None,
-                    'alcoholic_flag': assist_entry.alcoholic_flag if assist_entry else None,
-                    'tobacco_measurement': assist_entry.tobacco_measurement if assist_entry else None,
-                    'tobacco_flag': assist_entry.tobacco_flag if assist_entry else None,
-                    'cannabis_measurement': assist_entry.cannabis_measurement if assist_entry else None,
-                    'cannabis_flag': assist_entry.cannabis_flag if assist_entry else None,
-                    'cocaine_measurement': assist_entry.cocaine_measurement if assist_entry else None,
-                    'cocaine_flag': assist_entry.cocaine_flag if assist_entry else None,
-                    'amphetamine_measurement': assist_entry.amphetamine_measurement if assist_entry else None,
-                    'amphetamine_flag': assist_entry.amphetamine_flag if assist_entry else None,
-                    'inhalants_measurement': assist_entry.inhalants_measurement if assist_entry else None,
-                    'inhalants_flag': assist_entry.inhalants_flag if assist_entry else None,
-                    'sedatives_measurement': assist_entry.sedatives_measurement if assist_entry else None,
-                    'sedatives_flag': assist_entry.sedatives_flag if assist_entry else None,
-                    'hallucinogens_measurement': assist_entry.hallucinogens_measurement if assist_entry else None,
-                    'hallucinogens_flag': assist_entry.hallucinogens_flag if assist_entry else None,
-                    'opioids_measurement': assist_entry.opioids_measurement if assist_entry else None,
-                    'opioids_flag': assist_entry.opioids_flag if assist_entry else None,
-                    'injection_measurement': assist_entry.injection_measurement if assist_entry else None,
-                    'injection_flag': assist_entry.injection_flag if assist_entry else None,
-                    'other_measurement': assist_entry.other_measurement if assist_entry else None,
-                    'other_flag': assist_entry.other_flag if assist_entry else None,
-                }
+                # Create Substance object if it doesn't exist
+                substance_instance, _ = Substance.objects.get_or_create(name=substance)
+                SubstanceRiskMeasurement.objects.create(
+                    substance=substance_instance,
+                    rescreening=rescreening,
+                    measurement=total_score,
+                    risk_flag=risk_flag
+                )
 
-                # Check if a duplicate record exists in Rescreening
-                existing_rescreening = Rescreening.objects.filter(
-                    user=user, submission_diagnosis=submission_data['diagnosis']).exists()
+            # Set the rescreened field of the associated UserSubmission to True
+            user_submission = UserSubmission.objects.get(user=user)
+            user_submission.rescreened = True
+            user_submission.save()
 
-                # If no duplicate record, save data to Rescreening model
-                if not existing_rescreening:
-                    Rescreening.objects.create(
-                        user=user,
-                        submission_diagnosis=submission_data['diagnosis'],
-                        measurement=measurement_data,
-                        measurement_assist=measurement_assist_data
-                    )
-                logger.debug(
-                    f"Saved rescreening data for user: {user.username}, submission: {submission.id}")
+        if created:
+            message = 'Rescreening data saved successfully.'
+        else:
+            message = 'Rescreening data updated successfully.'
+
+        return JsonResponse({'message': message})
+
+    else:
+        return JsonResponse({'error': 'Only POST requests are allowed.'})
 
 
-@csrf_exempt
-def get_rescreening_records(request):
-    rescreening_records = Rescreening.objects.filter(rescreening_count=0)
-    
-    result = {}
+def get_non_green_flags(request):
+    rescreening_list = []
 
-    for record in rescreening_records:
-        user_data = {
-            'id': record.user.id,
-            'username': record.user.username,
-            'identity_number': record.user.identity_number,
-            'nationality': record.user.nationality,
-            'first_name': record.user.first_name,
-            'middle_name': record.user.middle_name,
-            'last_name': record.user.last_name,
-            'date_of_birth': record.user.date_of_birth.strftime('%Y-%m-%d'),
-            'gender': record.user.gender,
-            'email': record.user.email,
-            'mob_number': record.user.mob_number,
-            'father_name': record.user.father_name,
-            'mother_name': record.user.mother_name,
-            'active_agency': record.user.active_agency.agency_name if record.user.active_agency else None,
-            'ps_add_dzongkhag': record.user.ps_add_dzongkhag,
-            'is_gyalsung': record.user.is_gyalsung,
-            'role': record.user.role,
-        }
-
+    # Iterate over all UserSubmission instances
+    for submission in UserSubmission.objects.filter(rescreened=False):
+        # Initialize a dictionary to store data for the current submission
         submission_data = {
-            'diagnosis': record.submission_diagnosis,
-            'submission_date': record.date,
+            'submission_id': submission.id,
+            'flags': {},  # Initialize flags dictionary
+            'user_details': {},
+            'measurement_data': {},
+            'measurement_assist_data': {},
+            'user_agency_data': {},
+            'diagnosis': ''  # Initialize diagnosis field
         }
 
-        measurement_data = record.measurement
-        measurement_assist_data = record.measurement_assist
+        # Fetch Measurement and MeasurementAssist instances for the current submission
+        measurement = Measurement.objects.filter(
+            user_submission=submission).first()
+        measurement_assist = MeasurementAssist.objects.filter(
+            user_submission=submission).first()
 
-        result.setdefault(
-            record.user.id, {'user_data': user_data, 'submission_details': []})
-        result[record.user.id]['submission_details'].append({
-            'submission_data': submission_data,
-            'measurement_data': measurement_data,
-            'measurement_assist_data': measurement_assist_data
-        })
+        # Fetch Submission details for the submission
+        submission_details = Submission.objects.filter(
+            user_submission=submission).first()
+        if submission_details:
+            submission_data['diagnosis'] = submission_details.diagnosis
+            submission_data['created_at'] = submission_details.created_at
 
-    return JsonResponse({'flag_details': list(result.values())}, status=200)
+        # Fetch user details for the submission
+        middle_name = submission.user.middle_name if submission.user.middle_name else ''
+        full_name = f"{submission.user.first_name} {middle_name} {submission.user.last_name}".strip()
+        user_details = {
+            'full_name': full_name,
+            'age': calculate_age(submission.user.date_of_birth),
+            'sex': submission.user.gender,
+            'user_id': submission.user.id
+        }
+        submission_data['user_details'] = user_details
+
+        # Fetch user agency details for the submission
+        if submission.user.active_agency:
+            user_agency_data = {}
+            try:
+                user_agency = submission.user.agency_details  # Accessing the UserAgency object
+                user_agency_data = {
+                    'agency_name': user_agency.agency.agency_name,
+                    'user_role_agency': user_agency.user_role_agency,
+                    'user_class': user_agency.user_class,
+                    'user_stream': user_agency.user_stream,
+                    'user_sub_class': user_agency.user_sub_class,
+                }
+            except UserAgency.DoesNotExist:
+                # Handle the case where UserAgency object does not exist for the CustomUser
+                user_agency_data = {}  # Set user_agency_data to empty dictionary or handle as needed
+            submission_data['user_agency_data'] = user_agency_data
+
+        # Check MeasurementAssist flags
+        if measurement_assist:
+            # Iterate over each field in MeasurementAssist
+            for field in measurement_assist._meta.fields:
+                # Check if the field represents a flag
+                if field.name.endswith('_flag'):
+                    flag_value = getattr(measurement_assist, field.name)
+                    # If the flag is not green, add it to flags dictionary
+                    if flag_value != 'green':
+                        submission_data['flags'][field.name] = flag_value
+
+        # Check Measurement flags
+        if measurement:
+            # Iterate over each field in Measurement
+            for field in measurement._meta.fields:
+                # Check if the field represents a flag
+                if field.name.endswith('_flag'):
+                    flag_value = getattr(measurement, field.name)
+                    # If the flag is not green, add it to flags dictionary
+                    if flag_value != 'green':
+                        submission_data['flags'][field.name] = flag_value
+
+        # If there are non-green flags, add the submission data to the rescreening list
+        if submission_data['flags']:
+            # Add measurement data if available
+            if measurement:
+                submission_data['measurement_data'] = model_to_dict(
+                    measurement)
+            # Add measurement assist data if available
+            if measurement_assist:
+                submission_data['measurement_assist_data'] = model_to_dict(
+                    measurement_assist)
+            rescreening_list.append(submission_data)
+
+    return {'Rescreening List': rescreening_list}
 
 
 @csrf_exempt
 def process_rescreening(request):
-    # Trigger saving of records to Rescreening table
-    save_to_rescreening(request)
-    logger.debug("Saved rescreening data")
-
     # Retrieve saved records from Rescreening table
-    rescreening_records = get_rescreening_records(request)
+    rescreening_records = get_non_green_flags(request)
 
     # Log the data being returned
     logger.debug("Response data:")
     logger.debug(rescreening_records)
 
-    # Return the JsonResponse object directly
-    return rescreening_records
+    # Convert the dictionary to JSON and return it as JsonResponse
+    return JsonResponse(rescreening_records)
 
 
-def calculate_age(birth_date):
-    today = datetime.today()
-    age = today.year - birth_date.year - \
-        ((today.month, today.day) < (birth_date.month, birth_date.day))
+def calculate_age(born):
+    today = date.today()
+    age = today.year - born.year - \
+        ((today.month, today.day) < (born.month, born.day))
     return age
 
 
-def getServiceAndTreatmentList(request):
-    service_and_treatment_data = []
-    service_and_treatments = ServiceAndTreatment.objects.all()
+def get_user_details(user):
+    return {
+        'id': user.id,
+        'full_name': f"{user.first_name} {user.middle_name or ''} {user.last_name}",
+        'age': (timezone.now().date() - user.date_of_birth).days // 365,
+        'gender': user.gender,
+        # Add other fields as needed
+    }
 
-    for service_and_treatment in service_and_treatments:
-        birth_date = service_and_treatment.user.date_of_birth
-        age = calculate_age(birth_date)
 
-        user_data = {
-            'date_of_birth': birth_date.strftime('%Y-%m-%d'),
-            'name': f"{service_and_treatment.user.first_name} {service_and_treatment.user.middle_name} {service_and_treatment.user.last_name}",
-            'age': age,
-            'gender': service_and_treatment.user.gender,
-        }
+def generateServiceAndTreatment(request):
+    try:
+        # Retrieve all rescreenings
+        rescreenings = Rescreening.objects.all()
 
-        service_and_treatment_entry = {
-            'user_data': user_data,
-            'date': service_and_treatment.date.strftime('%Y-%m-%d'),
-            'case_status': service_and_treatment.case_status,
-            'assessment_status': service_and_treatment.assessment_status,
-            'counseling': service_and_treatment.counseling,
-            'follow_up': service_and_treatment.follow_up,
-            'comments': service_and_treatment.comments,
-        }
+        # List to store the created ServiceAndTreatment instances
+        service_and_treatments_created = []
 
-        service_and_treatment_data.append(service_and_treatment_entry)
+        # Loop through each rescreening
+        for rescreening in rescreenings:
+            existing_instance = ServiceAndTreatment.objects.filter(
+                user=rescreening.user,
+                date=rescreening.submission_date.date(),
+            ).exists()
 
-    return JsonResponse({'service_and_treatment_data': service_and_treatment_data}, status=200)
+            # If no existing instance found, create and save a new one
+            if not existing_instance:
+                service_and_treatment = ServiceAndTreatment.objects.create(
+                    user=rescreening.user,
+                    date=rescreening.submission_date.date(),
+                    assessment_status='Not Conducted',
+                    case_status='On Going',
+                    counseling='Waiting List',
+                    follow_up='',
+                    comments='',
+                )
+                service_and_treatment.save()
+
+                # Append the created ServiceAndTreatment instance to the list
+                service_and_treatments_created.append(service_and_treatment)
+
+                # Update the rescreening to mark it as rescreened
+                rescreening.rescreened = True
+                rescreening.save()
+
+        # Retrieve all instances of ServiceAndTreatment
+        service_and_treatments = ServiceAndTreatment.objects.all()
+
+        # Serialize the ServiceAndTreatment instances along with user details to JSON
+        service_and_treatments_data = [{
+            'user': get_user_details(obj.user),
+            'date': obj.date,
+            'assessment_status': obj.assessment_status,
+            'case_status': obj.case_status,
+            'counseling': obj.counseling,
+            'follow_up': obj.follow_up,
+            'comments': obj.comments,
+        } for obj in service_and_treatments]
+
+        return JsonResponse({'message': 'ServiceAndTreatment records updated successfully', 'data': service_and_treatments_data}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt
@@ -271,3 +346,103 @@ def updateReferralStatus(request):
             return JsonResponse({'error': 'Referral does not exist'}, status=404)
     else:
         return JsonResponse({'error': 'Invalid request method. Only POST requests are allowed'}, status=405)
+
+
+# function for getting users details:
+def get_user_monitoring_details(request):
+    # Retrieve the user ID from query parameters
+    user_id = request.GET.get('user_id')
+
+    # Check if user_id is provided
+    if user_id is None:
+        return JsonResponse({'error': 'User ID is missing'}, status=400)
+
+    # Retrieve the user object based on the user ID
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    # Retrieve the user's agency details
+    try:
+        user_agency = UserAgency.objects.get(user=user)
+        agency_details = {
+            'agency_name': user_agency.agency.agency_name,
+            'agency_code': user_agency.agency.agency_code,
+            'agency_parent': user_agency.agency.agency_parent,
+            'present_dzongkhag': user_agency.agency.present_dzongkhag,
+            'present_gewog': user_agency.agency.present_gewog,
+            'present_village': user_agency.agency.present_village,
+            # Add other agency details as needed
+        }
+    except UserAgency.DoesNotExist:
+        agency_details = None
+
+    # Retrieve service and treatment details for the user
+    service_and_treatment_details = list(
+        ServiceAndTreatment.objects.filter(user=user).values())
+
+    # Retrieve referral details for the user
+    referral_details = list(Referral.objects.filter(user=user).values())
+
+    # Retrieve rescreening details for the user
+    rescreenings = Rescreening.objects.filter(user=user)
+    rescreening_details = []
+    for rescreening in rescreenings:
+        rescreening_data = {
+            'id': rescreening.id,
+            'submission_date': rescreening.submission_date.strftime('%Y-%m-%d %H:%M:%S'),
+            # Include other relevant fields here
+        }
+        rescreening_details.append(rescreening_data)
+
+    # Retrieve SubstanceRiskMeasurement details for the user
+    substance_risk_measurements = SubstanceRiskMeasurement.objects.filter(rescreening__in=rescreenings)
+    substance_risk_measurement_details = []
+    for measurement in substance_risk_measurements:
+        substance_name = measurement.substance.name  # Fetch the name of the substance
+        measurement_data = {
+            'id': measurement.id,
+            'substance_name': substance_name,
+            'measurement': measurement.measurement,
+            'risk_flag': measurement.risk_flag,
+            'total_score': measurement.total_score,
+            # Include other relevant fields here
+        }
+        substance_risk_measurement_details.append(measurement_data)
+
+    # Construct the user details JSON response
+    user_details = {
+        'id': user.id,
+        'username': user.username,
+        'is_staff': user.is_staff,
+        'is_active': user.is_active,
+        'identity_number': user.identity_number,
+        'nationality': user.nationality,
+        'first_name': user.first_name,
+        'middle_name': user.middle_name,
+        'last_name': user.last_name,
+        'date_of_birth': user.date_of_birth.strftime('%Y-%m-%d'),
+        'gender': user.gender,
+        'email': user.email,
+        'mob_number': user.mob_number,
+        'father_name': user.father_name,
+        'mother_name': user.mother_name,
+        'perm_add_village': user.perm_add_village,
+        'perm_add_gewog': user.perm_add_gewog,
+        'perm_add_dzongkhag': user.perm_add_dzongkhag,
+        'profile_picture': user.profile_picture.url if user.profile_picture else None,
+        'active_agency': user.active_agency.agency_name if user.active_agency else None,
+        'ps_add_village': user.ps_add_village,
+        'ps_add_gewog': user.ps_add_gewog,
+        'ps_add_dzongkhag': user.ps_add_dzongkhag,
+        'is_gyalsung': user.is_gyalsung,
+        'academy_code': user.academy_code,
+        'date_joined': user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
+        'role': user.role,
+        'access_level': user.access_level,
+        'agency_details': agency_details,
+        'service_and_treatment_details': service_and_treatment_details,
+        'referral_details': referral_details,
+        'rescreening_details': rescreening_details,
+        'substance_risk_measurement_details': substance_risk_measurement_details,
+    }
+
+    return JsonResponse(user_details)
