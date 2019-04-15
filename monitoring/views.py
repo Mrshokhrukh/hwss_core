@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 from django.db import transaction
 from datetime import date
 from django.contrib.auth import get_user_model
+from django.db.models import Prefetch
 import logging
 
 logger = logging.getLogger(__name__)
@@ -343,8 +344,13 @@ def update_service_and_treatment(request):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
+@csrf_exempt
 def getReferralList(request):
-    referrals = Referral.objects.all()
+    referrals = Referral.objects.all().select_related('user', 'referred_by', 'referred_to').prefetch_related(
+        Prefetch('service_and_treatment',
+                 queryset=ServiceAndTreatment.objects.select_related('user'))
+    )
+
     referral_list = []
 
     for referral in referrals:
@@ -356,6 +362,7 @@ def getReferralList(request):
             'name': f"{referral.user.first_name} {referral.user.middle_name} {referral.user.last_name}",
             'age': age,
             'gender': referral.user.gender,
+            'patient_id': referral.user.id
         }
 
         referral_data = {
@@ -364,11 +371,17 @@ def getReferralList(request):
                 'username': referral.referred_by.username if referral.referred_by else None
             },
             'referred_to': {
-                'name': referral.referred_to_name
+                'name': referral.referred_to_name,
+                'user_id': referral.referred_to_id
             },
             'date': referral.date,
             'referral_status': referral.referral_status,
             'referral_remarks': referral.referral_remarks,
+            # Include details from ServiceAndTreatment model
+            'assessment_status': referral.service_and_treatment.assessment_status if referral.service_and_treatment else None,
+            'counseling_status': referral.service_and_treatment.counseling if referral.service_and_treatment else None,
+            'follow_up': referral.service_and_treatment.follow_up if referral.service_and_treatment else None,
+            'comments': referral.service_and_treatment.comments if referral.service_and_treatment else None,
         }
         referral_list.append(referral_data)
 
@@ -413,7 +426,8 @@ def update_referral_status(request):
 
             # Update the referred field in ServiceAndTreatment model based on referral status
             with transaction.atomic():
-                service_and_treatment = ServiceAndTreatment.objects.filter(user=user_id).first()
+                service_and_treatment = ServiceAndTreatment.objects.filter(
+                    user=user_id).first()
                 if service_and_treatment:
                     if referral.referral_status:
                         service_and_treatment.referred = 'Referred'
@@ -540,3 +554,63 @@ def get_user_monitoring_details(request):
     }
 
     return JsonResponse(user_details)
+
+
+@csrf_exempt
+def accept_referral(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        referred_to_user_id = data.get('referredToUserId')
+        patient_id = data.get('patientId')
+
+        # Get the referred counselor and patient
+        referred_counselor = get_object_or_404(
+            CustomUser, id=referred_to_user_id)
+        referred_patient = get_object_or_404(CustomUser, id=patient_id)
+
+        try:
+            # Check if a referral exists
+            referral = Referral.objects.filter(
+                referred_to=referred_counselor, user=referred_patient)
+
+            if referral:
+                # Update referral status to 'Accepted'
+                referral.referral_status = 'Accepted'
+                referral.save()
+                return JsonResponse({'message': 'Referral accepted successfully.'})
+            else:
+                return JsonResponse({'error': 'No referral found matching the criteria.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+@csrf_exempt
+def reject_referral(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        referred_to_user_id = data.get('referredToUserId')
+        patient_id = data.get('patientId')
+        rejection_reason = data.get('reason')
+
+        # Get the referred counselor and patient
+        referred_counselor = get_object_or_404(
+            CustomUser, id=referred_to_user_id)
+        referred_patient = get_object_or_404(CustomUser, id=patient_id)
+
+        try:
+            referral = Referral.objects.get(
+                referred_to=referred_counselor, user=referred_patient)
+
+            if referral:
+                referral.referral_status = 'Rejected'
+                referral.referral_remarks = rejection_reason
+                referral.save()
+                return JsonResponse({'message': 'Referral rejected successfully.'})
+            else:
+                return JsonResponse({'error': 'No referral found matching the criteria.'}, status=404)
+        except Referral.DoesNotExist:
+            return JsonResponse({'error': 'Referral does not exist.'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method.'}, status=400)

@@ -64,6 +64,7 @@ class Reporting(models.Model):
     referral_status = models.CharField(max_length=20, blank=True, null=True, help_text="Referral status")
     referral_remarks = models.TextField(blank=True, null=True, help_text="Remarks related to referral")
     rescreening_count = models.PositiveIntegerField(default=0, help_text="Number of rescreenings conducted")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Reporting for {self.user.username}"
