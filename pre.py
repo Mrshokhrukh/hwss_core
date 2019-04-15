@@ -1,17 +1,12 @@
-import sqlite3
+import json
 
-# Connect to the SQLite database
-conn = sqlite3.connect('db.sqlite3')
-cursor = conn.cursor()
+# Open the original JSON file with specified encoding
+with open('dump.json', 'r', encoding='latin-1') as f:
+    data = f.read()
 
-# Get a list of all tables in the database
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = cursor.fetchall()
+# Replace any non-UTF-8 characters with empty string
+data = data.encode('utf-8', 'ignore').decode('utf-8')
 
-# Generate and execute SQL statements to drop each table
-for table in tables:
-    cursor.execute("DROP TABLE IF EXISTS " + table[0] + ";")
-
-# Commit changes and close the connection
-conn.commit()
-conn.close()
+# Write the processed data to a new JSON file
+with open('dump_processed.json', 'w', encoding='utf-8') as f:
+    f.write(data)

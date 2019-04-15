@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import save_submission, MeasurementListView, MeasurementAssistListView, SubmissionListView, CombinedListView, main_composer
+from .views import save_submission, MeasurementListView, MeasurementAssistListView, SubmissionListView, CombinedListView, main_composer, fetch_school_env_entries
 
 urlpatterns = [
     path('submit-screening/', save_submission, name='submit_screening'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('get-submission-data/', SubmissionListView.as_view(), name='submission-list'),
     path('get-measurement-data/', CombinedListView.as_view(), name='measurement-list'),
     path('get-sud-data/', main_composer, name='main_composer'),
+    path('get-school-env-data/', fetch_school_env_entries, name='fetch_school_env_entries'),
 ]

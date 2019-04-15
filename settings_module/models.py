@@ -88,10 +88,17 @@ class MenuItem(models.Model):
 
 
 class Video(models.Model):
+    VIDEO_FOR_CHOICES = (
+        ('Admin Users', 'Admin Users'),
+        ('Counselor Users', 'Counselor Users'),
+        ('Student/Public Users', 'Student/Public Users'),
+    )
+
     title = models.CharField(max_length=100)
     thumbnail = models.ImageField(upload_to='thumbnails/')
     topic = models.CharField(max_length=100)
     description = models.TextField()
+    video_for = models.CharField(max_length=50, choices=VIDEO_FOR_CHOICES)
     video_link = models.URLField(blank=True)
     video_file = models.FileField(upload_to='videos/', blank=True)
 

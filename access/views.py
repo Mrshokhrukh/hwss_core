@@ -4,7 +4,7 @@
 
 from rest_framework import serializers
 
-from screening.models import CaseScreening
+from screening.models import CaseScreening, EventScreening
 from .models import CustomUser, Agency, UserAgency
 from django.contrib.auth.hashers import make_password
 from pathlib import Path
@@ -470,7 +470,8 @@ class CustomTokenAuthentication(APIView):
         auth_token = request.META.get('HTTP_AUTHORIZATION')
 
         if not auth_token:
-            raise AuthenticationFailed('Invalid token header. No credentials provided.')
+            raise AuthenticationFailed(
+                'Invalid token header. No credentials provided.')
 
         try:
             token_type, token_key = auth_token.split(' ')
@@ -478,7 +479,8 @@ class CustomTokenAuthentication(APIView):
             raise AuthenticationFailed('Invalid token header format.')
 
         if token_type.lower() != 'token':
-            raise AuthenticationFailed('Invalid token type. Only "Token" authentication is supported.')
+            raise AuthenticationFailed(
+                'Invalid token type. Only "Token" authentication is supported.')
 
         try:
             token = Token.objects.get(key=token_key)
@@ -531,7 +533,8 @@ def register_user(request):
                 ps_add_gewog=user_data.get('ps_add_gewog'),
                 ps_add_dzongkhag=user_data.get('ps_add_dzongkhag'),
                 password=user_data.get('password'),
-                role=user_data.get('role')
+                role=user_data.get('role'),
+                active_agency=agency
             )
 
             # Create the UserAgency link
@@ -555,9 +558,9 @@ def register_user(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def registerCounselorUser(request):
+def registerCounselorCaseUser(request):
     try:
-        print("Received request to register counselor user.")
+        print("Received request to register counselor case user.")
 
         # Extract data from request
         user_data = request.data.get('userData', {})
@@ -587,14 +590,58 @@ def registerCounselorUser(request):
             else:
                 first_name, middle_names, last_name = '', '', ''
 
-            # Check if the user already exists based on some criteria (e.g., CID)
             existing_user = CustomUser.objects.filter(
                 identity_number=user_data.get('CID')).first()
 
+
             if existing_user:
-                # User exists, proceed with existing data
-                user = existing_user
+                # User exists, proceed with existing data or update it if necessary
+                existing_user.username = user_data.get('username')
+                existing_user.email = user_data.get('email')
+                existing_user.first_name = first_name
+                existing_user.middle_name = ' '.join(middle_names)
+                existing_user.last_name = last_name
+                existing_user.date_of_birth = user_data.get('DOB')
+                existing_user.gender = user_data.get('gender')
+                existing_user.mob_number = user_data.get('phoneNumber')
+                existing_user.perm_add_village = user_data.get('currentAddress')
+                existing_user.perm_add_gewog = user_data.get('currentAddress')
+                existing_user.perm_add_dzongkhag = user_data.get('dzongkhag')
+                existing_user.nationality = 'Bhutanese'
+                existing_user.ps_add_village = user_data.get('currentAddress')
+                existing_user.ps_add_gewog = user_data.get('currentAddress')
+                existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
+                existing_user.role = 'public'
+
+                # Save the updated user
+                existing_user.save()
+
+                # Update other associated data if needed
+                # For example, update CaseScreening object
+                case_screening = CaseScreening.objects.filter(user=existing_user).first()
+                if case_screening:
+                    case_screening.case_name = 'Case Daily Screening'
+                    case_screening.purpose = user_data.get('purpose')
+                    case_screening.dzongkhag = user_data.get('dzongkhag')
+                    case_screening.counselor = user_data.get('counselorName')
+                    case_screening.date = date.today()
+                    case_screening.save()
+
+                # Create or update the UserAgency link if needed
+                # Assuming user_agency_data contains relevant agency information
+                user_agency_data['user'] = existing_user
+                agency_code = agency_data.get('agency_code')
+                agency, _ = Agency.objects.get_or_create(
+                    agency_code=agency_code, defaults=agency_data)
+                user_agency_data['agency'] = agency
+                user_agency, _ = UserAgency.objects.get_or_create(
+                    user=existing_user, defaults=user_agency_data)
+
+                response_data = {'userId': existing_user.id,
+                                'message': 'Counselor user updated successfully.'}
+                return Response(response_data, status=status.HTTP_200_OK)
             else:
+                # User does not exist, proceed with creating a new user
                 user = CustomUser.objects.create_user(
                     username=user_data.get('username'),
                     email=user_data.get('email'),
@@ -615,24 +662,24 @@ def registerCounselorUser(request):
                     role='student'
                 )
 
-            # Create the CaseScreening object
-            case_screening = CaseScreening.objects.create(
-                user=user,
-                case_name=user_data.get('caseName'),
-                purpose=user_data.get('purpose'),
-                dzongkhag=user_data.get('dzongkhag'),
-                counselor=user_data.get('counselorName'),
-                date=date.today()
-            )
+                # Create the CaseScreening object
+                case_screening = CaseScreening.objects.create(
+                    user=user,
+                    case_name='Case Daily Screening',
+                    purpose=user_data.get('purpose'),
+                    dzongkhag=user_data.get('dzongkhag'),
+                    counselor=user_data.get('counselorName'),
+                    date=date.today()
+                )
 
-            # Create the UserAgency link
-            user_agency_data['user'] = user
-            user_agency_data['agency'] = agency
-            UserAgency.objects.create(**user_agency_data)
+                # Create the UserAgency link
+                user_agency_data['user'] = user
+                user_agency_data['agency'] = agency
+                UserAgency.objects.create(**user_agency_data)
 
-            response_data = {'userId': user.id,
-                             'message': 'Counselor user registered successfully.'}
-            return Response(response_data, status=status.HTTP_201_CREATED)
+                response_data = {'userId': user.id,
+                                'message': 'Counselor user registered successfully.'}
+                return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         print(f"Error registering counselor user: {str(e)}")
@@ -642,6 +689,135 @@ def registerCounselorUser(request):
         print(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def registerCounselorEventUser(request):
+    try:
+        print("Received request to register counselor event user.")
+
+        # Extract data from request
+        user_data = request.data.get('userData', {})
+        agency_data = request.data.get('agencyData', {})
+        user_agency_data = request.data.get('userAgencyData', {})
+
+        # Begin a transaction to ensure atomicity
+        with transaction.atomic():
+
+            # Get clientFullName from user_data, default to empty string if not present
+            agency_code = agency_data.get('agency_code')
+            agency, created = Agency.objects.get_or_create(
+                agency_code=agency_code, defaults=agency_data)
+
+            full_name = user_data.get('clientFullName', '')
+
+            # Split the full name into first, middle, and last names
+            if full_name:
+                name_parts = full_name.split()
+                if len(name_parts) == 1:
+                    first_name, middle_names, last_name = name_parts[0], '', ''
+                elif len(name_parts) == 2:
+                    first_name, last_name = name_parts
+                    middle_names = ''
+                else:
+                    first_name, *middle_names, last_name = name_parts
+            else:
+                first_name, middle_names, last_name = '', '', ''
+
+            existing_user = CustomUser.objects.filter(
+                identity_number=user_data.get('CID')).first()
+
+
+            if existing_user:
+                # User exists, proceed with existing data or update it if necessary
+                existing_user.username = user_data.get('username')
+                existing_user.email = user_data.get('email')
+                existing_user.first_name = first_name
+                existing_user.middle_name = ' '.join(middle_names)
+                existing_user.last_name = last_name
+                existing_user.date_of_birth = user_data.get('DOB')
+                existing_user.gender = user_data.get('gender')
+                existing_user.mob_number = user_data.get('phoneNumber')
+                existing_user.perm_add_village = user_data.get('currentAddress')
+                existing_user.perm_add_gewog = user_data.get('currentAddress')
+                existing_user.perm_add_dzongkhag = user_data.get('dzongkhag')
+                existing_user.nationality = 'Bhutanese'
+                existing_user.ps_add_village = user_data.get('currentAddress')
+                existing_user.ps_add_gewog = user_data.get('currentAddress')
+                existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
+                existing_user.role = 'student'
+
+                # Save the updated user
+                existing_user.save()
+
+                # Update other associated data if needed
+                # For example, update CaseScreening object
+                event_screening = EventScreening.objects.filter(user=existing_user).first()
+                if event_screening:
+                    event_screening.dzongkhag = user_data.get('dzongkhag')
+                    event_screening.counselor = user_data.get('counselorName')
+                    event_screening.save()
+
+                # Create or update the UserAgency link if needed
+                # Assuming user_agency_data contains relevant agency information
+                user_agency_data['user'] = existing_user
+                agency_code = agency_data.get('agency_code')
+                agency, _ = Agency.objects.get_or_create(
+                    agency_code=agency_code, defaults=agency_data)
+                user_agency_data['agency'] = agency
+                user_agency, _ = UserAgency.objects.get_or_create(
+                    user=existing_user, defaults=user_agency_data)
+
+                response_data = {'userId': existing_user.id,
+                                'message': 'Counselor user updated successfully.'}
+                return Response(response_data, status=status.HTTP_200_OK)
+            else:
+                # User does not exist, proceed with creating a new user
+                user = CustomUser.objects.create_user(
+                    username=user_data.get('username'),
+                    email=user_data.get('email'),
+                    identity_number=user_data.get('CID'),
+                    first_name=first_name,
+                    middle_name=' '.join(middle_names),
+                    last_name=last_name,
+                    date_of_birth=user_data.get('DOB'),
+                    gender=user_data.get('gender'),
+                    mob_number=user_data.get('phoneNumber'),
+                    perm_add_village=user_data.get('currentAddress'),
+                    perm_add_gewog=user_data.get('currentAddress'),
+                    perm_add_dzongkhag=user_data.get('dzongkhag'),
+                    nationality='Bhutanese',
+                    ps_add_village=user_data.get('currentAddress'),
+                    ps_add_gewog=user_data.get('currentAddress'),
+                    ps_add_dzongkhag=user_data.get('dzongkhag'),
+                    role='student'
+                )
+
+                # Create the CaseScreening object
+                event_screening = EventScreening.objects.create(
+                    user=user
+                )
+
+                # Create the UserAgency link
+                user_agency_data['user'] = user
+                user_agency_data['agency'] = agency
+                UserAgency.objects.create(**user_agency_data)
+
+                response_data = {'userId': user.id,
+                                'message': 'Counselor user registered successfully.'}
+                return Response(response_data, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        print(f"Error registering counselor user: {str(e)}")
+        traceback.print_exc()
+        error_message = str(e)
+        response_data = {'error': error_message}
+        print(f"Response data: {response_data}")
+
+        return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
 
 
 class UserCreate(generics.CreateAPIView):
@@ -1199,15 +1375,21 @@ def update_user_info(request):
         # Update the UserAgency details if it exists
         user_agency = getattr(user, 'agency_details', None)
         if user_agency:
-            user_agency.parent_occupation = request.data.get('parent_occupation', user_agency.parent_occupation)
-            user_agency.guardian_name = request.data.get('guardian_name', user_agency.guardian_name)
-            user_agency.guardian_occupation = request.data.get('guardian_occupation', user_agency.guardian_occupation)
-            user_agency.parent_status = request.data.get('parent_status', user_agency.parent_status)
-            user_agency.current_living_with = request.data.get('current_living_with', user_agency.current_living_with)
+            user_agency.parent_occupation = request.data.get(
+                'parent_occupation', user_agency.parent_occupation)
+            user_agency.guardian_name = request.data.get(
+                'guardian_name', user_agency.guardian_name)
+            user_agency.guardian_occupation = request.data.get(
+                'guardian_occupation', user_agency.guardian_occupation)
+            user_agency.parent_status = request.data.get(
+                'parent_status', user_agency.parent_status)
+            user_agency.current_living_with = request.data.get(
+                'current_living_with', user_agency.current_living_with)
             user_agency.save()
 
         # Log the successful update
-        logger.info(f"User details updated successfully for user ID: {user.id}")
+        logger.info(
+            f"User details updated successfully for user ID: {user.id}")
 
         # Return success response
         return Response({'message': 'User details updated successfully'}, status=status.HTTP_200_OK)
@@ -1217,8 +1399,6 @@ def update_user_info(request):
 
         # Return error response
         return Response({'message': 'Failed to update user details. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 @api_view(['POST'])
@@ -1250,3 +1430,33 @@ def change_password(request):
     user.save()
 
     return Response({'message': 'Password changed successfully.'}, status=200)
+
+
+@csrf_exempt
+def get_referral_counselors(request):
+    if request.method == 'GET':
+        # Get the role and active agency name from the request parameters
+        role = request.GET.get('role')
+        active_agency_name = request.GET.get('active_agency')
+
+        # Query users based on the role only
+        users = CustomUser.objects.filter(role=role)
+
+        # Create a list of users with their full name and active agency if available
+        users_list = []
+        for user in users:
+            # Check if the middle name is None and replace it with an empty string
+            middle_name = user.middle_name if user.middle_name else ''
+            
+            if user.active_agency:
+                users_list.append({'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}", 'active_agency': user.active_agency.agency_name})
+            else:
+                users_list.append({'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}", 'active_agency': ''})
+
+        # Return the list of users as JSON response
+        return JsonResponse({'data': users_list})
+
+    else:
+        return JsonResponse({'error': 'Only GET requests are allowed'})
+
+    

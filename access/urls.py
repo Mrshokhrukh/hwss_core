@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, update_user_info, registerCounselorUser, CustomTokenAuthentication
+from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, fetch_rcsc_details, get_csrf_token, get_emis_staff_details, get_emis_student_details, register_pre_recorded_user, register_user, update_user_info, registerCounselorEventUser, registerCounselorCaseUser, CustomTokenAuthentication, user_logout, verify_pre_recorded_user, get_referral_counselors
 from . import views
 
 urlpatterns = [
@@ -11,33 +11,37 @@ urlpatterns = [
          name='password-reset-request'),
     path('password-reset/<str:token>/',
          PasswordResetView.as_view(), name='password-reset'),
-    path('register-user/', views.register_user, name='register_user'),
-    path('register-counselor-user/', views.registerCounselorUser,
-         name='register_counselor_user'),
-    path('verify-pre-recorded-user/', views.verify_pre_recorded_user,
+    path('register-user/', register_user, name='register_user'),
+    path('register-counselor-event-user/', registerCounselorEventUser,
+         name='register_counselor_event_user'),
+    path('register-counselor-case-user/', registerCounselorCaseUser,
+         name='register_counselor_case_user'),
+    path('verify-pre-recorded-user/', verify_pre_recorded_user,
          name='verify_pre_recorded_user'),
-    path('register-pre-recorded-user/', views. register_pre_recorded_user,
+    path('register-pre-recorded-user/', register_pre_recorded_user,
          name=' register_pre_recorded_user'),
     path('get-user-details/', GetUserDetailsView.as_view(), name='get_user_details'),
-    path('user-logout/', views.user_logout, name='user_logout'),
+    path('user-logout/', user_logout, name='user_logout'),
     path('update-gyalsung-user/<int:pk>/',
          UpdateGyalsungDetails.as_view(), name='update_gyalsung_details'),
 
-    path('get_csrf_token/', views.get_csrf_token, name='get_csrf_token'),
+    path('get_csrf_token/', get_csrf_token, name='get_csrf_token'),
+
+    path('get-referral-counselors/', get_referral_counselors, name='get_referral_counselors'),
 
     # API CALLS
     path('get-citizen-details/<str:cid>/',
          views.fetch_citizen_details, name='get_citizen_details'),
-    path('verify-pre-recorded-user/', views.verify_pre_recorded_user,
+    path('verify-pre-recorded-user/', verify_pre_recorded_user,
          name='verify-pre-recorded-user'),
     path('get-rcsc-details/<str:cid>/',
-         views.fetch_rcsc_details, name='get_rcsc_details'),
+         fetch_rcsc_details, name='get_rcsc_details'),
     path('get-rcsc-details/<str:cid>/<str:reg_email>/',
-         views.fetch_rcsc_details, name='get_rcsc_details_with_email'),
+         fetch_rcsc_details, name='get_rcsc_details_with_email'),
     path('get-emis-student-details/<str:student_code>/<str:dob>/<str:reg_email>/',
-         views.get_emis_student_details, name='get_emis_student_details'),
+         get_emis_student_details, name='get_emis_student_details'),
     path('get-emis-staff-details/<str:emp_id>/<str:reg_email>/',
-         views.get_emis_staff_details, name='get_emis_staff_details'),
+         get_emis_staff_details, name='get_emis_staff_details'),
     path('update-user-info/', update_user_info, name='update_user_info'),
     path('change-password/', change_password, name='change_password'),
     path('authenticate-token/', CustomTokenAuthentication.as_view(),

@@ -4,8 +4,8 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from measurement.models import Measurement, MeasurementAssist, Submission, UserSubmission
 from django.views.decorators.csrf import csrf_exempt
-from access.models import CustomUser, UserAgency
-from .models import Rescreening, ServiceAndTreatment, Referral, Substance, SubstanceRiskMeasurement
+from access.models import Agency, CustomUser, UserAgency
+from .models import Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import json
@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET
 from django.forms.models import model_to_dict
 from django.db import transaction
 from datetime import date
+from django.contrib.auth import get_user_model
 import logging
 
 logger = logging.getLogger(__name__)
@@ -196,13 +197,24 @@ def calculate_age(born):
 
 
 def get_user_details(user):
+    user_agency = UserAgency.objects.filter(user=user).first()
+    agency_details = None
+    if user_agency:
+        agency_details = {
+            'agency_name': user_agency.agency.agency_name,
+            'agency_code': user_agency.agency.agency_code,
+            'parent_occupation': user_agency.parent_occupation,
+            'parent_status': user_agency.parent_status,
+
+        }
     return {
         'id': user.id,
         'full_name': f"{user.first_name} {user.middle_name or ''} {user.last_name}",
         'age': (timezone.now().date() - user.date_of_birth).days // 365,
         'gender': user.gender,
-        # Add other fields as needed
+        'user_agency': agency_details,
     }
+
 
 
 def generateServiceAndTreatment(request):
@@ -220,7 +232,7 @@ def generateServiceAndTreatment(request):
                 date=rescreening.submission_date.date(),
             ).exists()
 
-            # If no existing instance found, create and save a new one
+             # If no existing instance found, create and save a new one
             if not existing_instance:
                 service_and_treatment = ServiceAndTreatment.objects.create(
                     user=rescreening.user,
@@ -243,7 +255,7 @@ def generateServiceAndTreatment(request):
         # Retrieve all instances of ServiceAndTreatment
         service_and_treatments = ServiceAndTreatment.objects.all()
 
-        # Serialize the ServiceAndTreatment instances along with user details to JSON
+         # Serialize the ServiceAndTreatment instances along with user details to JSON
         service_and_treatments_data = [{
             'user': get_user_details(obj.user),
             'date': obj.date,
@@ -254,7 +266,16 @@ def generateServiceAndTreatment(request):
             'comments': obj.comments,
         } for obj in service_and_treatments]
 
-        return JsonResponse({'message': 'ServiceAndTreatment records updated successfully', 'data': service_and_treatments_data}, status=200)
+        # Retrieve users who are not admins, students, or part of the public role
+        counselors = CustomUser.objects.exclude(
+            role__in=['student', 'public']
+        ).exclude(
+            role__contains='_admin'
+        ).values('first_name', 'middle_name', 'last_name', 'active_agency__agency_name', 'role')
+
+        return JsonResponse({'message': 'ServiceAndTreatment records updated successfully',
+                             'data': service_and_treatments_data,
+                             'counselors': list(counselors)}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
@@ -262,30 +283,54 @@ def generateServiceAndTreatment(request):
 @csrf_exempt
 @require_POST
 def update_service_and_treatment(request):
-    try:
-        data = json.loads(request.body)
-        service_and_treatment_id = data.get('service_and_treatment_id')
-        updated_fields = data.get('updated_fields', {})
+    if request.method == 'POST':
+        try:
+            logger.info('Received POST request to update service and treatment')
 
-        # Ensure both service_and_treatment_id and updated_fields are provided
-        if not service_and_treatment_id or not updated_fields:
-            return JsonResponse({'error': 'Invalid request. Please provide service_and_treatment_id and updated_fields'}, status=400)
+            # Get the update data from the request body
+            data = json.loads(request.body)
+            update_data = data.get('updateData')
 
-        # Fetch the ServiceAndTreatment object to update
-        service_and_treatment = ServiceAndTreatment.objects.get(
-            pk=service_and_treatment_id)
+            custom_user_id = update_data.get('id') 
+            service_and_treatments = ServiceAndTreatment.objects.filter(user_id=custom_user_id)
 
-        # Update the fields based on the provided data
-        for field, value in updated_fields.items():
-            setattr(service_and_treatment, field, value)
+            # Check if any ServiceAndTreatment instance is found
+            if not service_and_treatments.exists():
+                error_msg = 'ServiceAndTreatment not found for user_id: {}'.format(custom_user_id)
+                return JsonResponse({'error': error_msg}, status=404)
 
-        # Save the changes
-        service_and_treatment.save()
+            # Get the counselor's CustomUser instance
+            counselor_id = update_data.get('updated_by')
+            counselor = get_user_model().objects.get(id=counselor_id)
 
-        return JsonResponse({'message': 'ServiceAndTreatment updated successfully'}, status=200)
+            for service_and_treatment in service_and_treatments:
+                # Create a ServiceAndTreatmentHistory instance to store the changes
+                history_entry = ServiceAndTreatmentHistory.objects.create(
+                    service_and_treatment=service_and_treatment,
+                    updated_by=counselor,
+                    updated_at=timezone.now(),
+                    changes=json.dumps(update_data)  # Assuming you want to store all changes as JSON
+                ) 
+                history_entry.save()
 
-    except ServiceAndTreatment.DoesNotExist:
-        return JsonResponse({'error': 'ServiceAndTreatment does not exist'}, status=404)
+                # Update the ServiceAndTreatment instance with the latest data
+                service_and_treatment.assessment_status = update_data.get('assessment_status')
+                service_and_treatment.case_status = update_data.get('case_status')
+                service_and_treatment.counseling = update_data.get('counseling')
+                service_and_treatment.follow_up = update_data.get('follow_up')
+                service_and_treatment.comments = update_data.get('comments')
+                service_and_treatment.updated_by = counselor
+                
+                service_and_treatment.save()
+
+            # Return success response
+            return JsonResponse({'message': 'ServiceAndTreatment updated successfully'}, status=200)
+        except Exception as e:
+            error_msg = f'An error occurred: {str(e)}'
+            return JsonResponse({'error': error_msg}, status=500)
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
 
 
 def getReferralList(request):
@@ -367,13 +412,20 @@ def get_user_monitoring_details(request):
             'agency_name': user_agency.agency.agency_name,
             'agency_code': user_agency.agency.agency_code,
             'agency_parent': user_agency.agency.agency_parent,
-            'present_dzongkhag': user_agency.agency.present_dzongkhag,
-            'present_gewog': user_agency.agency.present_gewog,
-            'present_village': user_agency.agency.present_village,
-            # Add other agency details as needed
+            'parent_occupation': user_agency.parent_occupation,
+            'parent_status': user_agency.parent_status,
         }
     except UserAgency.DoesNotExist:
         agency_details = None
+
+    # Retrieve active agency details
+    agency_active_details = []
+    if user.active_agency:
+        agency_active_details.append({
+            'present_dzongkhag': user.active_agency.present_dzongkhag,
+            'present_gewog': user.active_agency.present_gewog,
+            'present_village': user.active_agency.present_village,
+        })
 
     # Retrieve service and treatment details for the user
     service_and_treatment_details = list(
@@ -381,6 +433,11 @@ def get_user_monitoring_details(request):
 
     # Retrieve referral details for the user
     referral_details = list(Referral.objects.filter(user=user).values())
+
+    # Retrieve [past diagnosis] details for the user from submission model
+    user_submissions = UserSubmission.objects.filter(user=user)
+    diagnosis_details = list(
+        Submission.objects.filter(user_submission__in=user_submissions).values('diagnosis'))
 
     # Retrieve rescreening details for the user
     rescreenings = Rescreening.objects.filter(user=user)
@@ -443,6 +500,9 @@ def get_user_monitoring_details(request):
         'referral_details': referral_details,
         'rescreening_details': rescreening_details,
         'substance_risk_measurement_details': substance_risk_measurement_details,
+        'agency': agency_active_details,
+        'diagnosis_details': diagnosis_details
     }
 
     return JsonResponse(user_details)
+

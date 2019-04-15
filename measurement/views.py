@@ -939,3 +939,30 @@ def main_composer(request):
     response = get_lifetime_and_active_users(request)
 
     return response
+
+
+
+
+
+
+@csrf_exempt
+def fetch_school_env_entries(request):
+    if request.method == 'GET':
+        submissions = Submission.objects.filter(question_set__name="SCHOOL ENV")
+        data = {}
+        for submission in submissions:
+            user = submission.user_submission.user.username
+            if user not in data:
+                data[user] = []
+            data[user].append({
+                "question": submission.question,
+                "answer": submission.answer,
+                "score": submission.score,
+                "substance": submission.substance,
+                "specify": submission.specify,
+                "diagnosis": submission.diagnosis,
+                "created_at": submission.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        return JsonResponse(data)
+    else:
+        return JsonResponse({"error": "Method not allowed"}, status=405)

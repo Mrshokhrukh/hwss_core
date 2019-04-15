@@ -3,7 +3,9 @@ from django.utils import timezone
 from access.models import CustomUser
 from multiselectfield import MultiSelectField
 from measurement.models import Submission, Measurement, MeasurementAssist
+from django.contrib.auth import get_user_model
 
+User = CustomUser
 
 class ServiceAndTreatment(models.Model):
     DATE_CHOICES = (
@@ -44,8 +46,7 @@ class ServiceAndTreatment(models.Model):
          'Detention-based SUD Treatment and Care'),
     )
 
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    # You might want to adjust this field accordingly
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateField(default=None)
     assessment_status = models.CharField(
         max_length=20, choices=ASSESSMENT_STATUS_CHOICES, default='Not Conducted')
@@ -56,6 +57,16 @@ class ServiceAndTreatment(models.Model):
     follow_up = models.CharField(
         max_length=255, choices=FOLLOW_UP_CHOICES, blank=True)
     comments = models.TextField(null=True, blank=True)
+    updated_by = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='updated_by')
+    updated_at = models.DateTimeField(default=timezone.now)
+
+class ServiceAndTreatmentHistory(models.Model):
+    service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE)
+    updated_by = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='service_and_treatment_histories')
+    updated_at = models.DateTimeField(default=timezone.now)
+    changes = models.TextField()
 
 
 class Referral(models.Model):
@@ -83,6 +94,7 @@ class Referral(models.Model):
             self.referred_to_name = f"{self.referred_to.first_name} {self.referred_to.middle_name} {self.referred_to.last_name}"
         super().save(*args, **kwargs)
 
+
 class Substance(models.Model):
     name = models.CharField(max_length=100)
 
@@ -107,7 +119,7 @@ class Rescreening(models.Model):
         max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
     school_env_data = models.JSONField(null=True, blank=True)
     rescreened = models.BooleanField(default=False)
-    rescreening_count = models.IntegerField(default=0)
+    rescreening_count = models.IntegerField(default=0, null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
     service_and_treatment = models.ForeignKey(
         'ServiceAndTreatment', on_delete=models.SET_NULL, related_name='rescreenings', null=True, blank=True)

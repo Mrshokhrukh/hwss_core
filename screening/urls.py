@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import create_event_screening, get_counselor_info
+from .views import create_event_screening, get_counselor_info, submit_case_screening, submit_event_screening
 
 urlpatterns = [
     path('create-event-screening/', create_event_screening, name='create_event_screening'),
     path('get-event-info/<str:counselor_name>/', get_counselor_info, name='get_counselor_info'),
+    path('submit-case-screening/', submit_case_screening, name='submit_case_screening'),
+    path('submit-event-screening/', submit_event_screening, name='submit_event_screening'),
 ]

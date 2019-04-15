@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from access.models import CustomUser
 from measurement.models import UserSubmission
+from monitoring.models import Referral, ServiceAndTreatment
 from django.utils import timezone
 
 User = get_user_model()
@@ -40,12 +42,16 @@ class CaseScreening(models.Model):
     ]
     dzongkhag = models.CharField(max_length=50, choices=DZONGKHAG_CHOICES)
     
-    date = models.DateField()
+    date = models.DateField(null=True, blank=True)
 
     counselor = models.CharField(max_length=255)
 
     registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
 
+    def __str__(self):
+        return f"Case Screening: {self.case_name}"
+
+    
     def save(self, *args, **kwargs):
         if not self.id:  # Check if it's a new instance
             # Check if the user has reached the daily registration limit
@@ -60,6 +66,8 @@ class CaseScreening(models.Model):
             self.registration_lockout_end_time = timezone.now() + timezone.timedelta(hours=24)  # Lockout for 24 hours
         
         super().save(*args, **kwargs)
+
+    
 
 
 class EventScreening(models.Model):
@@ -78,8 +86,9 @@ class EventScreening(models.Model):
     ]
     approval_status = models.CharField(max_length=20, choices=approval_status_choices, default='pending')
     remarks = models.TextField(null=True, blank=True)
-
+    rejection_reason = models.TextField(null=True, blank=True)
     registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
+    selected_tool = models.CharField(max_length=100, null=True, blank=True)  # Add selected_tool field
 
     def save(self, *args, **kwargs):
         if not self.id: 
@@ -91,7 +100,105 @@ class EventScreening(models.Model):
 
         super().save(*args, **kwargs)
 
+
 class ScreenedUser(models.Model):
     event_screening = models.ForeignKey(EventScreening, on_delete=models.CASCADE, related_name='screened_users')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     screening_date = models.DateField(default=timezone.now)
+
+
+
+
+
+class CaseBasedSubmission(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # Add a ForeignKey field to the User model
+    case = models.ForeignKey(
+        CaseScreening, on_delete=models.CASCADE, related_name='case_based_submissions')
+    gad_data = models.JSONField(null=True, blank=True)
+    gad_score = models.IntegerField(null=True, blank=True)
+    gad_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of GAD score")
+    phq_data = models.JSONField(null=True, blank=True)
+    phq_score = models.IntegerField(null=True, blank=True)
+    phq_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of PHQ score")
+    ace_data = models.JSONField(null=True, blank=True)
+    ace_score = models.IntegerField(null=True, blank=True)
+    ace_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
+    school_env_data = models.JSONField(null=True, blank=True)
+    submission_date = models.DateTimeField(auto_now_add=True)
+    service_and_treatment = models.ForeignKey(
+        'monitoring.ServiceAndTreatment', on_delete=models.SET_NULL, related_name='case_based_submissions', null=True, blank=True)
+    referral = models.ForeignKey(
+        'monitoring.Referral', on_delete=models.SET_NULL, related_name='case_based_submissions', null=True, blank=True)
+
+    def __str__(self):
+        return f"Case Based Submission for {self.case}"
+
+class CaseSubstance(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class CaseSubstanceRiskMeasurement(models.Model):
+    substance = models.ForeignKey(
+        CaseSubstance, on_delete=models.CASCADE, related_name='case_risk_measurements')
+    case_submission = models.ForeignKey(
+        CaseBasedSubmission, on_delete=models.CASCADE, related_name='case_substance_risk_measurements')
+    measurement = models.FloatField(help_text="Measurement value for the substance")
+    risk_flag = models.CharField(max_length=250, help_text="Risk flag based on measurement")
+    total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  
+
+    def __str__(self):
+        return f"Risk Measurement for {self.substance} in Case Based Submission for {self.case_submission.case.name}"
+    
+
+
+class EventBasedSubmission(models.Model):
+    event = models.ForeignKey(
+        EventScreening, on_delete=models.CASCADE, related_name='event_based_submissions')
+    gad_data = models.JSONField(null=True, blank=True)
+    gad_score = models.IntegerField(null=True, blank=True)
+    gad_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of GAD score")
+    phq_data = models.JSONField(null=True, blank=True)
+    phq_score = models.IntegerField(null=True, blank=True)
+    phq_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of PHQ score")
+    ace_data = models.JSONField(null=True, blank=True)
+    ace_score = models.IntegerField(null=True, blank=True)
+    ace_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
+    school_env_data = models.JSONField(null=True, blank=True)
+    submission_date = models.DateTimeField(auto_now_add=True)
+    service_and_treatment = models.ForeignKey(
+        'monitoring.ServiceAndTreatment', on_delete=models.SET_NULL, related_name='event_based_submissions', null=True, blank=True)
+    referral = models.ForeignKey(
+        'monitoring.Referral', on_delete=models.SET_NULL, related_name='event_based_submissions', null=True, blank=True)
+
+    def __str__(self):
+        return f"Event Based Submission for {self.event.name}"
+
+class EventSubstance(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class EventSubstanceRiskMeasurement(models.Model):
+    substance = models.ForeignKey(
+        EventSubstance, on_delete=models.CASCADE, related_name='event_risk_measurements')
+    event_submission = models.ForeignKey(
+        EventBasedSubmission, on_delete=models.CASCADE, related_name='event_substance_risk_measurements')
+    measurement = models.FloatField(help_text="Measurement value for the substance")
+    risk_flag = models.CharField(max_length=250, help_text="Risk flag based on measurement")
+    total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  
+
+    def __str__(self):
+        return f"Risk Measurement for {self.substance} in Event Based Submission for {self.event_submission.event.name}"
+
+
