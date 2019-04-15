@@ -30,7 +30,8 @@ def submit_rescreening(request):
         # Calculate the age of the user
         age = calculate_age(user.date_of_birth)
 
-        assist_data_json = request.POST.get('assistRiskSeverity')  # Updated key to match the sent data
+        # Updated key to match the sent data
+        assist_data_json = request.POST.get('assistRiskSeverity')
         assist_data = json.loads(assist_data_json) if assist_data_json else {}
 
         # Start transaction to ensure data consistency
@@ -53,12 +54,16 @@ def submit_rescreening(request):
             # Save substance risk measurements
             for substance, risk_level in assist_data.items():
                 # Extract total score and risk flag from the risk level string
-                total_score_str = risk_level.split()[1]  # Get the part after the space
-                total_score = float(total_score_str.strip('()'))  # Remove parentheses and convert to float
-                risk_flag = risk_level.split()[0]  # Get the part before the space
+                # Get the part after the space
+                total_score_str = risk_level.split()[1]
+                # Remove parentheses and convert to float
+                total_score = float(total_score_str.strip('()'))
+                # Get the part before the space
+                risk_flag = risk_level.split()[0]
 
                 # Create Substance object if it doesn't exist
-                substance_instance, _ = Substance.objects.get_or_create(name=substance)
+                substance_instance, _ = Substance.objects.get_or_create(
+                    name=substance)
                 SubstanceRiskMeasurement.objects.create(
                     substance=substance_instance,
                     rescreening=rescreening,
@@ -216,7 +221,6 @@ def get_user_details(user):
     }
 
 
-
 def generateServiceAndTreatment(request):
     try:
         # Retrieve all rescreenings
@@ -232,7 +236,7 @@ def generateServiceAndTreatment(request):
                 date=rescreening.submission_date.date(),
             ).exists()
 
-             # If no existing instance found, create and save a new one
+            # If no existing instance found, create and save a new one
             if not existing_instance:
                 service_and_treatment = ServiceAndTreatment.objects.create(
                     user=rescreening.user,
@@ -255,7 +259,7 @@ def generateServiceAndTreatment(request):
         # Retrieve all instances of ServiceAndTreatment
         service_and_treatments = ServiceAndTreatment.objects.all()
 
-         # Serialize the ServiceAndTreatment instances along with user details to JSON
+        # Serialize the ServiceAndTreatment instances along with user details to JSON
         service_and_treatments_data = [{
             'user': get_user_details(obj.user),
             'date': obj.date,
@@ -285,18 +289,21 @@ def generateServiceAndTreatment(request):
 def update_service_and_treatment(request):
     if request.method == 'POST':
         try:
-            logger.info('Received POST request to update service and treatment')
+            logger.info(
+                'Received POST request to update service and treatment')
 
             # Get the update data from the request body
             data = json.loads(request.body)
             update_data = data.get('updateData')
 
-            custom_user_id = update_data.get('id') 
-            service_and_treatments = ServiceAndTreatment.objects.filter(user_id=custom_user_id)
+            custom_user_id = update_data.get('id')
+            service_and_treatments = ServiceAndTreatment.objects.filter(
+                user_id=custom_user_id)
 
             # Check if any ServiceAndTreatment instance is found
             if not service_and_treatments.exists():
-                error_msg = 'ServiceAndTreatment not found for user_id: {}'.format(custom_user_id)
+                error_msg = 'ServiceAndTreatment not found for user_id: {}'.format(
+                    custom_user_id)
                 return JsonResponse({'error': error_msg}, status=404)
 
             # Get the counselor's CustomUser instance
@@ -309,18 +316,22 @@ def update_service_and_treatment(request):
                     service_and_treatment=service_and_treatment,
                     updated_by=counselor,
                     updated_at=timezone.now(),
-                    changes=json.dumps(update_data)  # Assuming you want to store all changes as JSON
-                ) 
+                    # Assuming you want to store all changes as JSON
+                    changes=json.dumps(update_data)
+                )
                 history_entry.save()
 
                 # Update the ServiceAndTreatment instance with the latest data
-                service_and_treatment.assessment_status = update_data.get('assessment_status')
-                service_and_treatment.case_status = update_data.get('case_status')
-                service_and_treatment.counseling = update_data.get('counseling')
+                service_and_treatment.assessment_status = update_data.get(
+                    'assessment_status')
+                service_and_treatment.case_status = update_data.get(
+                    'case_status')
+                service_and_treatment.counseling = update_data.get(
+                    'counseling')
                 service_and_treatment.follow_up = update_data.get('follow_up')
                 service_and_treatment.comments = update_data.get('comments')
                 service_and_treatment.updated_by = counselor
-                
+
                 service_and_treatment.save()
 
             # Return success response
@@ -330,7 +341,6 @@ def update_service_and_treatment(request):
             return JsonResponse({'error': error_msg}, status=500)
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-
 
 
 def getReferralList(request):
@@ -366,31 +376,55 @@ def getReferralList(request):
 
 
 @csrf_exempt
-@require_POST
-def updateReferralStatus(request):
+def update_referral_status(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            referral_id = data.get('referral_id')
-            new_status = data.get('new_status')
+        data = json.loads(request.body)
+        refer_data = data.get('referData')
 
-            # Ensure both referral_id and new_status are provided
-            if not referral_id or not new_status:
-                return JsonResponse({'error': 'Invalid request. Please provide referral_id and new_status'}, status=400)
+        if refer_data:
+            referred_by_id = refer_data.get('referred_by')
+            referred_to_id = refer_data.get('referred_to_name')
+            user_id = refer_data.get('user')
 
-            # Fetch the Referral object to update
-            referral = Referral.objects.get(pk=referral_id)
+            if not all([referred_by_id, referred_to_id, user_id]):
+                return JsonResponse({'error': 'Incomplete data provided'}, status=400)
 
-            # Update the referral status
-            referral.referral_status = new_status
-            referral.save()
+            try:
+                referred_by = CustomUser.objects.get(id=referred_by_id)
+            except CustomUser.DoesNotExist:
+                return JsonResponse({'error': 'Referred by user does not exist'}, status=400)
 
-            return JsonResponse({'message': 'Referral status updated successfully'}, status=200)
+            try:
+                referred_to = CustomUser.objects.get(id=referred_to_id)
+            except CustomUser.DoesNotExist:
+                return JsonResponse({'error': 'Referred to user does not exist'}, status=400)
 
-        except Referral.DoesNotExist:
-            return JsonResponse({'error': 'Referral does not exist'}, status=404)
+            referral_status = 'Awaiting'
+            referral, created = Referral.objects.update_or_create(
+                user_id=user_id,
+                defaults={
+                    'referred_by': referred_by,
+                    'referred_to': referred_to,
+                    'referred_to_name': referred_to.first_name + ' ' + referred_to.last_name,
+                    'referral_status': referral_status,
+                    'date': timezone.now(),
+                }
+            )
+
+            # Update the referred field in ServiceAndTreatment model based on referral status
+            with transaction.atomic():
+                service_and_treatment = ServiceAndTreatment.objects.filter(user=user_id).first()
+                if service_and_treatment:
+                    if referral.referral_status:
+                        service_and_treatment.referred = 'Referred'
+                        pass
+                    service_and_treatment.save()
+
+            return JsonResponse({'message': 'Referral saved successfully!'}, status=200)
+        else:
+            return JsonResponse({'error': 'Data not provided'}, status=400)
     else:
-        return JsonResponse({'error': 'Invalid request method. Only POST requests are allowed'}, status=405)
+        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 # function for getting users details:
@@ -451,7 +485,8 @@ def get_user_monitoring_details(request):
         rescreening_details.append(rescreening_data)
 
     # Retrieve SubstanceRiskMeasurement details for the user
-    substance_risk_measurements = SubstanceRiskMeasurement.objects.filter(rescreening__in=rescreenings)
+    substance_risk_measurements = SubstanceRiskMeasurement.objects.filter(
+        rescreening__in=rescreenings)
     substance_risk_measurement_details = []
     for measurement in substance_risk_measurements:
         substance_name = measurement.substance.name  # Fetch the name of the substance
@@ -505,4 +540,3 @@ def get_user_monitoring_details(request):
     }
 
     return JsonResponse(user_details)
-

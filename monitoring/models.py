@@ -60,6 +60,13 @@ class ServiceAndTreatment(models.Model):
     updated_by = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='updated_by')
     updated_at = models.DateTimeField(default=timezone.now)
+    REFERRED_CHOICES = (
+        ('Not Referred', 'Not Referred'),
+        ('Referred', 'Referred'),
+        ('Referred Back', 'Referred Back'),
+    )
+
+    referred = models.CharField(max_length=20, choices=REFERRED_CHOICES, default='Not Referred')
 
 class ServiceAndTreatmentHistory(models.Model):
     service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE)
@@ -86,8 +93,9 @@ class Referral(models.Model):
     referral_status = models.CharField(
         max_length=20, choices=REFERRAL_STATUS_CHOICES, default='Awaiting')
     referral_remarks = models.TextField(null=True, blank=True)
-    service_and_treatment = models.ForeignKey(
-        ServiceAndTreatment, on_delete=models.CASCADE, related_name='referrals', null=True, blank=True)
+    service_and_treatment = models.OneToOneField(
+        ServiceAndTreatment, on_delete=models.CASCADE, related_name='referral', null=True, blank=True
+    )
 
     def save(self, *args, **kwargs):
         if self.referred_to:
