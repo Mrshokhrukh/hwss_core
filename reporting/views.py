@@ -1,6 +1,9 @@
 from datetime import datetime, date
+from django.contrib.auth.models import User as Token
 from django.db.models import F, ExpressionWrapper, DateField
 from django.http import JsonResponse
+from django.contrib.auth.models import Group, Permission
+from settings_module.models import Notification
 from .models import Reporting
 from measurement.models import Measurement, MeasurementAssist, UserSubmission, Submission
 from monitoring.models import ServiceAndTreatment, Referral, Rescreening
@@ -15,7 +18,6 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 
 @csrf_exempt
 def get_all_users_data(request):
@@ -36,17 +38,33 @@ def get_all_users_data(request):
         # Fetch related data for each user
         user_data = []
         for user in users:
-            user_dict = {
-                field.name: getattr(user, field.name)
-                for field in user._meta.fields
-                if field.name not in ['profile_picture', 'password']
-            }
+            user_dict = model_to_dict(user)
+            related_models = {}
+
+            # Fetching related models excluding specific relationships
+            for related_object in user._meta.related_objects:
+                related_model = related_object.related_model
+                if related_model not in [Group, Permission, Token]:
+                    related_models[related_model.__name__] = [field.name for field in related_model._meta.fields]
+
+            # Convert ImageFieldFile to string representation
+            for key, value in user_dict.items():
+                if key == 'profile_picture':
+                    if value and hasattr(value, 'url'):
+                        user_dict[key] = value.url
+                    else:
+                        user_dict[key] = None
+
+            # Adding related models data to user dictionary
+            user_dict['related_models'] = related_models
             user_data.append(user_dict)
 
         return JsonResponse({'user_data': user_data}, status=200)
-
+    
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
 
 def update_reporting_data(request):
     try:

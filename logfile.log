@@ -100105,3 +100105,62 @@ Internal Server Error: /api/v1/reporting/get-all-user-data/
 "GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
 Internal Server Error: /api/v1/reporting/get-all-user-data/
 "GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 59
+Internal Server Error: /see-relationships/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: print_related_models() takes 0 positional arguments but 1 was given
+"GET /see-relationships/ HTTP/1.1" 500 75895
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3214
+Not Found: /see-relationships/2
+"GET /see-relationships/2 HTTP/1.1" 404 3238
+Internal Server Error: /see-relationships/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: print_related_models() takes 0 positional arguments but 1 was given
+"GET /see-relationships/ HTTP/1.1" 500 75746
+Not Found: /favicon.ico
+Not Found: /api/v1/reporting
+"GET /api/v1/reporting HTTP/1.1" 404 3229
+Not Found: /api/v1/reporting/
+"GET /api/v1/reporting/ HTTP/1.1" 404 3533
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 67
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 67
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 76
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 52
+Internal Server Error: /api/v1/reporting/get-all-user-data/
+"GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 63
