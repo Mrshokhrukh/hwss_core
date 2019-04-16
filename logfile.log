@@ -100164,3 +100164,541 @@ Internal Server Error: /api/v1/reporting/get-all-user-data/
 "GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 52
 Internal Server Error: /api/v1/reporting/get-all-user-data/
 "GET /api/v1/reporting/get-all-user-data/ HTTP/1.1" 500 63
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'gad_rescreening_interpretation' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 77, in update_user_archive
+    user_archive.save()
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'gad_rescreening_interpretation' in 'field list'")
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 284014
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.OperationalError: (1054, "Unknown column 'gad_rescreening_interpretation' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 77, in update_user_archive
+    user_archive.save()
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.OperationalError: (1054, "Unknown column 'gad_rescreening_interpretation' in 'field list'")
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 284014
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 148, in update_user_archive
+    referral_instance = service_and_treatment.referral
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 524, in __get__
+    raise self.RelatedObjectDoesNotExist(
+monitoring.models.ServiceAndTreatment.referral.RelatedObjectDoesNotExist: ServiceAndTreatment has no referral.
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 93058
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.IntegrityError: (1062, "Duplicate entry '11203005686' for key 'reporting_userarchive.identity_number'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 77, in update_user_archive
+    user_archive.save()
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.IntegrityError: (1062, "Duplicate entry '11203005686' for key 'reporting_userarchive.identity_number'")
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 284009
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 158, in update_user_archive
+    referral_instance = service_and_treatment.referral
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 524, in __get__
+    raise self.RelatedObjectDoesNotExist(
+monitoring.models.ServiceAndTreatment.referral.RelatedObjectDoesNotExist: ServiceAndTreatment has no referral.
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 93067
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 161, in update_user_archive
+    'referred_by': referral_instance.referred_by,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'referred_by'
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 88591
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.IntegrityError: (1048, "Column 'date_of_birth' cannot be null")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 138, in update_user_archive
+    user_archive.save()
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.IntegrityError: (1048, "Column 'date_of_birth' cannot be null")
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 290281
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+MySQLdb.IntegrityError: (1062, "Duplicate entry '123123' for key 'reporting_userarchive.agency_code'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 87, in update_user_archive
+    user_archive.save()
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 814, in save
+    self.save_base(
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 901, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1059, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 1100, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1845, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1822, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\db\backends\mysql\base.py", line 75, in execute
+    return self.cursor.execute(query, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\MySQLdb\connections.py", line 261, in query
+    _mysql.connection.query(self, query)
+django.db.utils.IntegrityError: (1062, "Duplicate entry '123123' for key 'reporting_userarchive.agency_code'")
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 290352
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 158, in update_user_archive
+    referral_instance = service_and_treatment.referral_instance
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'referral_instance'
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 94410
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 158, in update_user_archive
+    referral_instance = service_and_treatment.referral_instance
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'referral_instance'
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 94451
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 158, in update_user_archive
+    referral_instance = service_and_treatment.referral_instance
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'referral_instance'
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 94410
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 86, in update_user_archive
+    'substances': Substance.objects.all(),
+                  ^^^^^^^^^
+NameError: name 'Substance' is not defined
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 83804
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 203, in update_user_archive
+    if referral_instance:
+       ^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'referral_instance' where it is not associated with a value
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 97885
+Internal Server Error: /api/v1/reporting/update-user-archive/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 203, in update_user_archive
+    if referral_instance:
+       ^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'referral_instance' where it is not associated with a value
+"GET /api/v1/reporting/update-user-archive/ HTTP/1.1" 500 98049

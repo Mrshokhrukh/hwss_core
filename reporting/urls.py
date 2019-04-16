@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import orchestrate_reporting, get_all_users_data
+from .views import orchestrate_reporting, update_user_archive
 
 urlpatterns = [
     path('generate-report/', orchestrate_reporting, name='orchestrate_reporting'),
-    path('get-all-user-data/', get_all_users_data, name='get_all_user_data'),
+    path('update-user-archive/', update_user_archive, name='update_user_archive'),
 ]

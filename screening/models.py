@@ -108,8 +108,6 @@ class ScreenedUser(models.Model):
 
 
 
-
-
 class CaseBasedSubmission(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # Add a ForeignKey field to the User model
     case = models.ForeignKey(

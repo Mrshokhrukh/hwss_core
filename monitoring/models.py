@@ -65,8 +65,8 @@ class ServiceAndTreatment(models.Model):
         ('Referred', 'Referred'),
         ('Referred Back', 'Referred Back'),
     )
-
     referred = models.CharField(max_length=20, choices=REFERRED_CHOICES, default='Not Referred')
+    referral_instance = models.ForeignKey('Referral', on_delete=models.CASCADE, related_name='service_and_treatments', null=True, blank=True)
 
 class ServiceAndTreatmentHistory(models.Model):
     service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE)
