@@ -33,13 +33,13 @@ LOGGING = {
 
 
 CREDENTIALS = {
-    'API_KEY': config('CONSUMER_KEY'),
-    'API_SECRET': config('CONSUMER_SECRET'),
-    'TOKEN_URL': config('TOKEN_URL'),
-    'API_URL': config('API_URL'),
-    'EMIS_STUDENT_API': config('EMIS_STUDENT_API'),
-    'EMIS_STAFF_API': config('EMIS_STAFF_API'),
-    'RCSC_API': config('RCSC_API'),
+    'API_KEY': 'ScC63jo40LjxifHweyLUR6IVto0a',
+    'API_SECRET': 'jk6jLebfES42oYmf8YuFNuMFpTUa',
+    'TOKEN_URL': 'https://stg-sso.dit.gov.bt/oauth2/token',
+    'API_URL': 'https://staging-datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
+    'EMIS_STUDENT_API': 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
+    'EMIS_STAFF_API': 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
+    'RCSC_API': 'https://staging-datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
 }
 
 
@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'ckeditor',
+    # 'ckeditor',
+    'django_quill'
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -114,23 +115,23 @@ REST_FRAMEWORK = {
 }
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hwss_core',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '3306',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'hwss_core',
+#         'USER': 'root',
+#         'PASSWORD': 'password',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
 
 
 AUTH_PASSWORD_VALIDATORS = [

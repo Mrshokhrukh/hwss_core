@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from .models import AppConfig, MenuItem, Video
-from ckeditor.widgets import CKEditorWidget
+from django import forms
+from django_quill.forms import QuillFormField
 from django.db import models
 
 class AppConfigAdmin(admin.ModelAdmin):
@@ -60,10 +61,15 @@ class MenuItemAdmin(admin.ModelAdmin):
         return ", ".join([role.name for role in obj.roles.all()])
     list_roles.short_description = 'Roles'
 
+class VideoForm(forms.ModelForm):
+    description = QuillFormField()
+
+    class Meta:
+        model = Video
+        fields = '__all__'
+
 class VideoAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TextField: {'widget': CKEditorWidget}
-    }
+    form = VideoForm
     list_display = ('title', 'topic', 'description', 'video_link', 'video_file', 'video_for')
     search_fields = ['title', 'topic']
     list_filter = ['topic', 'video_for']

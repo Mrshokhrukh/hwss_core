@@ -16,6 +16,8 @@ class UserSubmission(models.Model):
         TestType, on_delete=models.CASCADE, related_name='usersubmission')
     created_at = models.DateTimeField(default=timezone.now)
     rescreened = models.BooleanField(default=False)
+    mark_as_safe = models.BooleanField(default=False)
+    is_old_case = models.BooleanField(default=False)
     def __str__(self):
         unique_string = f'{self.user.username}_{self.test_type.name}_{self.created_at.strftime("%Y-%m-%d_%H")}'
         return unique_string

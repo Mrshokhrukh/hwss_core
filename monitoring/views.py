@@ -92,7 +92,7 @@ def get_non_green_flags(request):
     rescreening_list = []
 
     # Iterate over all UserSubmission instances
-    for submission in UserSubmission.objects.filter(rescreened=False):
+    for submission in UserSubmission.objects.filter(rescreened=False, mark_as_safe=False):
         # Initialize a dictionary to store data for the current submission
         submission_data = {
             'submission_id': submission.id,
