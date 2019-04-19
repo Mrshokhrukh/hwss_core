@@ -101128,3 +101128,5 @@ Internal Server Error: /api/v1/access/register-counselor-event-user/
 "POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 280
 Internal Server Error: /api/v1/access/register-counselor-event-user/
 "POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 280
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26
