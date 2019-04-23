@@ -101130,3 +101130,296 @@ Internal Server Error: /api/v1/access/register-counselor-event-user/
 "POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 280
 Bad Request: /api/v1/access/login/
 "POST /api/v1/access/login/ HTTP/1.1" 400 26
+Not Found: /
+"GET / HTTP/1.1" 404 3016
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3067
+Internal Server Error: /api/v1/screening/submit-case-screening/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\screening\views.py", line 129, in submit_case_screening
+    gad_submission = CaseBasedSubmission.objects.create(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 675, in create
+    obj = self.model(**kwargs)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\base.py", line 543, in __init__
+    _setattr(self, field.name, rel_obj)
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py", line 283, in __set__
+    raise ValueError(
+ValueError: Cannot assign "<QuerySet [<CaseScreening: Case Screening: Case Daily Screening>]>": "CaseBasedSubmission.case" must be a "CaseScreening" instance.
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 116829
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 54
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Bad Request: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 400 30
+Bad Request: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 400 30
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/screening/submit-case-screening/
+"POST /api/v1/screening/submit-case-screening/ HTTP/1.1" 500 34
+Internal Server Error: /admin/screening/casesubstanceriskmeasurement/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\options.py", line 681, in get_field
+    return self.fields_map[field_name]
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'action_checkbox'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\utils.py", line 289, in lookup_field
+    f = _get_non_gfk_field(opts, name)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\utils.py", line 322, in _get_non_gfk_field
+    field = opts.get_field(name)
+            ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\db\models\options.py", line 683, in get_field
+    raise FieldDoesNotExist(
+django.core.exceptions.FieldDoesNotExist: CaseSubstanceRiskMeasurement has no field named 'action_checkbox'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 220, in _get_response
+    response = response.render()
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 92, in rendered_content
+    return template.render(context, self._request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\backends\django.py", line 61, in render
+    return self.template.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 1000, in <listcomp>
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\base.py", line 961, in render_annotated
+    return self.render(context)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\templatetags\base.py", line 45, in render
+    return super().render(context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\template\library.py", line 258, in render
+    _dict = self.func(*resolved_args, **resolved_kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py", line 343, in result_list
+    "results": list(results(cl)),
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py", line 319, in results
+    yield ResultList(None, items_for_result(cl, res, None))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py", line 310, in __init__
+    super().__init__(*items)
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py", line 217, in items_for_result
+    f, attr, value = lookup_field(field_name, result, cl.model_admin)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\utils.py", line 298, in lookup_field
+    value = attr(obj)
+            ^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\contrib\admin\options.py", line 997, in action_checkbox
+    "aria-label": format_html(_("Select this object for an action - {}"), obj),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\utils\html.py", line 135, in format_html
+    return mark_safe(format_string.format(*args_safe, **kwargs_safe))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\utils\html.py", line 117, in conditional_escape
+    return escape(text)
+           ^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\utils\functional.py", line 231, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\utils\html.py", line 50, in escape
+    return SafeString(html.escape(str(text)))
+                                  ^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\screening\models.py", line 154, in __str__
+    return f"Risk Measurement for {self.substance} in Case Based Submission for {self.case_submission.case.name}"
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CaseScreening' object has no attribute 'name'
+"GET /admin/screening/casesubstanceriskmeasurement/ HTTP/1.1" 500 528006
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 67
+Internal Server Error: /api/v1/access/register-counselor-event-user/
+"POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 69
+Internal Server Error: /api/v1/access/register-counselor-event-user/
+"POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 69
+Internal Server Error: /api/v1/access/register-counselor-event-user/
+"POST /api/v1/access/register-counselor-event-user/ HTTP/1.1" 500 280
+Internal Server Error: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 500 71
+Internal Server Error: /api/v1/access/get-citizen-details/21204004058/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 169, in fetch_citizen_details
+    mapped_user_data = map_user_data(citizen_detail)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 306, in map_user_data
+    'identity_number': citizen_detail.get('cid', ''),
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+"GET /api/v1/access/get-citizen-details/21204004058/ HTTP/1.1" 500 76784
+Internal Server Error: /api/v1/access/get-citizen-details/21204004058/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 169, in fetch_citizen_details
+    mapped_user_data = map_user_data(citizen_detail)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 306, in map_user_data
+    'identity_number': citizen_detail.get('cid', ''),
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+"GET /api/v1/access/get-citizen-details/21204004058/ HTTP/1.1" 500 76784
+Internal Server Error: /api/v1/access/get-citizen-details/21203000121/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 169, in fetch_citizen_details
+    mapped_user_data = map_user_data(citizen_detail)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 306, in map_user_data
+    'identity_number': citizen_detail.get('cid', ''),
+                       ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+"GET /api/v1/access/get-citizen-details/21203000121/ HTTP/1.1" 500 76784
+Internal Server Error: /api/v1/access/get-emis-student-details/201.00169.11.0002/2006-03-17/jig@gmail.com/
+Traceback (most recent call last):
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 247, in get_emis_student_details
+    agency_data, user_agency_data = map_emis_data_to_agency_models(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\rashm\Desktop\The PEMA\hwss_core\access\views.py", line 401, in map_emis_data_to_agency_models
+    if 'late' in father_name.lower() or 'lt' in father_name.lower():
+                 ^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'lower'
+"GET /api/v1/access/get-emis-student-details/201.00169.11.0002/2006-03-17/jig@gmail.com/ HTTP/1.1" 500 86969
+Internal Server Error: /api/v1/monitoring/accept-referral/
+"POST /api/v1/monitoring/accept-referral/ HTTP/1.1" 500 54
+Internal Server Error: /api/v1/monitoring/accept-referral/
+"POST /api/v1/monitoring/accept-referral/ HTTP/1.1" 500 54

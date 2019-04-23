@@ -92,7 +92,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     nationality = models.CharField(max_length=50)
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True, null=True)
-    last_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50, blank=True, null=True)
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
     email = models.EmailField(unique=True, null=True)

@@ -558,31 +558,43 @@ def get_user_monitoring_details(request):
 
 @csrf_exempt
 def accept_referral(request):
+    logger.info("Accept referral endpoint called.")
+
     if request.method == 'POST':
+        logger.debug("Request method is POST.")
+
         data = json.loads(request.body)
         referred_to_user_id = data.get('referredToUserId')
         patient_id = data.get('patientId')
 
+        logger.debug(f"referredToUserId: {referred_to_user_id}, patientId: {patient_id}")
+
         # Get the referred counselor and patient
-        referred_counselor = get_object_or_404(
-            CustomUser, id=referred_to_user_id)
+        referred_counselor = get_object_or_404(CustomUser, id=referred_to_user_id)
         referred_patient = get_object_or_404(CustomUser, id=patient_id)
+
+        logger.debug(f"Referred counselor: {referred_counselor}, Referred patient: {referred_patient}")
 
         try:
             # Check if a referral exists
-            referral = Referral.objects.filter(
-                referred_to=referred_counselor, user=referred_patient)
+            referral = Referral.objects.filter(referred_to=referred_counselor, user=referred_patient).first()
+
+            logger.debug(f"Referral query result: {referral}")
 
             if referral:
                 # Update referral status to 'Accepted'
                 referral.referral_status = 'Accepted'
                 referral.save()
+                logger.info("Referral status updated to 'Accepted'.")
                 return JsonResponse({'message': 'Referral accepted successfully.'})
             else:
+                logger.error("No referral found matching the criteria.")
                 return JsonResponse({'error': 'No referral found matching the criteria.'}, status=404)
         except Exception as e:
+            logger.exception("An error occurred while accepting the referral.")
             return JsonResponse({'error': str(e)}, status=500)
     else:
+        logger.error("Invalid request method.")
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 

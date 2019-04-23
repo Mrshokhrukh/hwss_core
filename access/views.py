@@ -361,7 +361,7 @@ def map_rcsc_data_to_agency_model(rcsc_data):
         user_role = CustomUser.ROLE_CLINICAL_COUNSELOR
     elif 'ict officer' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_ADMIN
-    elif 'school_counselor' in rcsc_data.get('positionTitle', '').lower():
+    elif 'counselor' in rcsc_data.get('positionTitle', '').lower() and 'clinical' not in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_SCHOOL_COUNSELOR
     elif 'student' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_STUDENT
@@ -398,10 +398,12 @@ def map_emis_data_to_agency_models(emis_data):
             'guardian') else 'Parents'
         father_name = student_detail.get('father', '')
         mother_name = student_detail.get('mother', '')
-        if 'late' in father_name.lower() or 'lt' in father_name.lower():
-            current_living_with = 'Mother'
-        elif 'late' in mother_name.lower() or 'lt' in mother_name.lower():
-            current_living_with = 'Father'
+        if father_name:
+            if 'late' in father_name.lower() or 'lt' in father_name.lower():
+                current_living_with = 'Mother'
+        elif mother_name:
+            if 'late' in mother_name.lower() or 'lt' in mother_name.lower():
+                current_living_with = 'Father'
         agency_data = {
             'agency_code': student_detail.get('AgencyCode', ''),
             'agency_name': student_detail.get('school', ''),
@@ -795,8 +797,8 @@ def registerCounselorEventUser(request):
                 )
 
                 # Create the CaseScreening object
-                event_screening = EventScreening.objects.create(
-                    user=user
+                event_screening = EventScreening.objects.get(
+                    counselor=counselor
                 )
 
                 # Create the UserAgency link

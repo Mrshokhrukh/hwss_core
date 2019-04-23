@@ -103,63 +103,70 @@ def get_counselor_info(request, counselor_name):
 
 
 @csrf_exempt
+@require_POST
 def submit_case_screening(request):
-    if request.method == 'POST':
-        # Extracting form data
+    try:
+        # Extract data from form data
         user_id = request.POST.get('userId')
-        gad_data = json.loads(request.POST.get('gadData'))
-        phq_data = json.loads(request.POST.get('phqData'))
-        ace_data = json.loads(request.POST.get('aceData'))
-        assist_risk_severity = json.loads(
-            request.POST.get('assistRiskSeverity'))
-        school_env_data = json.loads(request.POST.get('schoolEnvData'))
+        gad_data = request.POST.get('gadData')
+        gad_score = request.POST.get('gadScore')
+        gad_interpretation = request.POST.get('gadInterpretation')
+        phq_data = request.POST.get('phqData')
+        phq_score = request.POST.get('phqScore')
+        phq_interpretation = request.POST.get('phqInterpretation')
+        ace_data = request.POST.get('aceData')
+        ace_score = request.POST.get('aceScore')
+        ace_interpretation = request.POST.get('aceInterpretation')
+        assist_risk_severity = request.POST.get('assistRiskSeverity')
+        school_env_data = request.POST.get('schoolEnvData')
 
-        # Assuming you have the CustomUser object associated with the user_id
-        user = CustomUser.objects.get(id=user_id)
+        # Retrieve the CustomUser instance based on the user ID
+        user = get_object_or_404(CustomUser, pk=user_id)
 
-        # Determine the CaseScreening instance to associate the submission with
-        # Here you need to implement your logic to retrieve the appropriate CaseScreening instance
-        # For example, you can retrieve the latest screening associated with the user
-        latest_screening = CaseScreening.objects.filter(
-            user=user)
+        # Retrieve the latest CaseScreening for the user
+        latest_case_screening = user.case_screenings.order_by('-date').first()
 
-        # Saving GAD data
-        gad_score = gad_data['totalScore']
-        gad_interpretation = gad_data['interpretation']
-        gad_submission = CaseBasedSubmission.objects.create(
-            user=user, case=latest_screening, gad_data=gad_data, gad_score=gad_score, gad_interpretation=gad_interpretation)
+        # Create CaseBasedSubmission instance
+        case_submission = CaseBasedSubmission.objects.create(
+            user=user,
+            case=latest_case_screening,  # Associate with the latest CaseScreening
+            gad_data=gad_data,
+            gad_score=gad_score,
+            gad_interpretation=gad_interpretation,
+            phq_data=phq_data,
+            phq_score=phq_score,
+            phq_interpretation=phq_interpretation,
+            ace_data=ace_data,
+            ace_score=ace_score,
+            ace_interpretation=ace_interpretation,
+            school_env_data=school_env_data
+        )
 
-        # Saving PHQ data
-        phq_score = phq_data['totalScore']
-        phq_interpretation = phq_data['interpretation']
-        phq_submission = CaseBasedSubmission.objects.create(
-            user=user, case=latest_screening, phq_data=phq_data, phq_score=phq_score, phq_interpretation=phq_interpretation)
+        # Parse assist risk severity data
+        assist_risk_severity = json.loads(assist_risk_severity)
 
-        # Saving ACE data
-        ace_score = ace_data['totalScore']
-        ace_interpretation = ace_data['interpretation']
-        ace_submission = CaseBasedSubmission.objects.create(
-            user=user, case=latest_screening, ace_data=ace_data, ace_score=ace_score, ace_interpretation=ace_interpretation)
-
-        # Saving school environment data
-        school_env_submission = CaseBasedSubmission.objects.create(
-            user=user, case=latest_screening, school_env_data=school_env_data)
-
-        # Saving substance risk measurements
-        for substance_name, risk_severity in assist_risk_severity.items():
-            substance, _ = CaseSubstance.objects.get_or_create(
-                name=substance_name)
-            risk_measurement = CaseSubstanceRiskMeasurement.objects.create(
+        # Create CaseSubstanceRiskMeasurement instances
+        for substance_name, severity in assist_risk_severity.items():
+            # Check if the substance exists in the database
+            substance, created = CaseSubstance.objects.get_or_create(name=substance_name)
+            # Set a default value for the measurement field if it's not available from the request
+            measurement = 0.0  # You can change this default value as needed
+            CaseSubstanceRiskMeasurement.objects.create(
                 substance=substance,
-                case_submission=gad_submission,
-                measurement=0, 
-                risk_flag=risk_severity,
-                total_score=0 
+                case_submission=case_submission,
+                measurement=measurement,  # Assign a default value
+                risk_flag=severity
             )
 
-        return JsonResponse({'message': 'Form data saved successfully'}, status=200)
-    else:
-        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
+        # Return success response
+        return JsonResponse({'message': 'Submission saved successfully'})
+
+    except Exception as e:
+        # Log the exception
+        logger.exception("Error occurred while processing submission")
+
+        # Return error response
+        return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 
 @csrf_exempt
