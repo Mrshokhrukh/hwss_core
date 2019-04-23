@@ -101423,3 +101423,15 @@ Internal Server Error: /api/v1/monitoring/accept-referral/
 "POST /api/v1/monitoring/accept-referral/ HTTP/1.1" 500 54
 Internal Server Error: /api/v1/monitoring/accept-referral/
 "POST /api/v1/monitoring/accept-referral/ HTTP/1.1" 500 54
+Internal Server Error: /api/v1/access/register-pre-recorded-user/
+"POST /api/v1/access/register-pre-recorded-user/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/access/register-pre-recorded-user/
+"POST /api/v1/access/register-pre-recorded-user/ HTTP/1.1" 500 34
+Bad Request: /api/v1/access/verify-pre-recorded-user/
+"GET /api/v1/access/verify-pre-recorded-user/?cid=11201003758 HTTP/1.1" 400 73
+Bad Request: /api/v1/measurement/submit-screening/
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
+Bad Request: /api/v1/measurement/submit-screening/
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
+Bad Request: /api/v1/measurement/submit-screening/
+"POST /api/v1/measurement/submit-screening/ HTTP/1.1" 400 73
