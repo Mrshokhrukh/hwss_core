@@ -16,7 +16,7 @@ class AppConfigListView(generics.ListAPIView):
 
 
 class MenuItemsAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]  # Adjust the permissions as needed
+    permission_classes = [permissions.AllowAny] 
     serializer_class = MenuItemSerializer
 
     def get_queryset(self):

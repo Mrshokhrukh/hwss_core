@@ -67,42 +67,8 @@ class CaseScreening(models.Model):
         
         super().save(*args, **kwargs)
 
-    
-
-
-class EventScreening(models.Model):
-    event_name = models.CharField(max_length=255)
-    event_purpose = models.TextField(null=True, blank=True)
-    location = models.CharField(max_length=255)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    duration = models.IntegerField(help_text="Duration in hours")
-    counselor = models.CharField(max_length=255)
-    approval_status_choices = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-        ('ended', 'Ended'),
-    ]
-    approval_status = models.CharField(max_length=20, choices=approval_status_choices, default='pending')
-    remarks = models.TextField(null=True, blank=True)
-    rejection_reason = models.TextField(null=True, blank=True)
-    registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
-    selected_tool = models.CharField(max_length=100, null=True, blank=True)  # Add selected_tool field
-
-    def save(self, *args, **kwargs):
-        if not self.id: 
-            self.registration_lockout_end_time = timezone.now() + timezone.timedelta(days=self.duration)
-
-        current_date = timezone.now().date()
-        if current_date >= self.end_date or (self.registration_lockout_end_time and timezone.now() >= self.registration_lockout_end_time):
-            self.approval_status = 'ended'
-
-        super().save(*args, **kwargs)
-
-
 class ScreenedUser(models.Model):
-    event_screening = models.ForeignKey(EventScreening, on_delete=models.CASCADE, related_name='screened_users')
+    event_screening = models.ForeignKey('EventScreening', on_delete=models.CASCADE, related_name='screened_users')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     screening_date = models.DateField(default=timezone.now)
 
@@ -151,11 +117,44 @@ class CaseSubstanceRiskMeasurement(models.Model):
     total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  
 
     def __str__(self):
-        return f"Risk Measurement for {self.substance} in Case Based Submission for {self.case_submission.case.name}"
+        return f"Risk Measurement for {self.substance} in Case Based Submission for {self.case_submission.case.case_name}"
     
+
+class EventScreening(models.Model):
+    event_name = models.CharField(max_length=255)
+    event_purpose = models.TextField(null=True, blank=True)
+    location = models.CharField(max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    duration = models.IntegerField(help_text="Duration in hours")
+    counselor = models.CharField(max_length=255)
+    approval_status_choices = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('ended', 'Ended'),
+    ]
+    approval_status = models.CharField(max_length=20, choices=approval_status_choices, default='pending')
+    remarks = models.TextField(null=True, blank=True)
+    rejection_reason = models.TextField(null=True, blank=True)
+    registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
+    selected_tool = models.CharField(max_length=100, null=True, blank=True)  # Add selected_tool field
+    users = models.ManyToManyField(CustomUser, related_name='events', blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id: 
+            self.registration_lockout_end_time = timezone.now() + timezone.timedelta(days=self.duration)
+
+        current_date = timezone.now().date()
+        if current_date >= self.end_date or (self.registration_lockout_end_time and timezone.now() >= self.registration_lockout_end_time):
+            self.approval_status = 'ended'
+
+        super().save(*args, **kwargs)
 
 
 class EventBasedSubmission(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='event_based_submissions')
     event = models.ForeignKey(
         EventScreening, on_delete=models.CASCADE, related_name='event_based_submissions')
     gad_data = models.JSONField(null=True, blank=True)
@@ -178,7 +177,7 @@ class EventBasedSubmission(models.Model):
         'monitoring.Referral', on_delete=models.SET_NULL, related_name='event_based_submissions', null=True, blank=True)
 
     def __str__(self):
-        return f"Event Based Submission for {self.event.name}"
+        return f"Event Based Submission for {self.event.event_name}"
 
 class EventSubstance(models.Model):
     name = models.CharField(max_length=100)
@@ -197,6 +196,6 @@ class EventSubstanceRiskMeasurement(models.Model):
     total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  
 
     def __str__(self):
-        return f"Risk Measurement for {self.substance} in Event Based Submission for {self.event_submission.event.name}"
+        return f"Risk Measurement for {self.substance} in Event Based Submission for {self.event_submission.event.event_name}"
 
 

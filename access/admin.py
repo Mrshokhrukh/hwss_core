@@ -75,7 +75,7 @@ class PreRecordedUserAdmin(admin.ModelAdmin):
 
 
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role',
+    list_display = ('id','username', 'email', 'role',
                     'active_agency', 'display_profile_picture')
     inlines = [UserAgencyInline]
 

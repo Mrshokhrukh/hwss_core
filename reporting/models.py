@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils import timezone
-from access.models import CustomUser
+from access.models import CustomUser, UserAgency, Agency
+from django.contrib.auth import get_user_model
+
+from monitoring.models import Referral, ServiceAndTreatment
 
 User = CustomUser
 
@@ -72,133 +75,57 @@ class Reporting(models.Model):
 
 
 
-class UserArchive(models.Model):
-    # Personal Information
-    identity_number = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    nationality = models.CharField(max_length=50, blank=True, null=True)
-    first_name = models.CharField(max_length=50, blank=True, null=True)
-    middle_name = models.CharField(max_length=50, blank=True, null=True)
-    last_name = models.CharField(max_length=50, blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)
-    gender = models.CharField(max_length=10, blank=True, null=True)
-    mobile_number = models.CharField(max_length=15, null=True, blank=True)
-    is_gyalsung = models.BooleanField(default=False)
-    academy_code = models.CharField(max_length=100, blank=True, null=True)
-    role = models.CharField(max_length=20, null=True)
-
-    # User Agency Details
-    user_code = models.CharField(max_length=100, blank=True, null=True)
-    parent_status = models.CharField(max_length=100, blank=True, null=True)
-    current_living_with = models.CharField(max_length=100, blank=True, null=True)
-    user_role_agency = models.CharField(max_length=100, blank=True, null=True)
-    user_class = models.CharField(max_length=100, blank=True, null=True)
-    user_stream = models.CharField(max_length=100, blank=True, null=True)
-    user_sub_class = models.CharField(max_length=100, blank=True, null=True)
-
-    # Location Details
-    agency_code = models.CharField(max_length=100, blank=True, null=True)
-    agency_name = models.CharField(max_length=100, blank=True, null=True)
-    agency_parent = models.CharField(max_length=100, null=True, blank=True)
-    present_dzongkhag = models.CharField(max_length=100, null=True, blank=True)
-    present_gewog = models.CharField(max_length=100, null=True, blank=True)
-    present_village = models.CharField(max_length=100, null=True, blank=True)
-    ps_add_village = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
-
-    # Substance Use Information
-    gad_measurement = models.CharField(max_length=50, blank=True, null=True)
-    gad_flag = models.CharField(max_length=10, blank=True, null=True)
-    phq_measurement = models.CharField(max_length=50, blank=True, null=True)
-    phq_flag = models.CharField(max_length=10, blank=True, null=True)
-    suicidal_measurement = models.CharField(max_length=50, blank=True, null=True)
-    suicidal_flag = models.CharField(max_length=10, blank=True, null=True)
-    ace_measurement = models.CharField(max_length=50, blank=True, null=True)
-    ace_flag = models.CharField(max_length=10, blank=True, null=True)
-    overall_flag = models.CharField(max_length=10, blank=True, null=True)
-    alcoholic_measurement = models.CharField(max_length=50, blank=True, null=True)
-    alcoholic_flag = models.CharField(max_length=50, blank=True, null=True)
-    tobacco_measurement = models.CharField(max_length=50, blank=True, null=True)
-    tobacco_flag = models.CharField(max_length=50, blank=True, null=True)
-    cannabis_measurement = models.CharField(max_length=50, blank=True, null=True)
-    cannabis_flag = models.CharField(max_length=50, blank=True, null=True)
-    cocaine_measurement = models.CharField(max_length=50, blank=True, null=True)
-    cocaine_flag = models.CharField(max_length=50, blank=True, null=True)
-    amphetamine_measurement = models.CharField(max_length=50, blank=True, null=True)
-    amphetamine_flag = models.CharField(max_length=50, blank=True, null=True)
-    inhalants_measurement = models.CharField(max_length=50, blank=True, null=True)
-    inhalants_flag = models.CharField(max_length=50, blank=True, null=True)
-    sedatives_measurement = models.CharField(max_length=50, blank=True, null=True)
-    sedatives_flag = models.CharField(max_length=50, blank=True, null=True)
-    hallucinogens_measurement = models.CharField(max_length=50, blank=True, null=True)
-    hallucinogens_flag = models.CharField(max_length=50, blank=True, null=True)
-    opioids_measurement = models.CharField(max_length=50, blank=True, null=True)
-    opioids_flag = models.CharField(max_length=50, blank=True, null=True)
-    injection_measurement = models.CharField(max_length=50, blank=True, null=True)
-    injection_flag = models.CharField(max_length=50, blank=True, null=True)
-    other_measurement = models.CharField(max_length=50, blank=True, null=True)
-    other_flag = models.CharField(max_length=50, blank=True, null=True)
-    other_name = models.CharField(max_length=100, blank=True, null=True)
-
-    # Submission Details
-    test_type = models.CharField(max_length=100, blank=True, null=True)
+class ReportingModel(models.Model):
+    user = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
+    user_agency = models.OneToOneField(
+        UserAgency, on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
+    agency = models.ForeignKey(
+        Agency, on_delete=models.CASCADE, related_name='reporting_models', null=True, blank=True)
+    agency_name = models.CharField(max_length=100, null=True, blank=True)
+    service_and_treatment = models.ForeignKey(
+        ServiceAndTreatment, on_delete=models.CASCADE, related_name='reporting_models', null=True, blank=True)
+    referral = models.ForeignKey(
+        Referral, on_delete=models.CASCADE, related_name='reporting_models', null=True, blank=True)
+    gad_score = models.IntegerField(null=True, blank=True)
+    gad_interpretation = models.CharField(max_length=255, null=True, blank=True)
+    phq_score = models.IntegerField(null=True, blank=True)
+    phq_interpretation = models.CharField(max_length=255, null=True, blank=True)
+    suicidal_score = models.IntegerField(null=True, blank=True)
+    suicidal_intepretation = models.CharField(max_length=255, null=True, blank=True)
+    ace_score = models.IntegerField(null=True, blank=True)
+    ace_interpretation = models.CharField(max_length=255, null=True, blank=True)
+    previous_diagnosis = models.CharField(max_length=255, null=True, blank=True)
+    alcoholic_measurement = models.CharField(max_length=50, null=True, blank=True)
+    alcoholic_flag = models.CharField(max_length=50, null=True, blank=True)
+    tobacco_measurement = models.CharField(max_length=50, null=True, blank=True)
+    tobacco_flag = models.CharField(max_length=50, null=True, blank=True)
+    cannabis_measurement = models.CharField(max_length=50, null=True, blank=True)
+    cannabis_flag = models.CharField(max_length=50, null=True, blank=True)
+    cocaine_measurement = models.CharField(max_length=50, null=True, blank=True)
+    cocaine_flag = models.CharField(max_length=50, null=True, blank=True)
+    amphetamine_measurement = models.CharField(max_length=50, null=True, blank=True)
+    amphetamine_flag = models.CharField(max_length=50, null=True, blank=True)
+    inhalants_measurement = models.CharField(max_length=50, null=True, blank=True)
+    inhalants_flag = models.CharField(max_length=50, null=True, blank=True)
+    sedatives_measurement = models.CharField(max_length=50, null=True, blank=True)
+    sedatives_flag = models.CharField(max_length=50, null=True, blank=True)
+    hallucinogens_measurement = models.CharField(max_length=50, null=True, blank=True)
+    hallucinogens_flag = models.CharField(max_length=50, null=True, blank=True)
+    opioids_measurement = models.CharField(max_length=50, null=True, blank=True)
+    opioids_flag = models.CharField(max_length=50, null=True, blank=True)
+    injection_measurement = models.CharField(max_length=50, null=True, blank=True)
+    injection_flag = models.CharField(max_length=50, null=True, blank=True)
+    other_measurement = models.CharField(max_length=50, null=True, blank=True)
+    other_flag = models.CharField(max_length=50, null=True, blank=True)
+    other_name = models.CharField(max_length=100, null=True, blank=True)
     rescreened = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    # Screening and Assessment
-    assessment_status = models.CharField(max_length=20, default='Not Conducted', blank=True, null=True)
-    case_status = models.CharField(max_length=20, default='On Going', blank=True, null=True)
-    counseling = models.CharField(max_length=20, default='Waiting List', blank=True, null=True)
-    follow_up = models.CharField(max_length=255, blank=True)
-    comments = models.TextField(null=True, blank=True)
-    updated_at = models.DateTimeField(default=timezone.now)
-    referred = models.CharField(max_length=20, default='Not Referred')
-
-    # Rescreening Details
-    gad_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    gad_rescreening_score = models.CharField(max_length=10, blank=True, null=True)
-    phq_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    phq_rescreening_score = models.CharField(max_length=10, blank=True, null=True)
-    suicidal_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    suicidal_rescreening_score = models.CharField(max_length=10, blank=True, null=True)
-    ace_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    ace_rescreening_score = models.CharField(max_length=10, blank=True, null=True)
-
-    alcoholic_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    alcoholic_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    tobacco_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    tobacco_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    cannabis_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    cannabis_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    cocaine_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    cocaine_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    amphetamine_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    amphetamine_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    inhalants_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    inhalants_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    sedatives_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    sedatives_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    hallucinogens_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    hallucinogens_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    opioids_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    opioids_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    injection_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    injection_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    other_rescreening_interpretation = models.CharField(max_length=50, blank=True, null=True)
-    other_rescreening_score = models.CharField(max_length=50, blank=True, null=True)
-    other_rescreening_name = models.CharField(max_length=100, blank=True, null=True)
-
-    # Referral Details
-    referred_by = models.CharField(max_length=100, null=True, blank=True)
-    date = models.DateField(auto_now_add=True)
-    referred_to = models.CharField(max_length=100, null=True, blank=True)
-    referred_to_name = models.CharField(max_length=100, null=True, blank=True)
-    referral_status = models.CharField(max_length=20, default='Awaiting')
-    referral_remarks = models.TextField(null=True, blank=True)
-
-    class Meta:
-        verbose_name = "User Archive"
-        verbose_name_plural = "User Archives"
+    rescreened_by = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name='rescreened_new_models')
+    original_submission_date = models.DateTimeField(
+        null=True, blank=True, auto_now_add=True)
+    rescreened_date = models.DateTimeField(
+        null=True, blank=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} - {self.identity_number}"
+        return f"ReportingModel for {self.user.username}"

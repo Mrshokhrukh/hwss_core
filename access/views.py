@@ -468,28 +468,32 @@ def map_emis_staff_data_to_agency_models(emis_data):
 class CustomTokenAuthentication(APIView):
     authentication_classes = [TokenAuthentication]
 
-    def post(self, request, format=None):  # Change to accept POST requests
+    def post(self, request, format=None):
+        # Extract the token from the request
         auth_token = request.META.get('HTTP_AUTHORIZATION')
 
+        # Check if token exists
         if not auth_token:
-            raise AuthenticationFailed(
-                'Invalid token header. No credentials provided.')
+            raise AuthenticationFailed('Invalid token header. No credentials provided.')
 
+        # Split the token type and key
         try:
             token_type, token_key = auth_token.split(' ')
         except ValueError:
             raise AuthenticationFailed('Invalid token header format.')
 
+        # Check if token type is valid
         if token_type.lower() != 'token':
-            raise AuthenticationFailed(
-                'Invalid token type. Only "Token" authentication is supported.')
+            raise AuthenticationFailed('Invalid token type. Only "Token" authentication is supported.')
 
+        # Retrieve token from the database
         try:
-            token = Token.objects.get(key=token_key)
+            token = Token.objects.select_related('user').get(key=token_key)
         except Token.DoesNotExist:
             raise AuthenticationFailed('Invalid token.')
 
-        return Response({"valid": True})
+        # Token is valid, return a minimal response indicating its validity
+        return Response({"valid": True}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -667,7 +671,7 @@ def registerCounselorCaseUser(request):
                 # Create the CaseScreening object
                 case_screening = CaseScreening.objects.create(
                     user=user,
-                    case_name='Case Daily Screening',
+                    case_name=user_data.get('caseName'),
                     purpose=user_data.get('purpose'),
                     dzongkhag=user_data.get('dzongkhag'),
                     counselor=user_data.get('counselorName'),
@@ -692,6 +696,7 @@ def registerCounselorCaseUser(request):
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -730,7 +735,6 @@ def registerCounselorEventUser(request):
             existing_user = CustomUser.objects.filter(
                 identity_number=user_data.get('CID')).first()
 
-
             if existing_user:
                 # User exists, proceed with existing data or update it if necessary
                 existing_user.username = user_data.get('username')
@@ -754,19 +758,17 @@ def registerCounselorEventUser(request):
                 existing_user.save()
 
                 # Update other associated data if needed
-                # For example, update CaseScreening object
-                event_screening = EventScreening.objects.filter(user=existing_user).first()
+                # For example, update EventScreening object
+                counselor_name = user_data.get('counselorName')
+                event_screening = EventScreening.objects.filter(counselor=counselor_name, approval_status='approved').first()
                 if event_screening:
-                    event_screening.dzongkhag = user_data.get('dzongkhag')
-                    event_screening.counselor = user_data.get('counselorName')
+                    # Add the existing user to the event's users
+                    event_screening.users.add(existing_user)
                     event_screening.save()
 
                 # Create or update the UserAgency link if needed
                 # Assuming user_agency_data contains relevant agency information
                 user_agency_data['user'] = existing_user
-                agency_code = agency_data.get('agency_code')
-                agency, _ = Agency.objects.get_or_create(
-                    agency_code=agency_code, defaults=agency_data)
                 user_agency_data['agency'] = agency
                 user_agency, _ = UserAgency.objects.get_or_create(
                     user=existing_user, defaults=user_agency_data)
@@ -796,15 +798,20 @@ def registerCounselorEventUser(request):
                     role='student'
                 )
 
-                # Create the CaseScreening object
-                event_screening = EventScreening.objects.get(
-                    counselor=counselor
-                )
-
-                # Create the UserAgency link
+                # Create or update the UserAgency link if needed
                 user_agency_data['user'] = user
                 user_agency_data['agency'] = agency
-                UserAgency.objects.create(**user_agency_data)
+                user_agency, _ = UserAgency.objects.get_or_create(
+                    user=user, defaults=user_agency_data)
+
+                # Retrieve the event based on counselor's name and approval status
+                counselor_name = user_data.get('counselorName')
+                event_screening = EventScreening.objects.filter(counselor=counselor_name, approval_status='approved').first()
+                
+                # Create the EventScreening object if event exists
+                if event_screening:
+                    # Add the newly created user to the event's users
+                    event_screening.users.add(user)
 
                 response_data = {'userId': user.id,
                                 'message': 'Counselor user registered successfully.'}
@@ -818,9 +825,6 @@ def registerCounselorEventUser(request):
         print(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    
-
 
 class UserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -1052,110 +1056,6 @@ class GetUserDetailsView(APIView):
             logger.error(f"Error occurred: {str(e)}")
             return JsonResponse({"error": "An error occurred while fetching user details."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-# class AgencySerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Agency
-#         fields = '__all__'
-
-#     def create(self, validated_data):
-#         # Create the agency instance
-#         agency_instance = Agency.objects.create(**validated_data)
-#         return agency_instance
-
-#     def update(self, instance, validated_data):
-#         for field, value in validated_data.items():
-#             setattr(instance, field, value)
-#         instance.save()
-#         return instance
-
-
-# class UserAgencySerializer(serializers.ModelSerializer):
-#     agency_details = AgencySerializer(read_only=True)
-
-#     class Meta:
-#         model = UserAgency
-#         fields = '__all__'
-
-#     def create(self, validated_data):
-#         user_agency_instance = UserAgency.objects.create(**validated_data)
-
-#         user_instance = validated_data.get('user')
-#         agency_instance = validated_data.get('agency_details')
-#         if user_instance and agency_instance:
-#             user_instance.active_agency = agency_instance
-#             user_instance.save()
-
-#         return user_agency_instance
-
-#     def update(self, instance, validated_data):
-#         for field, value in validated_data.items():
-#             setattr(instance, field, value)
-#         instance.save()
-
-#         user_instance = instance.user
-#         agency_instance = instance.agency_details
-#         if user_instance and agency_instance:
-#             user_instance.active_agency = agency_instance
-#             user_instance.save()
-
-#         return instance
-
-
-# class CustomUserSerializer(serializers.ModelSerializer):
-#     active_agency = AgencySerializer(read_only=True)
-#     agency_details = serializers.PrimaryKeyRelatedField(
-#         queryset=UserAgency.objects.all(), allow_null=True)
-
-#     class Meta:
-#         model = CustomUser
-#         fields = [
-#             'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
-#             'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
-#             'gender', 'email', 'mob_number', 'father_name', 'mother_name',
-#             'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
-#             'profile_picture', 'academy_code', 'date_joined',
-#             'password',  'role', 'active_agency', 'agency_details'
-#         ]
-#         extra_kwargs = {
-#             'password': {'write_only': True},
-#         }
-
-#     def create(self, validated_data):
-#         password = validated_data.pop('password', None)
-#         agency_details = validated_data.pop('agency_details', None)
-#         instance = super().create(validated_data)
-#         if password:
-#             instance.set_password(password)
-#             instance.save()
-
-#         if agency_details:
-#             UserAgency.objects.create(user=instance, **agency_details)
-
-#         return instance
-
-
-# class PreRecordedUserSerializer(serializers.ModelSerializer):
-#     password = serializers.CharField(write_only=True)
-
-#     class Meta:
-#         model = CustomUser
-#         fields = [
-#             'id', 'username', 'is_staff', 'is_active', 'is_gyalsung', 'identity_number',
-#             'nationality', 'first_name', 'middle_name', 'last_name', 'date_of_birth',
-#             'gender', 'email', 'mob_number', 'father_name', 'mother_name',
-#             'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
-#             'profile_picture', 'active_agency', 'academy_code', 'date_joined',
-#             'password',  'role'
-#         ]
-
-#     def create(self, validated_data):
-#         password = validated_data.pop('password', None)
-#         instance = super().create(validated_data)
-#         if password:
-#             instance.set_password(password)
-#             instance.save()
-#         return instance
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]

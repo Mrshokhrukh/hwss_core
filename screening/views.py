@@ -84,6 +84,7 @@ def get_counselor_info(request, counselor_name):
             latest_event.save()
 
         counselor_info = {
+            'eventId': latest_event.pk,  # Add eventId to the response
             'event_name': latest_event.event_name,
             'event_purpose': latest_event.event_purpose,
             'location': latest_event.location,
@@ -106,57 +107,68 @@ def get_counselor_info(request, counselor_name):
 @require_POST
 def submit_case_screening(request):
     try:
-        # Extract data from form data
-        user_id = request.POST.get('userId')
-        gad_data = request.POST.get('gadData')
-        gad_score = request.POST.get('gadScore')
-        gad_interpretation = request.POST.get('gadInterpretation')
-        phq_data = request.POST.get('phqData')
-        phq_score = request.POST.get('phqScore')
-        phq_interpretation = request.POST.get('phqInterpretation')
-        ace_data = request.POST.get('aceData')
-        ace_score = request.POST.get('aceScore')
-        ace_interpretation = request.POST.get('aceInterpretation')
-        assist_risk_severity = request.POST.get('assistRiskSeverity')
-        school_env_data = request.POST.get('schoolEnvData')
+        with transaction.atomic():
+            # Extract data from form data
+            user_id = request.POST.get('userId')
+            gad_data = json.loads(request.POST.get('gadData', '{}'))
+            phq_data = json.loads(request.POST.get('phqData', '{}'))
+            ace_data = json.loads(request.POST.get('aceData', '{}'))
+            assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
+            school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
 
-        # Retrieve the CustomUser instance based on the user ID
-        user = get_object_or_404(CustomUser, pk=user_id)
+            # Retrieve the CustomUser instance based on the user ID
+            user = CustomUser.objects.get(pk=user_id)
 
-        # Retrieve the latest CaseScreening for the user
-        latest_case_screening = user.case_screenings.order_by('-date').first()
+            # Retrieve the latest CaseScreening for the user
+            latest_case_screening = user.case_screenings.order_by('-date').first()
 
-        # Create CaseBasedSubmission instance
-        case_submission = CaseBasedSubmission.objects.create(
-            user=user,
-            case=latest_case_screening,  # Associate with the latest CaseScreening
-            gad_data=gad_data,
-            gad_score=gad_score,
-            gad_interpretation=gad_interpretation,
-            phq_data=phq_data,
-            phq_score=phq_score,
-            phq_interpretation=phq_interpretation,
-            ace_data=ace_data,
-            ace_score=ace_score,
-            ace_interpretation=ace_interpretation,
-            school_env_data=school_env_data
-        )
+            # Create or update CaseBasedSubmission instance
+            submission_instance = latest_case_screening.case_based_submissions.first()
 
-        # Parse assist risk severity data
-        assist_risk_severity = json.loads(assist_risk_severity)
+            if submission_instance:
+                # Update existing instance
+                submission_instance.gad_data = gad_data.get('responses', [])
+                submission_instance.gad_score = gad_data.get('totalScore')
+                submission_instance.gad_interpretation = gad_data.get('interpretation')
+                submission_instance.phq_data = phq_data.get('responses', [])
+                submission_instance.phq_score = phq_data.get('totalScore')
+                submission_instance.phq_interpretation = phq_data.get('interpretation')
+                submission_instance.ace_data = ace_data.get('responses', [])
+                submission_instance.ace_score = ace_data.get('totalScore')
+                submission_instance.ace_interpretation = ace_data.get('interpretation')
+                submission_instance.school_env_data = school_env_data
+                submission_instance.save()
+            else:
+                # Create new instance
+                submission_instance = CaseBasedSubmission.objects.create(
+                    user=user,
+                    case=latest_case_screening,
+                    gad_data=gad_data.get('responses', []),
+                    gad_score=gad_data.get('totalScore'),
+                    gad_interpretation=gad_data.get('interpretation'),
+                    phq_data=phq_data.get('responses', []),
+                    phq_score=phq_data.get('totalScore'),
+                    phq_interpretation=phq_data.get('interpretation'),
+                    ace_data=ace_data.get('responses', []),
+                    ace_score=ace_data.get('totalScore'),
+                    ace_interpretation=ace_data.get('interpretation'),
+                    school_env_data=school_env_data
+                )
 
-        # Create CaseSubstanceRiskMeasurement instances
-        for substance_name, severity in assist_risk_severity.items():
-            # Check if the substance exists in the database
-            substance, created = CaseSubstance.objects.get_or_create(name=substance_name)
-            # Set a default value for the measurement field if it's not available from the request
-            measurement = 0.0  # You can change this default value as needed
-            CaseSubstanceRiskMeasurement.objects.create(
-                substance=substance,
-                case_submission=case_submission,
-                measurement=measurement,  # Assign a default value
-                risk_flag=severity
-            )
+            # Create CaseSubstanceRiskMeasurement instances
+            for substance_name, severity in assist_risk_severity.items():
+                # Check if the substance exists in the database
+                substance, created = CaseSubstance.objects.get_or_create(name=substance_name)
+                # Extract score from severity
+                score = int(severity.split('(')[1].split(')')[0])
+                # Create new instance
+                CaseSubstanceRiskMeasurement.objects.create(
+                    substance=substance,
+                    case_submission=submission_instance,
+                    measurement=0.0,  # Default value
+                    risk_flag=severity,
+                    total_score=score
+                )
 
         # Return success response
         return JsonResponse({'message': 'Submission saved successfully'})
@@ -169,72 +181,66 @@ def submit_case_screening(request):
         return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 
+
+
 @csrf_exempt
 def submit_event_screening(request):
-    if request.method == 'POST':
+    try:
+        # Extract data from form data
         user_id = request.POST.get('userId')
+        event_id = request.POST.get('eventId')
+        gad_data = json.loads(request.POST.get('gadData', '{}'))
+        phq_data = json.loads(request.POST.get('phqData', '{}'))
+        ace_data = json.loads(request.POST.get('aceData', '{}'))
+        assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
+        school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
 
-        # Retrieve the CustomUser instance using the provided user_id
-        user = get_object_or_404(CustomUser, id=user_id)
+        # Retrieve the CustomUser instance based on the user ID
+        user = CustomUser.objects.get(pk=user_id)
 
-        # Calculate the age of the user
-        age = calculate_age(user.date_of_birth)
+        # Retrieve the EventScreening instance based on the event ID
+        event = get_object_or_404(EventScreening, pk=event_id)
 
-        # Updated key to match the sent data
-        assist_data_json = request.POST.get('assistRiskSeverity')
-        assist_data = json.loads(assist_data_json) if assist_data_json else {}
+        # Create new EventBasedSubmission instance
+        submission_instance = EventBasedSubmission.objects.create(
+            user=user,
+            event=event,
+            gad_data=gad_data.get('responses', []),
+            gad_score=gad_data.get('totalScore'),
+            gad_interpretation=gad_data.get('interpretation'),
+            phq_data=phq_data.get('responses', []),
+            phq_score=phq_data.get('totalScore'),
+            phq_interpretation=phq_data.get('interpretation'),
+            ace_data=ace_data.get('responses', []),
+            ace_score=ace_data.get('totalScore'),
+            ace_interpretation=ace_data.get('interpretation'),
+            school_env_data=school_env_data
+        )
 
-        # Start transaction to ensure data consistency
-        with transaction.atomic():
-            # Create or update the EventBasedSubmission instance
-            eventscreening, created = EventBasedSubmission.objects.update_or_create(
-                user=user,
-                defaults={
-                    'gad_data': request.POST.get('gadData', {}),
-                    'gad_score': json.loads(request.POST.get('gadData', '{}')).get('totalScore', 0),
-                    'phq_data': request.POST.get('phqData', {}),
-                    'phq_score': json.loads(request.POST.get('phqData', '{}')).get('totalScore', 0),
-                    'ace_data': request.POST.get('aceData', {}),
-                    'ace_score': json.loads(request.POST.get('aceData', '{}')).get('totalScore', 0),
-                    'school_env_data': request.POST.get('schoolEnvData', {}),
-                    'rescreened': True
-                }
+        # Create EventSubstanceRiskMeasurement instances
+        for substance_name, severity in assist_risk_severity.items():
+            # Check if the substance exists in the database
+            substance, _ = EventSubstance.objects.get_or_create(name=substance_name)
+            # Extract score from severity
+            score = int(severity.split('(')[1].split(')')[0])
+            # Create new instance
+            EventSubstanceRiskMeasurement.objects.create(
+                substance=substance,
+                event_submission=submission_instance,
+                measurement=0.0,  # Default value
+                risk_flag=severity,
+                total_score=score
             )
 
-            # Save substance risk measurements
-            for substance, risk_level in assist_data.items():
-                # Get the part after the space
-                total_score_str = risk_level.split()[1]
-                total_score = float(total_score_str.strip('()'))
-                # Get the part before the space
-                risk_flag = risk_level.split()[0]
+        # Return success response
+        return JsonResponse({'message': 'Submission saved successfully'})
 
-                # Create Substance object if it doesn't exist
-                substance_instance, _ = EventSubstance.objects.get_or_create(
-                    name=substance)
-                EventSubstanceRiskMeasurement.objects.create(
-                    substance=substance_instance,
-                    event_submission=eventscreening,
-                    measurement=total_score,
-                    risk_flag=risk_flag
-                )
+    except Exception as e:
+        # Log the exception
+        logger.exception("Error occurred while processing submission")
 
-            # Set the rescreened field of the associated UserSubmission to True
-            user_submission = UserSubmission.objects.get(user=user)
-            if not user_submission.rescreened:
-                user_submission.rescreened = True
-                user_submission.save()
-
-        if created:
-            message = 'Event screening data saved successfully.'
-        else:
-            message = 'Event screening data updated successfully.'
-
-        return JsonResponse({'message': message})
-
-    else:
-        return JsonResponse({'error': 'Only POST requests are allowed.'})
-
+        # Return error response
+        return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 def calculate_age(born):
     today = date.today()
