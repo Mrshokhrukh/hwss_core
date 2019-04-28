@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, fetch_rcsc_details, get_csrf_token, get_emis_staff_details, get_emis_student_details, register_pre_recorded_user, register_user, update_user_info, registerCounselorEventUser, registerCounselorCaseUser, CustomTokenAuthentication, user_logout, verify_pre_recorded_user, get_referral_counselors
+from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, fetch_rcsc_details, get_csrf_token, get_emis_staff_details, get_emis_student_details, register_pre_recorded_user, register_user, update_user_info, registerCounselorEventUser, registerCounselorCaseUser, CustomTokenAuthentication, user_logout, verify_pre_recorded_user, get_referral_counselors, LoginGyalsung
 from . import views
 
 urlpatterns = [
@@ -22,7 +22,7 @@ urlpatterns = [
          name=' register_pre_recorded_user'),
     path('get-user-details/', GetUserDetailsView.as_view(), name='get_user_details'),
     path('user-logout/', user_logout, name='user_logout'),
-    path('update-gyalsung-user/<int:pk>/',
+    path('update-gyalsung-user/',
          UpdateGyalsungDetails.as_view(), name='update_gyalsung_details'),
 
     path('get_csrf_token/', get_csrf_token, name='get_csrf_token'),
@@ -46,4 +46,6 @@ urlpatterns = [
     path('change-password/', change_password, name='change_password'),
     path('authenticate-token/', CustomTokenAuthentication.as_view(),
          name='authenticate-token'),
+
+    path('get-gyalsung-token/', LoginGyalsung.as_view(), name='login_gyalsung'),
 ]

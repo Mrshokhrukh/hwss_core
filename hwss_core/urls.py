@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/v1/monitoring/', include('monitoring.urls')),
     path('api/v1/reporting/', include('reporting.urls')),
     path('api/v1/screening/', include('screening.urls')),
+    path('api/v1/gyalsung_users/', include('gyalsung_users.urls')),
 ]
 
 if settings.DEBUG:

@@ -103969,3 +103969,130 @@ Internal Server Error: /api/v1/screening/submit-event-screening/
 "POST /api/v1/screening/submit-event-screening/ HTTP/1.1" 500 34
 Internal Server Error: /api/v1/screening/submit-event-screening/
 "POST /api/v1/screening/submit-event-screening/ HTTP/1.1" 500 34
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"GET /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Internal Server Error: /api/v1/access/update-gyalsung-user
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via PUT, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining PUT data. Change your form to point to 127.0.0.1:8000/api/v1/access/update-gyalsung-user/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+"PUT /api/v1/access/update-gyalsung-user HTTP/1.1" 500 83436
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Not Found: /api/v1/access/login_gyalsung/
+"POST /api/v1/access/login_gyalsung/ HTTP/1.1" 404 8184
+Not Found: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 404 8184
+Not Found: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 404 8184
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Internal Server Error: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 500 33
+Bad Request: /api/v1/access/login-gyalsung/
+"POST /api/v1/access/login-gyalsung/ HTTP/1.1" 400 32
+Not Found: /api/v1/access/get-gyalsung-token/
+"POST /api/v1/access/get-gyalsung-token/ HTTP/1.1" 404 8393
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Forbidden: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 403 61
+Not Found: /api/v1/gyalsung_users/save-gyalsung-users/
+"POST /api/v1/gyalsung_users/save-gyalsung-users/ HTTP/1.1" 404 4066
+Unauthorized: /api/v1/gyalsung_users/save-gyalsung-users/
+"POST /api/v1/gyalsung_users/save-gyalsung-users/ HTTP/1.1" 401 58
+Internal Server Error: /admin/access/prerecordeduser/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 220, in _get_response
+    response = response.render()
+               ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 74, in resolve_template
+    return get_template(template, using=self.using)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin/import_export/change_list_import_export.html
+"GET /admin/access/prerecordeduser/ HTTP/1.1" 500 96480
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3189
+Internal Server Error: /admin/access/prerecordeduser/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 220, in _get_response
+    response = response.render()
+               ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 90, in rendered_content
+    template = self.resolve_template(self.template_name)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\response.py", line 74, in resolve_template
+    return get_template(template, using=self.using)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin/import_export/change_list_import_export.html
+"GET /admin/access/prerecordeduser/ HTTP/1.1" 500 96436

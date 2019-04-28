@@ -61,12 +61,13 @@ INSTALLED_APPS = [
     'monitoring',
     'settings_module',
     'screening',
+    'gyalsung_users',
 
     # 3rd party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    # 'ckeditor',
+    'import_export',
     'django_quill'
 ]
 
@@ -89,7 +90,9 @@ ROOT_URLCONF = "hwss_core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            os.path.join(BASE_DIR, 'venv/Lib/site-packages/import_export/templates'),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

@@ -20,6 +20,7 @@ from django.db.models import F
 from datetime import date, datetime
 import token
 
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -43,6 +44,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import authenticate
 from .models import CustomUser, Agency, PreRecordedUser, UserAgency
@@ -899,25 +901,53 @@ class UserList(ListAPIView):
 
 
 class UpdateGyalsungDetails(APIView):
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, pk, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
+        # Log authentication status
+        if request.user.is_authenticated:
+            logger.info(f"User {request.user} is authenticated")
+        else:
+            logger.info("User is not authenticated")
+
+        identity_number = request.data.get('identity_number', None)
+        academy_code = request.data.get('academy_code', None)
+
+        if not identity_number or not academy_code:
+            logger.error("Identity number and academy code are required")
+            return Response({"error": "Identity number and academy code are required"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            user = CustomUser.objects.get(pk=pk)
+            user = CustomUser.objects.get(identity_number=identity_number)
         except CustomUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
+            logger.error("User not found")
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if user != request.user:
-            return Response({"error": "You do not have permission to perform this action"}, status=403)
+        # Check if retrieved user is of role student or public
+        if user.role not in [CustomUser.ROLE_STUDENT, CustomUser.ROLE_PUBLIC]:
+            logger.error("Retrieved user is not a student or public user")
+            return Response({"error": "Retrieved user is not a student or public user"}, status=status.HTTP_403_FORBIDDEN)
 
-        data = request.data
-        if 'is_gyalsung' in data:
-            user.is_gyalsung = data['is_gyalsung']
-        if 'academy_code' in data:
-            user.academy_code = data['academy_code']
+        # Update is_gyalsung field
+        is_gyalsung = request.data.get('is_gyalsung', None)
+        if is_gyalsung is not None:
+            user.is_gyalsung = is_gyalsung
+
+        # Update academy_code field
+        user.academy_code = academy_code
+
+        # Update active_agency field
+        try:
+            active_agency = Agency.objects.get(agency_code=academy_code)
+            user.active_agency = active_agency
+        except Agency.DoesNotExist:
+            logger.error("Agency not found")
+            return Response({"error": "Agency not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user.save()
 
+        logger.info("User details updated successfully")
         serializer = CustomUserSerializer(user)
         return Response(serializer.data)
 
@@ -1362,3 +1392,36 @@ def get_referral_counselors(request):
         return JsonResponse({'error': 'Only GET requests are allowed'})
 
     
+
+class LoginGyalsung(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            app_key_encoded = request.data.get('app_key')
+            app_secret_encoded = request.data.get('app_secret')
+
+            # Decoding base64 encoded app_key and app_secret
+            app_key_decoded = base64.b64decode(app_key_encoded).decode('utf-8')
+            app_secret_decoded = base64.b64decode(app_secret_encoded).decode('utf-8')
+
+            logger.info('Login request received - Username: %s', app_key_decoded)
+
+            # Check if the decoded app_key and app_secret match the predefined values
+            if app_key_decoded == 'TheGyalsung' and app_secret_decoded == 'Gyalsung4Hwss@2024':
+                # Assuming CustomUser is your custom user model
+                user = authenticate(username=app_key_decoded, password=app_secret_decoded)
+
+                if user is not None:
+                    token, created = Token.objects.get_or_create(user=user)
+                    return Response({"token": token.key}, status=status.HTTP_200_OK)
+                else:
+                    logger.warning('Authentication failed for username: %s', app_key_decoded)
+                    return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                logger.warning('Invalid app_key or app_secret provided')
+                return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.error('Exception during login: %s', str(e))
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
