@@ -104096,3 +104096,59 @@ Traceback (most recent call last):
     raise TemplateDoesNotExist(template_name, chain=chain)
 django.template.exceptions.TemplateDoesNotExist: admin/import_export/change_list_import_export.html
 "GET /admin/access/prerecordeduser/ HTTP/1.1" 500 96436
+Unauthorized: /api/v1/access/update-gyalsung-user/
+"PUT /api/v1/access/update-gyalsung-user/ HTTP/1.1" 401 58
+Bad Request: /api/v1/access/verify-pre-recorded-user/
+"GET /api/v1/access/verify-pre-recorded-user/?cid=11203005686 HTTP/1.1" 400 73
+Internal Server Error: /api/v1/access/register-pre-recorded-user/
+"POST /api/v1/access/register-pre-recorded-user/ HTTP/1.1" 500 34
+Internal Server Error: /api/v1/access/verify-pre-recorded-user/
+"GET /api/v1/access/verify-pre-recorded-user/?cid=11203004569 HTTP/1.1" 500 54
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /api/v1/reporting/build-reporting-data/
+"GET /api/v1/reporting/build-reporting-data/ HTTP/1.1" 404 3363
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Internal Server Error: /api/v1/reporting/get-reporting-model-data/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 348, in get_reporting_model_data
+    reporting_model_data = serialize('json', reporting_models)
+                           ^^^^^^^^^
+NameError: name 'serialize' is not defined
+"GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 80826
+Internal Server Error: /api/v1/reporting/get-reporting-model-data/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\reporting\views.py", line 355, in get_reporting_model_data
+    'agency': serialize('json', [reporting_model.agency]),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\serializers\__init__.py", line 134, in serialize
+    s.serialize(queryset, **options)
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\serializers\base.py", line 112, in serialize
+    concrete_model = obj._meta.concrete_model
+                     ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '_meta'
+"GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 92223

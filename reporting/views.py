@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
 from django.forms.models import model_to_dict
 import logging
+from django.core.serializers import serialize
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -283,57 +284,51 @@ def orchestrate_reporting(request):
 
 
 def populate_reporting_model():
-    # Filter users based on roles 'student' or 'general_public'
     users = CustomUser.objects.filter(role__in=['student', 'general_public'])
-    
+
     for user in users:
-        # Initialize user_agency variable
         user_agency = None
-        
-        # Check if the user has an active agency
-        if user.active_agency:
-            agency = user.active_agency
-        else:
+        agency_name = None
+
+        try:
+            user_agency = UserAgency.objects.get(user=user)
+            agency_name = user_agency.agency.agency_name
+        except UserAgency.DoesNotExist:
+            pass
+
+        latest_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
+
+        if latest_submission:
             try:
-                # If user doesn't have an active agency, use agency from UserAgency
-                user_agency = UserAgency.objects.get(user=user)
-                agency = user_agency.agency
-            except UserAgency.DoesNotExist:
-                # If no UserAgency exists for the user, skip this user
-                continue
-            
-        # Find the latest ServiceAndTreatment record for the user
-        latest_service_treatment = None
-        try:
-            latest_service_treatment = ServiceAndTreatment.objects.filter(user=user).latest('date')
-        except ServiceAndTreatment.DoesNotExist:
-            pass
-        
-        # Find the latest Referral record for the user
-        latest_referral = None
-        try:
-            latest_referral = Referral.objects.filter(user=user).latest('date')
-        except Referral.DoesNotExist:
-            pass
-        
-        # Create or update ReportingModel instance
-        reporting_model, created = ReportingModel.objects.get_or_create(
-            user=user,
-            defaults={
-                'user_agency': user_agency,
-                'agency': agency,
-                'agency_name': agency.agency_name,
-                'service_and_treatment': latest_service_treatment,
-                'referral': latest_referral
-            }
-        )
-        
-        # If ReportingModel already exists, update agency_name, service_and_treatment, and referral fields
-        if not created:
-            reporting_model.agency_name = agency.agency_name
-            reporting_model.service_and_treatment = latest_service_treatment
-            reporting_model.referral = latest_referral
-            reporting_model.save()
+                measurement = Measurement.objects.get(user_submission=latest_submission)
+                measurement_assist = MeasurementAssist.objects.get(user=user, user_submission=latest_submission)
+            except (Measurement.DoesNotExist, MeasurementAssist.DoesNotExist):
+                measurement = None
+                measurement_assist = None
+
+            reporting_model, created = ReportingModel.objects.get_or_create(
+                user=user,
+                defaults={
+                    'user_agency': user_agency,
+                    'agency_name': agency_name,
+                    'service_and_treatment': None,
+                    'referral': None,
+                    'measurement': measurement,
+                    'measurement_assist': measurement_assist,
+                    'rescreened': False,
+                    'original_submission_date': latest_submission.created_at if latest_submission else None,
+                }
+            )
+
+            if not created:
+                reporting_model.user_agency = user_agency
+                reporting_model.agency_name = agency_name
+                reporting_model.measurement = measurement
+                reporting_model.measurement_assist = measurement_assist
+                reporting_model.rescreened = False
+                reporting_model.original_submission_date = latest_submission.created_at if latest_submission else None
+                reporting_model.save()
+
 
 def populate_reporting_model_view(request):
     try:
@@ -341,3 +336,33 @@ def populate_reporting_model_view(request):
         return JsonResponse({'status': 'success', 'message': 'ReportingModel populated successfully'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
+    
+
+
+def get_reporting_model_data(request):
+    # Retrieve all ReportingModel instances along with related data
+    reporting_models = ReportingModel.objects.select_related(
+        'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist'
+    ).all()
+
+    # Convert queryset to list of dictionaries including related object data
+    reporting_model_data = []
+    for reporting_model in reporting_models:
+        data = {
+            'pk': reporting_model.pk,
+            'user': serialize('json', [reporting_model.user]) if reporting_model.user else None,
+            'user_agency': serialize('json', [reporting_model.user_agency]) if reporting_model.user_agency else None,
+            'agency': serialize('json', [reporting_model.agency]) if reporting_model.agency else None,
+            'service_and_treatment': serialize('json', [reporting_model.service_and_treatment]) if reporting_model.service_and_treatment else None,
+            'referral': serialize('json', [reporting_model.referral]) if reporting_model.referral else None,
+            'measurement': serialize('json', [reporting_model.measurement]) if reporting_model.measurement else None,
+            'measurement_assist': serialize('json', [reporting_model.measurement_assist]) if reporting_model.measurement_assist else None,
+            'rescreened': reporting_model.rescreened,
+            'rescreened_by': serialize('json', [reporting_model.rescreened_by]) if reporting_model.rescreened_by else None,
+            'original_submission_date': reporting_model.original_submission_date,
+            'rescreened_date': reporting_model.rescreened_date,
+        }
+        reporting_model_data.append(data)
+
+    # Return the JSON response
+    return JsonResponse(reporting_model_data, safe=False)

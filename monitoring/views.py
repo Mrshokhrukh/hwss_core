@@ -54,15 +54,10 @@ def submit_rescreening(request):
 
             # Save substance risk measurements
             for substance, risk_level in assist_data.items():
-                # Extract total score and risk flag from the risk level string
-                # Get the part after the space
                 total_score_str = risk_level.split()[1]
-                # Remove parentheses and convert to float
                 total_score = float(total_score_str.strip('()'))
                 # Get the part before the space
                 risk_flag = risk_level.split()[0]
-
-                # Create Substance object if it doesn't exist
                 substance_instance, _ = Substance.objects.get_or_create(
                     name=substance)
                 SubstanceRiskMeasurement.objects.create(

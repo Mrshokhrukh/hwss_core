@@ -189,9 +189,6 @@ class PreRecordedUser(models.Model):
 
     # User agency data
     user_code = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_village = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_gewog = models.CharField(max_length=100, blank=True, null=True)
-    ps_add_dzongkhag = models.CharField(max_length=100, blank=True, null=True)
     parent_occupation = models.CharField(max_length=100, blank=True, null=True)
     guardian_name = models.CharField(max_length=100, blank=True, null=True)
     guardian_occupation = models.CharField(

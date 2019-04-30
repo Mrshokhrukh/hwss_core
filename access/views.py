@@ -1183,9 +1183,6 @@ def verify_pre_recorded_user(request):
 
         user_agency_data = {
             'user_code': user.user_code,
-            'ps_add_village': user.ps_add_village,
-            'ps_add_gewog': user.ps_add_gewog,
-            'ps_add_dzongkhag': user.ps_add_dzongkhag,
             'parent_occupation': user.parent_occupation,
             'guardian_name': user.guardian_name,
             'guardian_occupation': user.guardian_occupation,
