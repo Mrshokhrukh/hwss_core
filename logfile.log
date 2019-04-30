@@ -104152,3 +104152,4 @@ Traceback (most recent call last):
                      ^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute '_meta'
 "GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 92223
+Not Found: /favicon.ico
