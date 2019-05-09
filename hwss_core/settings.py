@@ -165,41 +165,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = 'access.CustomUser'
 
-CORS_ORIGIN_ALLOW_ALL = True
-
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-    'http://localhost:8000',
-    'http://172.30.3.164',
-    'http://172.30.3.5',
-]
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = [
-    'x-csrftoken',
-    'content-type',
-    'accept',
-    'origin',
-    'authorization',
-    'x-requested-with',
-    'x-csrftoken',
-]
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://172.30.3.164',
-]
-
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:5173',
-    'http://172.30.3.164',
-    'http://172.30.3.5',
-
-]
-
-
 STATIC_URL = "static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -215,3 +180,37 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+# Define common origins
+COMMON_ORIGINS = [
+    'https://thepemasystem.gov.bt',
+    'http://thepemasystem.gov.bt',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+    'https://172.30.84.97',
+    'http://172.30.84.97',
+    'https://103.252.84.46',
+]
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = COMMON_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_PREFLIGHT_MAX_AGE = 86400
+
+CSRF_TRUSTED_ORIGINS = COMMON_ORIGINS
+
+CORS_ORIGIN_WHITELIST = COMMON_ORIGINS

@@ -68,6 +68,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def get_csrf_token(request):
     """
     API endpoint to retrieve CSRF token.
@@ -502,16 +503,16 @@ class CustomTokenAuthentication(APIView):
 @permission_classes([AllowAny])
 def register_user(request):
     try:
-        print("Received request to register user.")
+        logger.info("Received request to register user.")
 
         # Extract data from request
         user_data = request.data.get('userData', {})
         agency_data = request.data.get('agencyData', {})
         user_agency_data = request.data.get('userAgencyData', {})
 
-        print(f'User Data Received are:', user_data)
-        print(f'Agency Data Received are:', agency_data)
-        print(f'User Agency Data Received are:', user_agency_data)
+        logger.debug(f'User Data Received are: {user_data}')
+        logger.debug(f'Agency Data Received are: {agency_data}')
+        logger.debug(f'User Agency Data Received are: {user_agency_data}')
 
         # Begin a transaction to ensure atomicity
         with transaction.atomic():
@@ -555,11 +556,11 @@ def register_user(request):
             return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        print(f"Error registering user: {str(e)}")
+        logger.error(f"Error registering user: {str(e)}")
         traceback.print_exc()
         error_message = str(e)
         response_data = {'error': error_message}
-        print(f"Response data: {response_data}")
+        logger.debug(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -619,7 +620,8 @@ def registerCounselorCaseUser(request):
                 existing_user.ps_add_village = user_data.get('currentAddress')
                 existing_user.ps_add_gewog = user_data.get('currentAddress')
                 existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
-                existing_user.role = 'public'
+                existing_user.role = 'general_public'
+                existing_user.active_agency = agency
 
                 # Save the updated user
                 existing_user.save()
@@ -635,7 +637,6 @@ def registerCounselorCaseUser(request):
                     case_screening.date = date.today()
                     case_screening.save()
 
-                # Create or update the UserAgency link if needed
                 # Assuming user_agency_data contains relevant agency information
                 user_agency_data['user'] = existing_user
                 agency_code = agency_data.get('agency_code')
@@ -667,7 +668,8 @@ def registerCounselorCaseUser(request):
                     ps_add_village=user_data.get('currentAddress'),
                     ps_add_gewog=user_data.get('currentAddress'),
                     ps_add_dzongkhag=user_data.get('dzongkhag'),
-                    role='student'
+                    role='general_public',
+                    active_agency=agency,
                 )
 
                 # Create the CaseScreening object
@@ -716,7 +718,7 @@ def registerCounselorEventUser(request):
 
             # Get clientFullName from user_data, default to empty string if not present
             agency_code = agency_data.get('agency_code')
-            agency, created = Agency.objects.get_or_create(
+            agency, _ = Agency.objects.get_or_create(
                 agency_code=agency_code, defaults=agency_data)
 
             full_name = user_data.get('clientFullName', '')
@@ -754,7 +756,8 @@ def registerCounselorEventUser(request):
                 existing_user.ps_add_village = user_data.get('currentAddress')
                 existing_user.ps_add_gewog = user_data.get('currentAddress')
                 existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
-                existing_user.role = 'student'
+                existing_user.role = 'general_public'
+                existing_user.active_agency=agency,
 
                 # Save the updated user
                 existing_user.save()
@@ -797,7 +800,8 @@ def registerCounselorEventUser(request):
                     ps_add_village=user_data.get('currentAddress'),
                     ps_add_gewog=user_data.get('currentAddress'),
                     ps_add_dzongkhag=user_data.get('dzongkhag'),
-                    role='student'
+                    role='general_public',
+                    active_agency=agency,
                 )
 
                 # Create or update the UserAgency link if needed

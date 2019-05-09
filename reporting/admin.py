@@ -12,13 +12,12 @@ class ReportingAdmin(admin.ModelAdmin):
     list_per_page = 20
 
 class ReportingModelAdmin(admin.ModelAdmin):
-    list_display = ['user', 'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist',
+    list_display = ['user', 'user_agency', 'agency', 'agency_name', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist',
                      'rescreened', 'rescreened_by', 'original_submission_date', 'rescreened_date']
-    search_fields = ['user__username', 'user_agency__user__email', 'agency__agency_name', 'service_and_treatment__date',
+    search_fields = ['user__username', 'user_agency__user__email', 'agency__agency_name', 'agency_name', 'service_and_treatment__date',
                      'referral__date',  'rescreened_by__username', 'original_submission_date', 'rescreened_date']
     list_filter = ['agency']
     list_per_page = 20
-
 
 admin.site.register(ReportingModel, ReportingModelAdmin)
 admin.site.register(Reporting, ReportingAdmin)

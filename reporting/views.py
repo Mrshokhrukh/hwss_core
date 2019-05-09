@@ -3,6 +3,7 @@ from django.contrib.auth.models import User as Token
 from django.db.models import F, ExpressionWrapper, DateField
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.models import Group, Permission
+from screening.models import CaseBasedSubmission, CaseScreening, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstanceRiskMeasurement, ScreenedUser
 from settings_module.models import Notification
 from .models import Reporting, ReportingModel
 from measurement.models import Measurement, MeasurementAssist, UserSubmission, Submission
@@ -284,9 +285,11 @@ def orchestrate_reporting(request):
 
 
 def populate_reporting_model():
+    # Filter users with specified roles
     users = CustomUser.objects.filter(role__in=['student', 'general_public'])
 
     for user in users:
+        # Retrieve active agency or user agency
         user_agency = None
         agency_name = None
 
@@ -294,40 +297,59 @@ def populate_reporting_model():
             user_agency = UserAgency.objects.get(user=user)
             agency_name = user_agency.agency.agency_name
         except UserAgency.DoesNotExist:
+            print(f"No UserAgency found for user: {user.username}")
             pass
 
+        print(f"User: {user.username}, UserAgency: {user_agency}, Agency Name: {agency_name}")
+
+        # Create a ReportingModel instance for each user
+        reporting_model, created = ReportingModel.objects.get_or_create(
+            user=user,
+            defaults={
+                'user_agency': user_agency,
+                'agency_name': agency_name,
+                'service_and_treatment': None,
+                'referral': None,
+                'measurement': None,
+                'measurement_assist': None,
+                'rescreened': False,
+                'isMarkedSafe': False,  # Adding the new field here
+                'original_submission_date': None,
+                'rescreening_data': None,
+            }
+        )
+
+        # Retrieve other information and associate with ReportingModel
         latest_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
-
         if latest_submission:
-            try:
-                measurement = Measurement.objects.get(user_submission=latest_submission)
-                measurement_assist = MeasurementAssist.objects.get(user=user, user_submission=latest_submission)
-            except (Measurement.DoesNotExist, MeasurementAssist.DoesNotExist):
-                measurement = None
-                measurement_assist = None
+            reporting_model.original_submission_date = latest_submission.created_at
+            reporting_model.rescreened = latest_submission.rescreened
+            reporting_model.isMarkedSafe = latest_submission.mark_as_safe  # Assigning the new field here
 
-            reporting_model, created = ReportingModel.objects.get_or_create(
-                user=user,
-                defaults={
-                    'user_agency': user_agency,
-                    'agency_name': agency_name,
-                    'service_and_treatment': None,
-                    'referral': None,
-                    'measurement': measurement,
-                    'measurement_assist': measurement_assist,
-                    'rescreened': False,
-                    'original_submission_date': latest_submission.created_at if latest_submission else None,
-                }
-            )
+            latest_measurement = Measurement.objects.filter(user_submission=latest_submission).last()
+            if latest_measurement:
+                reporting_model.measurement = latest_measurement
 
-            if not created:
-                reporting_model.user_agency = user_agency
-                reporting_model.agency_name = agency_name
-                reporting_model.measurement = measurement
-                reporting_model.measurement_assist = measurement_assist
-                reporting_model.rescreened = False
-                reporting_model.original_submission_date = latest_submission.created_at if latest_submission else None
-                reporting_model.save()
+            latest_measurement_assist = MeasurementAssist.objects.filter(user=user, user_submission=latest_submission).last()
+            if latest_measurement_assist:
+                reporting_model.measurement_assist = latest_measurement_assist
+
+            latest_rescreening_data = Rescreening.objects.filter(user=user).last()
+            if latest_rescreening_data:
+                reporting_model.rescreening_data = latest_rescreening_data
+
+            # Add foreign key relationships from the screening app
+            reporting_model.case_screenings.set(CaseScreening.objects.filter(user=user))
+            reporting_model.screened_users.set(ScreenedUser.objects.filter(user=user))
+            reporting_model.case_based_submissions.set(CaseBasedSubmission.objects.filter(user=user))
+            reporting_model.case_substance_risk_measurements.set(CaseSubstanceRiskMeasurement.objects.filter(case_submission__user=user))
+            reporting_model.event_screenings.set(EventScreening.objects.filter(users=user))
+            reporting_model.event_based_submissions.set(EventBasedSubmission.objects.filter(user=user))
+            reporting_model.event_substance_risk_measurements.set(EventSubstanceRiskMeasurement.objects.filter(event_submission__user=user))
+
+        # Save the ReportingModel instance
+        reporting_model.save()
+
 
 
 def populate_reporting_model_view(request):
@@ -342,7 +364,7 @@ def populate_reporting_model_view(request):
 def get_reporting_model_data(request):
     # Retrieve all ReportingModel instances along with related data
     reporting_models = ReportingModel.objects.select_related(
-        'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist'
+        'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist', 'rescreened_by'
     ).all()
 
     # Convert queryset to list of dictionaries including related object data
@@ -353,6 +375,7 @@ def get_reporting_model_data(request):
             'user': serialize('json', [reporting_model.user]) if reporting_model.user else None,
             'user_agency': serialize('json', [reporting_model.user_agency]) if reporting_model.user_agency else None,
             'agency': serialize('json', [reporting_model.agency]) if reporting_model.agency else None,
+            'agency_name': reporting_model.agency_name,
             'service_and_treatment': serialize('json', [reporting_model.service_and_treatment]) if reporting_model.service_and_treatment else None,
             'referral': serialize('json', [reporting_model.referral]) if reporting_model.referral else None,
             'measurement': serialize('json', [reporting_model.measurement]) if reporting_model.measurement else None,
@@ -361,6 +384,14 @@ def get_reporting_model_data(request):
             'rescreened_by': serialize('json', [reporting_model.rescreened_by]) if reporting_model.rescreened_by else None,
             'original_submission_date': reporting_model.original_submission_date,
             'rescreened_date': reporting_model.rescreened_date,
+            'case_screenings': serialize('json', reporting_model.case_screenings.all()),
+            'screened_users': serialize('json', reporting_model.screened_users.all()),
+            'case_based_submissions': serialize('json', reporting_model.case_based_submissions.all()),
+            'case_substance_risk_measurements': serialize('json', reporting_model.case_substance_risk_measurements.all()),
+            'event_screenings': serialize('json', reporting_model.event_screenings.all()),
+            'event_based_submissions': serialize('json', reporting_model.event_based_submissions.all()),
+            'event_substance_risk_measurements': serialize('json', reporting_model.event_substance_risk_measurements.all()),
+            'rescreening_data': serialize('json', [reporting_model.rescreening_data]) if reporting_model.rescreening_data else None,
         }
         reporting_model_data.append(data)
 

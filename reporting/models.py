@@ -4,7 +4,8 @@ from access.models import CustomUser, UserAgency, Agency
 from django.contrib.auth import get_user_model
 
 from measurement.models import Measurement, MeasurementAssist
-from monitoring.models import Referral, ServiceAndTreatment
+from monitoring.models import Referral, Rescreening, ServiceAndTreatment
+from screening.models import CaseBasedSubmission, CaseScreening, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstanceRiskMeasurement, ScreenedUser
 
 User = CustomUser
 
@@ -149,7 +150,7 @@ class Reporting(models.Model):
 
 class ReportingModel(models.Model):
     user = models.OneToOneField(
-        get_user_model(), on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
+        User, on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
     user_agency = models.OneToOneField(
         UserAgency, on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
     agency = models.ForeignKey(
@@ -161,16 +162,33 @@ class ReportingModel(models.Model):
         Referral, on_delete=models.CASCADE, related_name='reporting_models', null=True, blank=True)
     measurement = models.OneToOneField(  
         Measurement, on_delete=models.CASCADE, related_name='reporting_model', null=True, blank=True)
-    measurement_assist = models.OneToOneField(  # Include MeasurementAssist field
+    measurement_assist = models.OneToOneField(  
         MeasurementAssist, on_delete=models.CASCADE, related_name='reporting_model_assist', null=True, blank=True)
-
+    rescreening_data = models.ForeignKey(
+        Rescreening, on_delete=models.CASCADE, related_name='reporting_models', null=True, blank=True)
     rescreened = models.BooleanField(default=False)
+    isMarkedSafe = models.BooleanField(default=False)
     rescreened_by = models.ForeignKey(
-        get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name='rescreened_new_models')
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='rescreened_new_models')
     original_submission_date = models.DateTimeField(
         null=True, blank=True, auto_now_add=True)
     rescreened_date = models.DateTimeField(
         null=True, blank=True)
+    # Foreign Key Relationships
+    case_screenings = models.ManyToManyField(
+        CaseScreening, related_name='reporting_models', blank=True)
+    screened_users = models.ManyToManyField(
+        ScreenedUser, related_name='reporting_models', blank=True)
+    case_based_submissions = models.ManyToManyField(
+        CaseBasedSubmission, related_name='reporting_models', blank=True)
+    case_substance_risk_measurements = models.ManyToManyField(
+        CaseSubstanceRiskMeasurement, related_name='reporting_models', blank=True)
+    event_screenings = models.ManyToManyField(
+        EventScreening, related_name='reporting_models', blank=True)
+    event_based_submissions = models.ManyToManyField(
+        EventBasedSubmission, related_name='reporting_models', blank=True)
+    event_substance_risk_measurements = models.ManyToManyField(
+        EventSubstanceRiskMeasurement, related_name='reporting_models', blank=True)
 
     def __str__(self):
         return f"ReportingModel for {self.user.username}"
