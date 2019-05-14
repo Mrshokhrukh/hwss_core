@@ -33,13 +33,13 @@ LOGGING = {
 
 
 CREDENTIALS = {
-    'API_KEY': 'ScC63jo40LjxifHweyLUR6IVto0a',
-    'API_SECRET': 'jk6jLebfES42oYmf8YuFNuMFpTUa',
-    'TOKEN_URL': 'https://stg-sso.dit.gov.bt/oauth2/token',
-    'API_URL': 'https://staging-datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
-    'EMIS_STUDENT_API': 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
-    'EMIS_STAFF_API': 'https://staging-datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
-    'RCSC_API': 'https://staging-datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
+    'API_KEY': 'ZtXTsAHXljLQkzddM2Al1BKx6kwa',
+    'API_SECRET': 'df5eVQe7Q2sNe9tfZ4Ai90FMsHca',
+    'TOKEN_URL': 'https://sso.dit.gov.bt/oauth2/token',
+    'API_URL': 'https://datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
+    'EMIS_STUDENT_API': 'https://datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
+    'EMIS_STAFF_API': 'https://datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
+    'RCSC_API': 'https://datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
 }
 
 

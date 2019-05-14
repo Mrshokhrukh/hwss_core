@@ -106,8 +106,8 @@ def write_global(data):
 
 @permission_classes([AllowAny])
 def get_authorization_code():
-    auth_key = 'ScC63jo40LjxifHweyLUR6IVto0a'
-    auth_secret = 'jk6jLebfES42oYmf8YuFNuMFpTUa'
+    auth_key = settings.CREDENTIALS['API_KEY']
+    auth_secret = settings.CREDENTIALS['API_SECRET']
     auth_code = f"{auth_key}:{auth_secret}"
     return base64.b64encode(auth_code.encode()).decode()
 
@@ -122,16 +122,15 @@ def global_session():
 
 @permission_classes([AllowAny])
 def generate_token():
-    request_url = 'oauth2/token'
+    token_url = settings.CREDENTIALS['TOKEN_URL']
     if not global_session():
         headers = {'Authorization': 'Basic ' + get_authorization_code()}
         form_params = {'grant_type': 'client_credentials'}
 
         response = requests.post(
-            'https://stg-sso.dit.gov.bt/' + request_url,
+            token_url,
             headers=headers,
             data=form_params,
-            verify=False,
             timeout=30
         )
 
@@ -163,7 +162,7 @@ def fetch_citizen_details(request, cid):
         headers = {'Authorization': token}
         api_url = settings.CREDENTIALS['API_URL']
         response = requests.get(
-            f'{api_url}{cid}', headers=headers, verify=False)
+            f'{api_url}{cid}', headers=headers)
 
         if response.status_code == 200:
             citizen_detail = response.json().get('citizenDetailsResponse', {}
@@ -202,7 +201,7 @@ def fetch_rcsc_details(request, cid, reg_email):
 
         # Step 2: Proceed with RCSC API request
         response = requests.get(
-            f'{rcsc_api_url}{cid}', headers=headers, verify=False)
+            f'{rcsc_api_url}{cid}', headers=headers)
 
         if response.status_code == 200:
             rcsc_details = response.json().get(
@@ -240,7 +239,7 @@ def get_emis_student_details(request, student_code, dob, reg_email):
         print(f"Making request to EMIS Student API: {request_url}")
 
         # Step 2: Proceed with EMIS API request
-        response = requests.get(request_url, headers=headers, verify=False)
+        response = requests.get(request_url, headers=headers)
 
         if response.status_code == 200:
             emis_details = response.json()
@@ -277,7 +276,7 @@ def get_emis_staff_details(request, emp_id, reg_email):
         print(f"Making request to EMIS Staff API: {request_url}")
 
         # Proceed with EMIS API request
-        response = requests.get(request_url, headers=headers, verify=False)
+        response = requests.get(request_url, headers=headers)
 
         if response.status_code == 200:
             emis_details = response.json()

@@ -104214,3 +104214,80 @@ Not Found: /favicon.ico
 "GET /favicon.ico HTTP/1.1" 404 3189
 Not Found: /favicon.ico
 "GET /favicon.ico HTTP/1.1" 404 3189
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 348
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 162, in fetch_citizen_details
+    token = 'Bearer ' + generate_token()
+                        ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 126, in generate_token
+    if not global_session():
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 117, in global_session
+    data = read_global()
+           ^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 98, in read_global
+    return json.load(file)
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 906 (char 905)
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 109995
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 348
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 161, in fetch_citizen_details
+    token = 'Bearer ' + generate_token()
+                        ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 126, in generate_token
+    if not global_session():
+           ^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 117, in global_session
+    data = read_global()
+           ^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_core\access\views.py", line 98, in read_global
+    return json.load(file)
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ujwal\AppData\Local\Programs\Python\Python311\Lib\json\decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 106764
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 348
+Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
+"GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 348
+You're accessing the development server over HTTPS, but it only supports HTTP.
+You're accessing the development server over HTTPS, but it only supports HTTP.
