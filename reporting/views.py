@@ -371,7 +371,7 @@ def get_reporting_model_data(request):
     reporting_model_data = []
     for reporting_model in reporting_models:
         data = {
-            'pk': reporting_model.pk,
+            'userId': reporting_model.pk,
             'user': serialize('json', [reporting_model.user]) if reporting_model.user else None,
             'user_agency': serialize('json', [reporting_model.user_agency]) if reporting_model.user_agency else None,
             'agency': serialize('json', [reporting_model.agency]) if reporting_model.agency else None,
