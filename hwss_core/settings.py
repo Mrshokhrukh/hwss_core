@@ -4,9 +4,10 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# SECRET_KEY = str(os.environ.get('DJANGO_SECRET')) == '1'
 SECRET_KEY = "django-insecure-h713=ks4vm_*km8t1uh85%jb_@!pt7%k$z3wq9nxh)wglf%=n#"
 
-DEBUG = True
+DEBUG = str(os.environ.get('DEBUG')) == '1'
 
 ALLOWED_HOSTS = ['172.30.3.5', 'localhost', '127.0.0.1']
 
@@ -118,24 +119,39 @@ REST_FRAMEWORK = {
 }
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hwss_prod_db',
-        'USER': 'root',
-        'PASSWORD': 'hwss@2023',
-        'HOST': 'localhost',
-        'PORT': '3306',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
+DB_USERNAME = os.environ.get('POSTGRES_USER')
+DB_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+DB_NAME = os.environ.get('POSTGRES_DB')
+DB_HOST = os.environ.get('POSTGRES_HOST')
+DB_PORT = os.environ.get('POSTGRES_PORT')
+DB_IS_AVAIL = all([
+    DB_USERNAME,
+    DB_PASSWORD,
+    DB_NAME,
+    DB_HOST,
+    DB_PORT
+])
+
+POSTGRES_READY = str(os.environ.get('POSTGRES_READY')) == '1'
+
+if DB_IS_AVAIL and POSTGRES_READY:
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': DB_NAME,
+        'USER': DB_USERNAME,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

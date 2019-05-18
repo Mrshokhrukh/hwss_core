@@ -104291,3 +104291,53 @@ Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
 "GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 348
 You're accessing the development server over HTTPS, but it only supports HTTP.
 You're accessing the development server over HTTPS, but it only supports HTTP.
+Internal Server Error: /api/v1/access/get-citizen-details/11303004461/
+"GET /api/v1/access/get-citizen-details/11303004461/ HTTP/1.1" 500 348
+Internal Server Error: /api/v1/access/get-citizen-details/11303004461/
+"GET /api/v1/access/get-citizen-details/11303004461/ HTTP/1.1" 500 348
+Internal Server Error: /api/v1/access/get-citizen-details/11303004461/
+"GET /api/v1/access/get-citizen-details/11303004461/ HTTP/1.1" 500 348
+"GET /api/v1/access/get_csrf_token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"GET /api/v1/settings/appconfig/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 59
