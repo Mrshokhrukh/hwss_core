@@ -12,10 +12,4 @@ urlpatterns = [
     path('api/v1/reporting/', include('reporting.urls')),
     path('api/v1/screening/', include('screening.urls')),
     path('api/v1/gyalsung_users/', include('gyalsung_users.urls')),
-]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL,
-                          document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

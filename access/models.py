@@ -7,7 +7,7 @@ import uuid
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, identity_number, first_name, last_name, date_of_birth, gender, mob_number, perm_add_village, perm_add_gewog, perm_add_dzongkhag, password=None, role=None, agency_data=None, **extra_fields):
+    def create_user(self, username, email, password=None, role=None, agency_data=None, **extra_fields):
         if not username:
             raise ValueError('The Username field must be set')
 
@@ -15,15 +15,6 @@ class CustomUserManager(BaseUserManager):
         user = self.model(
             username=username,
             email=email,
-            identity_number=identity_number,
-            first_name=first_name,
-            last_name=last_name,
-            date_of_birth=date_of_birth,
-            gender=gender,
-            mob_number=mob_number,
-            perm_add_village=perm_add_village,
-            perm_add_gewog=perm_add_gewog,
-            perm_add_dzongkhag=perm_add_dzongkhag,
             role=role,
             **extra_fields,
         )
@@ -93,7 +84,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=255)
     middle_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(blank=True, null=True)  # Make it optional
     gender = models.CharField(max_length=10)
     email = models.EmailField(unique=True, null=True)
     mob_number = models.CharField(max_length=15, null=True, blank=True)
@@ -141,7 +132,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     access_level = models.IntegerField(default=1)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name', 'date_of_birth',
+    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name',
                        'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
 
     objects = CustomUserManager()
@@ -152,6 +143,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
+
 
 
 class PreRecordedUser(models.Model):

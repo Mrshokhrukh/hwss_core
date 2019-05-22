@@ -365,18 +365,40 @@ def get_reporting_model_data(request):
     # Retrieve all ReportingModel instances along with related data
     reporting_models = ReportingModel.objects.select_related(
         'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist', 'rescreened_by'
+    ).prefetch_related(
+        'case_screenings', 'screened_users', 'case_based_submissions', 'case_substance_risk_measurements',
+        'event_screenings', 'event_based_submissions', 'event_substance_risk_measurements'
     ).all()
 
     # Convert queryset to list of dictionaries including related object data
     reporting_model_data = []
     for reporting_model in reporting_models:
+        service_and_treatment = reporting_model.service_and_treatment
+        if service_and_treatment:
+            service_and_treatment_data = {
+                'id': service_and_treatment.id,
+                'user': service_and_treatment.user_id,
+                'date': service_and_treatment.date,
+                'assessment_status': service_and_treatment.assessment_status,
+                'case_status': service_and_treatment.case_status,
+                'counseling': service_and_treatment.counseling,
+                'follow_up': service_and_treatment.follow_up,
+                'comments': service_and_treatment.comments,
+                'updated_by': service_and_treatment.updated_by_id,
+                'updated_at': service_and_treatment.updated_at,
+                'referred': service_and_treatment.referred,
+                'referral_instance': service_and_treatment.referral_instance_id,
+            }
+        else:
+            service_and_treatment_data = None
+
         data = {
             'userId': reporting_model.pk,
             'user': serialize('json', [reporting_model.user]) if reporting_model.user else None,
             'user_agency': serialize('json', [reporting_model.user_agency]) if reporting_model.user_agency else None,
             'agency': serialize('json', [reporting_model.agency]) if reporting_model.agency else None,
             'agency_name': reporting_model.agency_name,
-            'service_and_treatment': serialize('json', [reporting_model.service_and_treatment]) if reporting_model.service_and_treatment else None,
+            'service_and_treatment': json.dumps(service_and_treatment_data),
             'referral': serialize('json', [reporting_model.referral]) if reporting_model.referral else None,
             'measurement': serialize('json', [reporting_model.measurement]) if reporting_model.measurement else None,
             'measurement_assist': serialize('json', [reporting_model.measurement_assist]) if reporting_model.measurement_assist else None,

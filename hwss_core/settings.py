@@ -4,14 +4,14 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECRET_KEY = str(os.environ.get('DJANGO_SECRET')) == '1'
-SECRET_KEY = "django-insecure-h713=ks4vm_*km8t1uh85%jb_@!pt7%k$z3wq9nxh)wglf%=n#"
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-w+%up+l9l$-lt@izmje9n5b^sf9^2(2tuzmk7*+m=m9d04z#85"
 
-DEBUG = str(os.environ.get('DEBUG')) == '1'
+DEBUG = True
 
-ALLOWED_HOSTS = ['172.30.3.5', 'localhost', '127.0.0.1']
-
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ALLOWED_HOSTS = [
+    '*',
+]
 
 LOGGING = {
     'version': 1,
@@ -20,7 +20,7 @@ LOGGING = {
         'file': {
             'level': 'WARN',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(PROJECT_DIR, 'logfile.log'),
+            'filename': os.path.join(BASE_DIR, 'logfile.log'),
         },
     },
     'loggers': {
@@ -43,8 +43,6 @@ CREDENTIALS = {
     'RCSC_API': 'https://datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
 }
 
-
-# Application definition
 
 INSTALLED_APPS = [
     'admin_interface',
@@ -72,15 +70,17 @@ INSTALLED_APPS = [
     'django_quill'
 ]
 
+
 X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 MIDDLEWARE = [
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -119,6 +119,10 @@ REST_FRAMEWORK = {
 }
 
 
+
+# Database
+# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -126,32 +130,32 @@ DATABASES = {
     }
 }
 
-DB_USERNAME = os.environ.get('POSTGRES_USER')
-DB_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
-DB_NAME = os.environ.get('POSTGRES_DB')
-DB_HOST = os.environ.get('POSTGRES_HOST')
-DB_PORT = os.environ.get('POSTGRES_PORT')
-DB_IS_AVAIL = all([
-    DB_USERNAME,
-    DB_PASSWORD,
-    DB_NAME,
-    DB_HOST,
-    DB_PORT
-])
+# pgadmin production
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB'),
+#         'USER': os.getenv('POSTGRES_USER'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+#         'HOST': 'db',
+#         'PORT': 5432,
+#     }
+# }
 
-POSTGRES_READY = str(os.environ.get('POSTGRES_READY')) == '1'
+# for pgadmin local
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'hwss_prod_db',
+#         'USER': 'root',
+#         'PASSWORD': 'password',
+#         'HOST': 'localhost',
+#         'PORT': 5432,
+#     }
+# }
 
-if DB_IS_AVAIL and POSTGRES_READY:
-    DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': DB_NAME,
-        'USER': DB_USERNAME,
-        'PASSWORD': DB_PASSWORD,
-        'HOST': DB_HOST,
-        'PORT': DB_PORT,
-    }
-}
+# Password validation
+# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -169,6 +173,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Internationalization
+# https://docs.djangoproject.com/en/4.1/topics/i18n/
+
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
@@ -177,17 +184,17 @@ USE_I18N = True
 
 USE_TZ = True
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 AUTH_USER_MODEL = 'access.CustomUser'
 
-STATIC_URL = "static/"
+STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ASGI_APPLICATION = 'hwss_core.asgi.application'
 
@@ -197,7 +204,8 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Define common origins
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 COMMON_ORIGINS = [
     'https://thepemasystem.gov.bt',
     'http://thepemasystem.gov.bt',
@@ -205,9 +213,21 @@ COMMON_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:5173',
     'http://localhost:5173',
-    'https://172.30.84.97',
-    'http://172.30.84.97',
-    'https://103.252.84.46',
+    # production ips
+    'https://172.30.84.154',
+    'http://172.30.84.154',
+    'https://172.30.84.155',
+    'http://172.30.84.155',
+    'https://172.30.84.156',
+    'http://172.30.84.156',
+    'https://172.30.84.157',
+    'http://172.30.84.157',
+    'https://172.30.84.158',
+    'http://172.30.84.158',
+    'https://172.30.84.159',
+    'http://172.30.84.159',
+    'https://172.30.84.159',
+    'http://172.30.84.159',
 ]
 
 # CORS settings
