@@ -121,7 +121,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         (ROLE_CLINICAL_COUNSELOR, 'Clinical Counselor'),
         (ROLE_GYALSUNG_COUNSELOR, 'Gyalsung Counselor'),
         (ROLE_SCHOOL_COUNSELOR, 'School Counselor'),
-        (ROLE_TRAINED_PROFESSIONAL, 'Trined Professional'),
+        (ROLE_TRAINED_PROFESSIONAL, 'Trained Professional'),
         (ROLE_ADMIN, 'Mental Health Care Admin'),
         (ROLE_RD_ADMIN, 'R&D Admin'),
         (ROLE_SUD_ADMIN, 'SUD Admin'),

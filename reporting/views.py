@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import json
 from django.contrib.auth.models import User as Token
 from django.db.models import F, ExpressionWrapper, DateField
 from django.http import HttpResponse, JsonResponse
@@ -6,6 +7,7 @@ from django.contrib.auth.models import Group, Permission
 from screening.models import CaseBasedSubmission, CaseScreening, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstanceRiskMeasurement, ScreenedUser
 from settings_module.models import Notification
 from .models import Reporting, ReportingModel
+from gyalsung_users.models import GyalsungUserProfile
 from measurement.models import Measurement, MeasurementAssist, UserSubmission, Submission
 from monitoring.models import ServiceAndTreatment, Referral, Rescreening, Substance, SubstanceRiskMeasurement
 from access.models import CustomUser, Agency, UserAgency
@@ -16,6 +18,7 @@ from django.apps import apps
 from django.forms.models import model_to_dict
 import logging
 from django.core.serializers import serialize
+from django.utils import timezone
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -300,56 +303,85 @@ def populate_reporting_model():
             print(f"No UserAgency found for user: {user.username}")
             pass
 
-        print(f"User: {user.username}, UserAgency: {user_agency}, Agency Name: {agency_name}")
+        print(
+            f"User: {user.username}, UserAgency: {user_agency}, Agency Name: {agency_name}")
 
-        # Create a ReportingModel instance for each user
+        # Retrieve or create ServiceAndTreatment instance for the user
+        service_and_treatment = ServiceAndTreatment.objects.filter(
+            user=user).last()
+        if not service_and_treatment:
+            service_and_treatment = ServiceAndTreatment.objects.create(
+                user=user,
+                date=timezone.now(),  # Assuming you want to set the current date
+                assessment_status='Not Conducted',
+                case_status='On Going',
+                counseling='Waiting List',
+                follow_up='',
+                comments='',
+                updated_by=user,
+                updated_at=timezone.now(),
+                referred='Not Referred'
+            )
+
+        # Create or update a ReportingModel instance for each user
         reporting_model, created = ReportingModel.objects.get_or_create(
             user=user,
             defaults={
                 'user_agency': user_agency,
                 'agency_name': agency_name,
-                'service_and_treatment': None,
+                'service_and_treatment': service_and_treatment,
                 'referral': None,
                 'measurement': None,
                 'measurement_assist': None,
                 'rescreened': False,
-                'isMarkedSafe': False,  # Adding the new field here
+                'isMarkedSafe': False,
                 'original_submission_date': None,
                 'rescreening_data': None,
             }
         )
 
         # Retrieve other information and associate with ReportingModel
-        latest_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
+        latest_submission = UserSubmission.objects.filter(
+            user=user).order_by('-created_at').first()
         if latest_submission:
             reporting_model.original_submission_date = latest_submission.created_at
             reporting_model.rescreened = latest_submission.rescreened
-            reporting_model.isMarkedSafe = latest_submission.mark_as_safe  # Assigning the new field here
+            reporting_model.isMarkedSafe = latest_submission.mark_as_safe
 
-            latest_measurement = Measurement.objects.filter(user_submission=latest_submission).last()
+            latest_measurement = Measurement.objects.filter(
+                user_submission=latest_submission).last()
             if latest_measurement:
                 reporting_model.measurement = latest_measurement
 
-            latest_measurement_assist = MeasurementAssist.objects.filter(user=user, user_submission=latest_submission).last()
+            latest_measurement_assist = MeasurementAssist.objects.filter(
+                user=user, user_submission=latest_submission).last()
             if latest_measurement_assist:
                 reporting_model.measurement_assist = latest_measurement_assist
 
-            latest_rescreening_data = Rescreening.objects.filter(user=user).last()
+            latest_rescreening_data = Rescreening.objects.filter(
+                user=user).last()
             if latest_rescreening_data:
                 reporting_model.rescreening_data = latest_rescreening_data
 
             # Add foreign key relationships from the screening app
-            reporting_model.case_screenings.set(CaseScreening.objects.filter(user=user))
-            reporting_model.screened_users.set(ScreenedUser.objects.filter(user=user))
-            reporting_model.case_based_submissions.set(CaseBasedSubmission.objects.filter(user=user))
-            reporting_model.case_substance_risk_measurements.set(CaseSubstanceRiskMeasurement.objects.filter(case_submission__user=user))
-            reporting_model.event_screenings.set(EventScreening.objects.filter(users=user))
-            reporting_model.event_based_submissions.set(EventBasedSubmission.objects.filter(user=user))
-            reporting_model.event_substance_risk_measurements.set(EventSubstanceRiskMeasurement.objects.filter(event_submission__user=user))
+            reporting_model.case_screenings.set(
+                CaseScreening.objects.filter(user=user))
+            reporting_model.screened_users.set(
+                ScreenedUser.objects.filter(user=user))
+            reporting_model.case_based_submissions.set(
+                CaseBasedSubmission.objects.filter(user=user))
+            reporting_model.case_substance_risk_measurements.set(
+                CaseSubstanceRiskMeasurement.objects.filter(case_submission__user=user))
+            reporting_model.event_screenings.set(
+                EventScreening.objects.filter(users=user))
+            reporting_model.event_based_submissions.set(
+                EventBasedSubmission.objects.filter(user=user))
+            reporting_model.event_substance_risk_measurements.set(
+                EventSubstanceRiskMeasurement.objects.filter(event_submission__user=user))
 
         # Save the ReportingModel instance
+        reporting_model.service_and_treatment = service_and_treatment
         reporting_model.save()
-
 
 
 def populate_reporting_model_view(request):
@@ -358,10 +390,11 @@ def populate_reporting_model_view(request):
         return JsonResponse({'status': 'success', 'message': 'ReportingModel populated successfully'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
-    
 
 
 def get_reporting_model_data(request):
+    populate_reporting_model_view(request)
+
     # Retrieve all ReportingModel instances along with related data
     reporting_models = ReportingModel.objects.select_related(
         'user_agency', 'agency', 'service_and_treatment', 'referral', 'measurement', 'measurement_assist', 'rescreened_by'
@@ -392,30 +425,40 @@ def get_reporting_model_data(request):
         else:
             service_and_treatment_data = None
 
+        user_data = json.loads(serialize('json', [reporting_model.user]))[0] if reporting_model.user else None
+        if user_data:
+            user_data['fields'].pop('password', None)  # Exclude password field
+
         data = {
             'userId': reporting_model.pk,
-            'user': serialize('json', [reporting_model.user]) if reporting_model.user else None,
-            'user_agency': serialize('json', [reporting_model.user_agency]) if reporting_model.user_agency else None,
-            'agency': serialize('json', [reporting_model.agency]) if reporting_model.agency else None,
+            'user': user_data,
+            'user_agency': json.loads(serialize('json', [reporting_model.user_agency]))[0] if reporting_model.user_agency else None,
+            'agency': json.loads(serialize('json', [reporting_model.agency]))[0] if reporting_model.agency else None,
             'agency_name': reporting_model.agency_name,
-            'service_and_treatment': json.dumps(service_and_treatment_data),
-            'referral': serialize('json', [reporting_model.referral]) if reporting_model.referral else None,
-            'measurement': serialize('json', [reporting_model.measurement]) if reporting_model.measurement else None,
-            'measurement_assist': serialize('json', [reporting_model.measurement_assist]) if reporting_model.measurement_assist else None,
+            'service_and_treatment': service_and_treatment_data,
+            'referral': json.loads(serialize('json', [reporting_model.referral]))[0] if reporting_model.referral else None,
+            'measurement': json.loads(serialize('json', [reporting_model.measurement]))[0] if reporting_model.measurement else None,
+            'measurement_assist': json.loads(serialize('json', [reporting_model.measurement_assist]))[0] if reporting_model.measurement_assist else None,
             'rescreened': reporting_model.rescreened,
-            'rescreened_by': serialize('json', [reporting_model.rescreened_by]) if reporting_model.rescreened_by else None,
+            'rescreened_by': json.loads(serialize('json', [reporting_model.rescreened_by]))[0] if reporting_model.rescreened_by else None,
             'original_submission_date': reporting_model.original_submission_date,
             'rescreened_date': reporting_model.rescreened_date,
-            'case_screenings': serialize('json', reporting_model.case_screenings.all()),
-            'screened_users': serialize('json', reporting_model.screened_users.all()),
-            'case_based_submissions': serialize('json', reporting_model.case_based_submissions.all()),
-            'case_substance_risk_measurements': serialize('json', reporting_model.case_substance_risk_measurements.all()),
-            'event_screenings': serialize('json', reporting_model.event_screenings.all()),
-            'event_based_submissions': serialize('json', reporting_model.event_based_submissions.all()),
-            'event_substance_risk_measurements': serialize('json', reporting_model.event_substance_risk_measurements.all()),
-            'rescreening_data': serialize('json', [reporting_model.rescreening_data]) if reporting_model.rescreening_data else None,
+            'case_screenings': json.loads(serialize('json', reporting_model.case_screenings.all())),
+            'screened_users': json.loads(serialize('json', reporting_model.screened_users.all())),
+            'case_based_submissions': json.loads(serialize('json', reporting_model.case_based_submissions.all())),
+            'case_substance_risk_measurements': json.loads(serialize('json', reporting_model.case_substance_risk_measurements.all())),
+            'event_screenings': json.loads(serialize('json', reporting_model.event_screenings.all())),
+            'event_based_submissions': json.loads(serialize('json', reporting_model.event_based_submissions.all())),
+            'event_substance_risk_measurements': json.loads(serialize('json', reporting_model.event_substance_risk_measurements.all())),
+            'rescreening_data': json.loads(serialize('json', [reporting_model.rescreening_data]))[0] if reporting_model.rescreening_data else None,
         }
         reporting_model_data.append(data)
 
-    # Return the JSON response
-    return JsonResponse(reporting_model_data, safe=False)
+    # Retrieve all GyalsungUserProfile instances without filtering
+    gyalsung_user_profiles = list(GyalsungUserProfile.objects.values())
+
+    # Return the JSON response with both data parts
+    return JsonResponse({
+        'reporting_model_data': reporting_model_data,
+        'gyalsung_user_profiles': gyalsung_user_profiles
+    }, safe=False)
