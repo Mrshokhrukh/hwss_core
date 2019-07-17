@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from decouple import config
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,9 +10,7 @@ SECRET_KEY = "django-insecure-w+%up+l9l$-lt@izmje9n5b^sf9^2(2tuzmk7*+m=m9d04z#85
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '*',
-]
+ALLOWED_HOSTS = ['*']
 
 LOGGING = {
     'version': 1,
@@ -137,9 +136,17 @@ DATABASES = {
 #         'NAME': os.getenv('POSTGRES_DB'),
 #         'USER': os.getenv('POSTGRES_USER'),
 #         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-#         'HOST': 'db',
-#         'PORT': 5432,
+#         'HOST': os.getenv('POSTGRES_HOST'),
+#         'PORT': os.getenv('POSTGRES_PORT', '5432'),
 #     }
+# }
+
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.environ.get('DATABASE_URL'),
+#         conn_max_age=600,
+#         ssl_require=False
+#     )
 # }
 
 # for pgadmin local
@@ -188,7 +195,9 @@ AUTH_USER_MODEL = 'access.CustomUser'
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = BASE_DIR / 'static'
+# STATIC_ROOT = BASE_DIR / 'static'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 

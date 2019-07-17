@@ -676,3 +676,44 @@ Traceback (most recent call last):
            ^^^^
 TypeError: 'dict' object is not callable
 "GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 119192
+Not Found: /
+"GET / HTTP/1.1" 404 3011
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3062
+Not Found: /
+"GET / HTTP/1.1" 404 3011
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3062
+Not Found: /api/v1/screenings/get-event-screenings/
+"GET /api/v1/screenings/get-event-screenings/ HTTP/1.1" 404 3146
+Not Found: /favicon.ico
+Not Found: /api/v1/screening/update-event-screenings/
+"POST /api/v1/screening/update-event-screenings/ HTTP/1.1" 404 4353
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Forbidden (CSRF cookie not set.): /api/v1/reporting/get-reporting-model-data/
+"POST /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 403 2869
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Not Found: /favicon.ico
+Internal Server Error: /api/v1/reporting/get-reporting-model-data/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\reporting\views.py", line 429, in get_reporting_model_data
+    'referral': serialize('json', [reporting_model.referral]),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\serializers\__init__.py", line 134, in serialize
+    s.serialize(queryset, **options)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\serializers\base.py", line 113, in serialize
+    concrete_model = obj._meta.concrete_model
+                     ^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '_meta'
+"GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 95281

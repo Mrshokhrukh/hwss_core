@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\Office Works\The PEMA\HWSS_CORE_PROD\hwss_core\venv"
+VIRTUAL_ENV="D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

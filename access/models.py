@@ -21,7 +21,6 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
 
-        # Create the associated agency user details
         if agency_data:
             agency = Agency.objects.create(**agency_data)
             UserAgency.objects.create(user=user, agency=agency)
@@ -39,7 +38,6 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(username, email, password=password, **extra_fields)
 
-
 class Agency(models.Model):
     id = models.AutoField(primary_key=True)
     agency_code = models.CharField(max_length=255, unique=True)
@@ -51,7 +49,6 @@ class Agency(models.Model):
 
     def __str__(self):
         return self.agency_name
-
 
 class UserAgency(models.Model):
     user = models.OneToOneField(
@@ -73,26 +70,25 @@ class UserAgency(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.agency.agency_name}"
 
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=255, unique=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    identity_number = models.CharField(max_length=255, unique=True)
-    nationality = models.CharField(max_length=255)
-    first_name = models.CharField(max_length=255)
+    identity_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    nationality = models.CharField(max_length=255, null=True, blank=True)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
     middle_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)  # Make it optional
-    gender = models.CharField(max_length=10)
+    date_of_birth = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
     email = models.EmailField(unique=True, null=True)
     mob_number = models.CharField(max_length=15, null=True, blank=True)
     father_name = models.CharField(max_length=255, blank=True, null=True)
     mother_name = models.CharField(max_length=255, blank=True, null=True)
-    perm_add_village = models.CharField(max_length=255)
-    perm_add_gewog = models.CharField(max_length=255)
-    perm_add_dzongkhag = models.CharField(max_length=255)
+    perm_add_village = models.CharField(max_length=255, null=True, blank=True)
+    perm_add_gewog = models.CharField(max_length=255, null=True, blank=True)
+    perm_add_dzongkhag = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(
         upload_to='profile_pictures/', null=True, blank=True)
     active_agency = models.ForeignKey(
@@ -132,8 +128,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     access_level = models.IntegerField(default=1)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['identity_number', 'email', 'first_name', 'last_name',
-                       'gender', 'mob_number', 'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag']
+    REQUIRED_FIELDS = ['email']
 
     objects = CustomUserManager()
 
@@ -143,7 +138,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
-
 
 
 class PreRecordedUser(models.Model):

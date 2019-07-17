@@ -256,3 +256,64 @@ def get_user_details(user):
         'age': (timezone.now().date() - user.date_of_birth).days // 365,
         'gender': user.gender,
     }
+
+
+
+@csrf_exempt
+def get_event_screenings(request):
+    if request.method == 'GET':
+        events = EventScreening.objects.all()
+        events_list = []
+
+        for event in events:
+            event_data = {
+                'id': event.id,
+                'event_name': event.event_name,
+                'event_purpose': event.event_purpose,
+                'location': event.location,
+                'start_date': event.start_date,
+                'end_date': event.end_date,
+                'duration': event.duration,
+                'counselor': event.counselor,
+                'approval_status': event.approval_status,
+                'remarks': event.remarks,
+                'rejection_reason': event.rejection_reason,
+                'registration_lockout_end_time': event.registration_lockout_end_time,
+                'selected_tool': event.selected_tool,
+                'users': list(event.users.values('id', 'username', 'email'))  # Adjust the fields as needed
+            }
+            events_list.append(event_data)
+
+        return JsonResponse(events_list, safe=False)
+    
+
+@csrf_exempt
+def update_event_screening(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            event_id = data.get('event_id')
+            approval_status = data.get('approval_status')
+            rejection_reason = data.get('rejection_reason', None)
+
+            if not event_id or not approval_status:
+                return JsonResponse({'error': 'Invalid request. event_id and approval_status are required.'}, status=400)
+
+            event = get_object_or_404(EventScreening, pk=event_id)
+
+            event.approval_status = approval_status
+            if approval_status == 'rejected' and rejection_reason:
+                event.rejection_reason = rejection_reason
+            else:
+                event.rejection_reason = None
+
+            event.save()
+            return JsonResponse({'message': 'Event updated successfully'}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            logger.exception("Error occurred while updating event screening")
+            return JsonResponse({'error': 'Internal Server Error'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)

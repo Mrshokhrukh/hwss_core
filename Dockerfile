@@ -1,36 +1,29 @@
-# django/Dockerfile
-FROM python:3.11-alpine3.19
+FROM python:3.11.9-alpine3.20
 
-# Set environment variables
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=hwss_core.settings
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements file and install dependencies
 COPY requirements.txt /app/
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev libpq-dev \
-    && apk add --no-cache postgresql-client \
-    && pip install --upgrade pip \
-    && pip install -r requirements.txt \
-    && apk del .build-deps
 
-# Copy application code
+RUN set -ex && \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories && \
+    for i in 1 2 3; do apk update && break || sleep 5; done && \
+    for i in 1 2 3; do apk add --no-cache --virtual .build-deps gcc musl-dev libpq-dev && break || sleep 5; done && \
+    for i in 1 2 3; do apk add --no-cache netcat-openbsd nginx && break || sleep 5; done && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apk del .build-deps
+
 COPY . /app/
 
-# Set the script as executable
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-# Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Adjust permissions for static files
-RUN chmod -R 755 /app/staticfiles
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 8000
-EXPOSE 8000
+EXPOSE 8888
 
-# Set entrypoint and default command
-ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "hwss_core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "6"]
+CMD ["sh", "-c", "gunicorn --workers=6 --bind=unix:/tmp/gunicorn.sock hwss_core.wsgi:application & nginx -g 'daemon off;'"]
