@@ -7,6 +7,16 @@ class AppConfigSerializer(serializers.ModelSerializer):
         model = AppConfig
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if request:
+            base_url = f"{request.scheme}://{request.get_host()}"
+            for field in data:
+                if isinstance(data[field], str) and data[field].startswith('/media/'):
+                    data[field] = f"{base_url}{data[field]}"
+        return data
+
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:

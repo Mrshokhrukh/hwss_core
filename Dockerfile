@@ -26,10 +26,13 @@ RUN python manage.py collectstatic --noinput
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Create a directory for static files
+RUN mkdir -p /app/staticfiles
+
 EXPOSE 8888
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8888/healthz || exit 1
 
-CMD ["sh", "-c", "gunicorn --workers=6 --bind=unix:/tmp/gunicorn.sock hwss_core.wsgi:application & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --workers=6 --bind=unix:/tmp/gunicorn.sock hwss_core.wsgi:application & nginx -g 'daemon off;'"]
