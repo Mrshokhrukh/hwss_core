@@ -719,3 +719,9 @@ AttributeError: 'NoneType' object has no attribute '_meta'
 "GET /api/v1/reporting/get-reporting-model-data/ HTTP/1.1" 500 95281
 Internal Server Error: /api/v1/access/get-citizen-details/11203005289/
 "GET /api/v1/access/get-citizen-details/11203005289/ HTTP/1.1" 500 350
+Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
+"GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
+Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
+"GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
+Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
+"GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
