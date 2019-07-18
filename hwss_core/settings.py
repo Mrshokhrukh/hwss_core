@@ -33,13 +33,13 @@ LOGGING = {
 
 
 CREDENTIALS = {
-    'API_KEY': 'ZtXTsAHXljLQkzddM2Al1BKx6kwa',
-    'API_SECRET': 'df5eVQe7Q2sNe9tfZ4Ai90FMsHca',
-    'TOKEN_URL': 'https://sso.dit.gov.bt/oauth2/token',
-    'API_URL': 'https://datahub-apim.dit.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
-    'EMIS_STUDENT_API': 'https://datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
-    'EMIS_STAFF_API': 'https://datahub-apim.dit.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
-    'RCSC_API': 'https://datahub-apim.dit.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
+    'API_KEY': 'Rie82o_SERTZEcb8dZbstH2fzJEa',
+    'API_SECRET': 'Y_drXbOABoHtJ0iII0yzplqzm98a',
+    'TOKEN_URL': 'https://sso.tech.gov.bt',
+    'API_URL': 'https://datahub-apim.tech.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
+    'EMIS_STUDENT_API': 'https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
+    'EMIS_STAFF_API': 'https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
+    'RCSC_API': 'https://datahub-apim.tech.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/',
 }
 
 
@@ -91,7 +91,8 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            os.path.join(BASE_DIR, 'venv/Lib/site-packages/import_export/templates'),
+            os.path.join(
+                BASE_DIR, 'venv/Lib/site-packages/import_export/templates'),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -116,7 +117,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
-
 
 
 # Database

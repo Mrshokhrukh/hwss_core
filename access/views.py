@@ -70,9 +70,6 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 @csrf_exempt
 def get_csrf_token(request):
-    """
-    API endpoint to retrieve CSRF token.
-    """
     csrf_token = get_token(request)
     return Response({'csrf_token': csrf_token})
 
@@ -165,8 +162,7 @@ def fetch_citizen_details(request, cid):
             f'{api_url}{cid}', headers=headers)
 
         if response.status_code == 200:
-            citizen_detail = response.json().get('citizenDetailsResponse', {}
-                                                 ).get('citizenDetail', [None])[0]
+            citizen_detail = response.json().get('citizenDetailsResponse', {}).get('citizenDetail', [None])[0]
 
             mapped_user_data = map_user_data(citizen_detail)
 
