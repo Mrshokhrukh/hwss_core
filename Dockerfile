@@ -11,7 +11,7 @@ COPY requirements.txt /app/
 RUN set -ex && \
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories && \
     for i in 1 2 3; do apk update && break || sleep 5; done && \
-    for i in 1 2 3; do apk add --no-cache --virtual .build-deps gcc musl-dev libpq-dev && break || sleep 5; done && \
+    for i in 1 2 3; do apk add --no-cache --virtual .build-deps gcc musl-dev && break || sleep 5; done && \
     for i in 1 2 3; do apk add --no-cache netcat-openbsd nginx && break || sleep 5; done && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
@@ -19,11 +19,17 @@ RUN set -ex && \
 
 COPY . /app/
 
+RUN mkdir -p /app/data
+
 RUN python manage.py collectstatic --noinput
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8888
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:8888/healthz || exit 1
 
 CMD ["sh", "-c", "gunicorn --workers=6 --bind=unix:/tmp/gunicorn.sock hwss_core.wsgi:application & nginx -g 'daemon off;'"]

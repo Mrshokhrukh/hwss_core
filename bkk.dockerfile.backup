@@ -1,0 +1,42 @@
+# Use a specific version of python:alpine to avoid breaking changes
+FROM python:3.11-alpine3.19
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV GUNICORN_WORKERS=6
+ENV DATABASE_URL=postgres://hwss_root:hwss@2023@172.30.85.156:5432/hwss_core_db
+
+# Set default environment variables
+ENV POSTGRES_HOST=172.30.85.156
+ENV POSTGRES_PORT=5432
+ENV DJANGO_SUPERUSER_USERNAME=uhollica666
+ENV DJANGO_SUPERUSER_EMAIL=admin@thepemasystem.gov.bt
+ENV DJANGO_SUPERUSER_PASSWORD=Caelen@0312
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements file and install dependencies
+COPY requirements.txt /app/
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev libpq-dev \
+    && apk add --no-cache netcat-openbsd \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && apk del .build-deps
+
+# Copy application code
+COPY . /app/
+
+# Set the script as executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Collect static files (make sure DATABASE_URL is set correctly)
+RUN DATABASE_URL=$DATABASE_URL python manage.py collectstatic --noinput
+
+# Expose port 8686
+EXPOSE 8686
+
+# Set entrypoint and default command
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "hwss_core.wsgi:application", "--bind", "0.0.0.0:8686", "--workers", "$GUNICORN_WORKERS"]

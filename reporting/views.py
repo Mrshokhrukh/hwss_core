@@ -19,6 +19,10 @@ from django.forms.models import model_to_dict
 import logging
 from django.core.serializers import serialize
 from django.utils import timezone
+from django.http import HttpResponse
+
+def healthz(request):
+    return HttpResponse("OK")
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
