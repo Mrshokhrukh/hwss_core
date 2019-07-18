@@ -35,7 +35,7 @@ LOGGING = {
 CREDENTIALS = {
     'API_KEY': 'Rie82o_SERTZEcb8dZbstH2fzJEa',
     'API_SECRET': 'Y_drXbOABoHtJ0iII0yzplqzm98a',
-    'TOKEN_URL': 'https://sso.tech.gov.bt',
+    'TOKEN_URL': 'https://sso.tech.gov.bt/oauth2/token',
     'API_URL': 'https://datahub-apim.tech.gov.bt/dcrc_citizen_details_api/1.0.0/citizendetails/',
     'EMIS_STUDENT_API': 'https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/',
     'EMIS_STAFF_API': 'https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/',
