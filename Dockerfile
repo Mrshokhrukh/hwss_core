@@ -1,38 +1,65 @@
-FROM python:3.11.9-alpine3.20
+# Stage 1: Build
+FROM python:3.11-alpine AS build
 
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=hwss_core.settings
 
+# Install dependencies
+RUN apk update \
+  && apk add --no-cache gcc musl-dev libffi-dev postgresql-dev build-base bash
+
+# Set work directory
 WORKDIR /app
 
+# Install and configure virtual environment
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+
+# Copy requirements file
 COPY requirements.txt /app/
 
-RUN set -ex && \
-    sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories && \
-    for i in 1 2 3; do apk update && break || sleep 5; done && \
-    for i in 1 2 3; do apk add --no-cache --virtual .build-deps gcc musl-dev && break || sleep 5; done && \
-    for i in 1 2 3; do apk add --no-cache netcat-openbsd nginx && break || sleep 5; done && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apk del .build-deps
+# Install dependencies
+RUN pip install --upgrade pip \
+  && pip install -r requirements.txt
 
-COPY . /app/
+# Stage 2: Final
+FROM python:3.11-alpine
 
-RUN mkdir -p /app/data
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/app/venv/bin:$PATH"
 
-RUN python manage.py collectstatic --noinput
+# Install dependencies
+RUN apk update \
+  && apk add --no-cache bash libpq
 
-RUN rm -f /etc/nginx/conf.d/default.conf
+# Set work directory
+WORKDIR /app
+
+# Copy virtual environment and application
+COPY --from=build /app/venv /app/venv
+COPY . /app
+
+# Create and activate virtual environment
+RUN python -m venv /app/venv \
+  && . /app/venv/bin/activate
+
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Configure Gunicorn
+RUN pip install gunicorn
+COPY gunicorn.conf.py /app/gunicorn.conf.py
+
+# Install Nginx
+RUN apk add --no-cache nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Create a directory for static files
-RUN mkdir -p /app/staticfiles
+# Expose port
+EXPOSE 8123
 
-EXPOSE 8888
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8888/api/v1/reporting/healthz || exit 1
-
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn --workers=6 --bind=unix:/tmp/gunicorn.sock hwss_core.wsgi:application & nginx -g 'daemon off;'"]
+# Start Gunicorn and Nginx
+CMD ["/app/entrypoint.sh"]

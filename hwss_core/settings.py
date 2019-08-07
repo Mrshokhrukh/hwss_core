@@ -2,13 +2,15 @@ import os
 from pathlib import Path
 from decouple import config
 import dj_database_url
+import re
+from decouple import Config, config
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-w+%up+l9l$-lt@izmje9n5b^sf9^2(2tuzmk7*+m=m9d04z#85"
-
-DEBUG = True
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -129,44 +131,28 @@ REST_FRAMEWORK = {
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
+        'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': config('DATABASE_NAME', default='hwss_core_db'),
+        'USER': config('DATABASE_USER', default='hwss-root'),
+        'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
+        'HOST': config('DATABASE_HOST', default='172.30.85.156'),
+        'PORT': config('DATABASE_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'disable',
+        },
     }
 }
 
-# pgadmin production
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('POSTGRES_DB'),
-#         'USER': os.getenv('POSTGRES_USER'),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-#         'HOST': os.getenv('POSTGRES_HOST'),
-#         'PORT': os.getenv('POSTGRES_PORT', '5432'),
-#     }
-# }
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.environ.get('DATABASE_URL'),
-#         conn_max_age=600,
-#         ssl_require=False
-#     )
-# }
-
-# for pgadmin local
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'hwss_prod_db',
-#         'USER': 'root',
-#         'PASSWORD': 'password',
-#         'HOST': 'localhost',
-#         'PORT': 5432,
-#     }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -248,12 +234,25 @@ COMMON_ORIGINS = [
     'http://172.30.84.159',
     'https://172.30.84.159',
     'http://172.30.84.159',
+    'http://localhost'
 ]
+
+# Add a regex pattern for the IP range
+IP_RANGE_PATTERN = r'^https?://172\.30\.84\.\d+(?::\d+)?$'
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = COMMON_ORIGINS
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -267,6 +266,14 @@ CORS_ALLOW_HEADERS = [
 ]
 CORS_PREFLIGHT_MAX_AGE = 86400
 
-CSRF_TRUSTED_ORIGINS = COMMON_ORIGINS
+# Use a custom CORS_ORIGIN_REGEX_WHITELIST
+CORS_ORIGIN_REGEX_WHITELIST = [
+    IP_RANGE_PATTERN,
+]
+
+# Use a custom CSRF_TRUSTED_ORIGINS_REGEX
+CSRF_TRUSTED_ORIGINS_REGEX = [
+    IP_RANGE_PATTERN,
+]
 
 CORS_ORIGIN_WHITELIST = COMMON_ORIGINS
