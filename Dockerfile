@@ -46,11 +46,6 @@ COPY . /app
 RUN python -m venv /app/venv \
     && . /app/venv/bin/activate
 
-# Run migrations
-# Enable the below 2 only if there has been changes in the models else no need to run
-# RUN python manage.py makemigrations
-# RUN python manage.py migrate
-
 # Configure Gunicorn
 RUN pip install gunicorn
 COPY gunicorn.conf.py /app/gunicorn.conf.py
