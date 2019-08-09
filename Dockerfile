@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM python:3.11-alpine AS build
+FROM python:3.11.9-alpine3.18 as build
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install dependencies
 RUN apk update \
-  && apk add --no-cache gcc musl-dev libffi-dev postgresql-dev build-base bash
+    && apk add --no-cache gcc musl-dev libffi-dev postgresql-dev build-base bash
 
 # Set work directory
 WORKDIR /app
@@ -21,10 +21,10 @@ COPY requirements.txt /app/
 
 # Install dependencies
 RUN pip install --upgrade pip \
-  && pip install -r requirements.txt
+    && pip install -r requirements.txt
 
 # Stage 2: Final
-FROM python:3.11-alpine
+FROM python:3.11.9-alpine3.18
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -33,7 +33,7 @@ ENV PATH="/app/venv/bin:$PATH"
 
 # Install dependencies
 RUN apk update \
-  && apk add --no-cache bash libpq
+    && apk add --no-cache bash libpq
 
 # Set work directory
 WORKDIR /app
@@ -44,15 +44,16 @@ COPY . /app
 
 # Create and activate virtual environment
 RUN python -m venv /app/venv \
-  && . /app/venv/bin/activate
+    && . /app/venv/bin/activate
 
-# Copy entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Run migrations and create superuser
+RUN python manage.py migrate 
 
 # Configure Gunicorn
 RUN pip install gunicorn
 COPY gunicorn.conf.py /app/gunicorn.conf.py
+
+RUN echo -e "https://dl-cdn.alpinelinux.org/alpine/v3.18/main\nhttps://dl-cdn.alpinelinux.org/alpine/v3.18/community" > /etc/apk/repositories
 
 # Install Nginx
 RUN apk add --no-cache nginx
@@ -62,4 +63,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8123
 
 # Start Gunicorn and Nginx
-CMD ["/app/entrypoint.sh"]
+CMD ["sh", "-c", "nginx && gunicorn --config /app/gunicorn.conf.py hwss_core.wsgi:application"]

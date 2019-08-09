@@ -1,15 +1,13 @@
 import os
 from pathlib import Path
 from decouple import config
-import dj_database_url
 import re
-from decouple import Config, config
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
+
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
@@ -121,16 +119,6 @@ REST_FRAMEWORK = {
 }
 
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -152,10 +140,6 @@ DATABASES = {
     }
 }
 
-
-
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -213,27 +197,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 COMMON_ORIGINS = [
     'https://thepemasystem.gov.bt',
     'http://thepemasystem.gov.bt',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    'http://127.0.0.1:8888',
-    'http://localhost:8888',
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-    # production ips
-    'https://172.30.84.154',
-    'http://172.30.84.154',
-    'https://172.30.84.155',
-    'http://172.30.84.155',
-    'https://172.30.84.156',
-    'http://172.30.84.156',
-    'https://172.30.84.157',
-    'http://172.30.84.157',
-    'https://172.30.84.158',
-    'http://172.30.84.158',
-    'https://172.30.84.159',
-    'http://172.30.84.159',
-    'https://172.30.84.159',
-    'http://172.30.84.159',
     'http://localhost'
 ]
 
@@ -270,10 +233,11 @@ CORS_PREFLIGHT_MAX_AGE = 86400
 CORS_ORIGIN_REGEX_WHITELIST = [
     IP_RANGE_PATTERN,
 ]
-
-# Use a custom CSRF_TRUSTED_ORIGINS_REGEX
-CSRF_TRUSTED_ORIGINS_REGEX = [
-    IP_RANGE_PATTERN,
-]
-
 CORS_ORIGIN_WHITELIST = COMMON_ORIGINS
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8123',
+    'https://thepemasystem.gov.bt',
+    'http://thepemasystem.gov.bt',
+    'http://localhost'
+]

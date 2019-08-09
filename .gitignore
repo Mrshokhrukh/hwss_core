@@ -1,0 +1,7 @@
+venv
+docker-compose.yml
+.env
+logfile.log
+.dockerignore
+bkk.dockerfile.backup
+db.sqlite3
