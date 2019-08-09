@@ -4,7 +4,9 @@
 . /app/venv/bin/activate
 
 # Run migrations
-python manage.py migrate
+# Enable the below 2 only if there has been changes in the models else no need to run
+# python manage.py makemigrations
+# python manage.py migrate
 
 # Start Gunicorn
 gunicorn --config /app/gunicorn.conf.py hwss_core.wsgi:application
