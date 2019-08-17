@@ -235,9 +235,40 @@ CORS_ORIGIN_REGEX_WHITELIST = [
 ]
 CORS_ORIGIN_WHITELIST = COMMON_ORIGINS
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8123',
     'https://thepemasystem.gov.bt',
     'http://thepemasystem.gov.bt',
-    'http://localhost'
+    'http://localhost',
+    'http://172.30.84.165',
+    'http://172.30.84.164:8123',
 ]
+
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_DOMAIN = None
+
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CSRF_COOKIE_DOMAIN = None
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ujwal.pradhan666@gmail.com'
+EMAIL_HOST_PASSWORD = 'Caelen@0312'
+DEFAULT_FROM_EMAIL = 'noreply@thepemasystem.com'
+
