@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import Group
 from .models import AppConfig, MenuItem
 
+
 class AppConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppConfig
@@ -14,7 +15,7 @@ class AppConfigSerializer(serializers.ModelSerializer):
             base_url = f"{request.scheme}://{request.get_host()}"
             for field in data:
                 if isinstance(data[field], str) and data[field].startswith('/media/'):
-                    data[field] = f"{base_url}{data[field]}"
+                    data[field] = f"{base_url}/api/core{data[field]}"
         return data
 
 
