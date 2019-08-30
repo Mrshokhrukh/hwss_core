@@ -119,26 +119,26 @@ REST_FRAMEWORK = {
 }
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
-#         'NAME': config('DATABASE_NAME', default='hwss_core_db'),
-#         'USER': config('DATABASE_USER', default='hwss-root'),
-#         'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
-#         'HOST': config('DATABASE_HOST', default='172.30.85.156'),
-#         'PORT': config('DATABASE_PORT', default='5432'),
-#         'OPTIONS': {
-#             'sslmode': 'disable',
-#         },
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': config('DATABASE_NAME', default='hwss_core_db'),
+        'USER': config('DATABASE_USER', default='hwss-root'),
+        'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
+        'HOST': config('DATABASE_HOST', default='172.30.85.156'),
+        'PORT': config('DATABASE_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'disable',
+        },
+    }
+}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -170,8 +170,7 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'access.CustomUser'
 
-STATIC_URL = '/static/'
-
+STATIC_URL = '/api/core/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -180,8 +179,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-MEDIA_URL = '/media/'
-
+MEDIA_URL = '/api/core/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ASGI_APPLICATION = 'hwss_core.asgi.application'
@@ -273,3 +271,6 @@ EMAIL_HOST_USER = 'ujwal.pradhan666@gmail.com'
 EMAIL_HOST_PASSWORD = 'Caelen@0312'
 DEFAULT_FROM_EMAIL = 'noreply@thepemasystem.com'
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 604800
+SESSION_COOKIE_SECURE = True
