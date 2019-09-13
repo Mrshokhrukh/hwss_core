@@ -725,3 +725,11 @@ Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
 "GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
 Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
 "GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26
+Internal Server Error: /api/v1/access/get-citizen-details/11506005090/
+"GET /api/v1/access/get-citizen-details/11506005090/ HTTP/1.1" 500 350
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 61
+Internal Server Error: /api/v1/access/register-user/
+"POST /api/v1/access/register-user/ HTTP/1.1" 500 61
