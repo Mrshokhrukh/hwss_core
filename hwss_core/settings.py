@@ -119,26 +119,26 @@ REST_FRAMEWORK = {
 }
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
-#         'NAME': config('DATABASE_NAME', default='hwss_core_db'),
-#         'USER': config('DATABASE_USER', default='hwss-root'),
-#         'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
-#         'HOST': config('DATABASE_HOST', default='172.30.85.156'),
-#         'PORT': config('DATABASE_PORT', default='5432'),
-#         'OPTIONS': {
-#             'sslmode': 'disable',
-#         },
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'),
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': config('DATABASE_NAME', default='hwss_core_db'),
+        'USER': config('DATABASE_USER', default='hwss-root'),
+        'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
+        'HOST': config('DATABASE_HOST', default='172.30.85.156'),
+        'PORT': config('DATABASE_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'disable',
+        },
+    }
+}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -228,7 +228,6 @@ CORS_ALLOW_HEADERS = [
 ]
 CORS_PREFLIGHT_MAX_AGE = 86400
 
-# Use a custom CORS_ORIGIN_REGEX_WHITELIST
 CORS_ORIGIN_REGEX_WHITELIST = [
     IP_RANGE_PATTERN,
 ]
