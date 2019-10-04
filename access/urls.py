@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, fetch_rcsc_details, get_csrf_token, get_emis_staff_details, get_emis_student_details, register_pre_recorded_user, register_user, update_user_info, registerCounselorEventUser, registerCounselorCaseUser, CustomTokenAuthentication, user_logout, verify_pre_recorded_user, get_referral_counselors, LoginGyalsung
+from .views import change_password, UserCreate, UserList, LoginView, PasswordResetRequestView, PasswordResetView, GetUserDetailsView, UpdateGyalsungDetails, check_email_cid, fetch_rcsc_details, get_csrf_token, get_emis_staff_details, get_emis_student_details, register_pre_recorded_user, register_user, update_user_info, registerCounselorEventUser, registerCounselorCaseUser, CustomTokenAuthentication, user_logout, verify_pre_recorded_user, get_referral_counselors, LoginGyalsung
 from . import views
 
 urlpatterns = [
@@ -16,10 +16,8 @@ urlpatterns = [
          name='register_counselor_event_user'),
     path('register-counselor-case-user/', registerCounselorCaseUser,
          name='register_counselor_case_user'),
-    path('verify-pre-recorded-user/', verify_pre_recorded_user,
-         name='verify_pre_recorded_user'),
     path('register-pre-recorded-user/', register_pre_recorded_user,
-         name=' register_pre_recorded_user'),
+         name='register_pre_recorded_user'),
     path('get-user-details/', GetUserDetailsView.as_view(), name='get_user_details'),
     path('user-logout/', user_logout, name='user_logout'),
     path('update-gyalsung-user/',
@@ -48,4 +46,5 @@ urlpatterns = [
          name='authenticate-token'),
 
     path('get-gyalsung-token/', LoginGyalsung.as_view(), name='login_gyalsung'),
+    path('check_email_cid/', check_email_cid, name='check_email_cid'),
 ]

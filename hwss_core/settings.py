@@ -69,8 +69,6 @@ INSTALLED_APPS = [
     'django_quill'
 ]
 
-
-X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 MIDDLEWARE = [
@@ -156,13 +154,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Thimphu"
 
 USE_I18N = True
 
@@ -197,14 +191,15 @@ COMMON_ORIGINS = [
     'http://thepemasystem.gov.bt',
     'http://localhost',
     'http://localhost:5173',
+    'http://172.30.84.164:8123',
 ]
 
 # Add a regex pattern for the IP range
 IP_RANGE_PATTERN = r'^https?://172\.30\.84\.\d+(?::\d+)?$'
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = COMMON_ORIGINS
-CORS_ALLOW_ALL_ORIGINS = False
+# CORS_ALLOWED_ORIGINS = COMMON_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
@@ -234,8 +229,10 @@ CORS_ORIGIN_REGEX_WHITELIST = [
 CORS_ORIGIN_WHITELIST = COMMON_ORIGINS
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'unsafe-none'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8123',
@@ -246,20 +243,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://172.30.84.164:8123',
 ]
 
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
-CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_DOMAIN = None
-
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
 CSRF_COOKIE_DOMAIN = None
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -270,6 +257,12 @@ EMAIL_HOST_USER = 'ujwal.pradhan666@gmail.com'
 EMAIL_HOST_PASSWORD = 'Caelen@0312'
 DEFAULT_FROM_EMAIL = 'noreply@thepemasystem.com'
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 604800
-SESSION_COOKIE_SECURE = True
+# Use database for session storage
+# SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in the database
+
+# # Session cookie settings
+# SESSION_COOKIE_AGE = 604800
+# SESSION_COOKIE_SECURE = True
+# SESSION_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SAMESITE = 'Lax'
+# SESSION_COOKIE_DOMAIN = '.thepemasystem.gov.bt'

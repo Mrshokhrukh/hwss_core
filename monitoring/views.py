@@ -134,6 +134,7 @@ def get_non_green_flags(request):
                     'user_class': user_agency.user_class,
                     'user_stream': user_agency.user_stream,
                     'user_sub_class': user_agency.user_sub_class,
+                    'user_dzongkhag': submission.user.active_agency.present_dzongkhag,
                 }
             except UserAgency.DoesNotExist:
                 # Handle the case where UserAgency object does not exist for the CustomUser

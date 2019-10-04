@@ -941,20 +941,66 @@ def main_composer(request):
     return response
 
 
-
-
-
-
 @csrf_exempt
 def fetch_school_env_entries(request):
     if request.method == 'GET':
         submissions = Submission.objects.filter(question_set__name="SCHOOL ENV")
         data = {}
         for submission in submissions:
-            user = submission.user_submission.user.username
-            if user not in data:
-                data[user] = []
-            data[user].append({
+            # Get the entire user object
+            user = submission.user_submission.user
+
+            # Retrieve related fields from the user model
+            user_data = {
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "gender": user.gender,
+                "perm_add_village": user.perm_add_village,
+                "perm_add_gewog": user.perm_add_gewog,
+                "perm_add_dzongkhag": user.perm_add_dzongkhag,
+                "ps_add_village": user.ps_add_village,
+                "ps_add_gewog": user.ps_add_gewog,
+                "ps_add_dzongkhag": user.ps_add_dzongkhag,
+                "role": user.get_role_display(),
+            }
+
+            # Include active agency details
+            if user.active_agency:
+                user_data["active_agency"] = {
+                    "agency_code": user.active_agency.agency_code,
+                    "agency_name": user.active_agency.agency_name,
+                }
+
+            # Include UserAgency details if available
+            try:
+                user_agency = user.agency_details
+                user_data["user_agency"] = {
+                    "agency_name": user_agency.agency.agency_name,
+                    "user_code": user_agency.user_code,
+                    "parent_occupation": user_agency.parent_occupation,
+                    "guardian_name": user_agency.guardian_name,
+                    "guardian_occupation": user_agency.guardian_occupation,
+                    "parent_status": user_agency.parent_status,
+                    "current_living_with": user_agency.current_living_with,
+                    "user_role_agency": user_agency.user_role_agency,
+                    "user_class": user_agency.user_class,
+                    "user_stream": user_agency.user_stream,
+                    "user_sub_class": user_agency.user_sub_class,
+                }
+            except UserAgency.DoesNotExist:
+                user_data["user_agency"] = None
+
+            # Add user data to the response
+            if user.username not in data:
+                data[user.username] = {
+                    "user_details": user_data,
+                    "submissions": [],
+                }
+
+            # Append submission details
+            data[user.username]["submissions"].append({
                 "question": submission.question,
                 "answer": submission.answer,
                 "score": submission.score,
@@ -963,6 +1009,7 @@ def fetch_school_env_entries(request):
                 "diagnosis": submission.diagnosis,
                 "created_at": submission.created_at.strftime("%Y-%m-%d %H:%M:%S")
             })
+
         return JsonResponse(data)
     else:
         return JsonResponse({"error": "Method not allowed"}, status=405)

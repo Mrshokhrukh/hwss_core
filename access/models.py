@@ -30,7 +30,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('identity_number', '123')
+        extra_fields.setdefault('identity_number', '1659784')
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -111,6 +111,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLE_RD_ADMIN = 'rd_admin'
     ROLE_SUD_ADMIN = 'sud_admin'
     ROLE_AAA_ADMIN = 'aaa_admin'
+    ROLE_CECD_ADMIN = 'cecd_admin'
 
     ROLE_CHOICES = [
         (ROLE_STUDENT, 'Student'),
@@ -123,6 +124,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         (ROLE_RD_ADMIN, 'R&D Admin'),
         (ROLE_SUD_ADMIN, 'SUD Admin'),
         (ROLE_AAA_ADMIN, 'AAA Admin'),
+        (ROLE_CECD_ADMIN, 'CECD Admin'),
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)

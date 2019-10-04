@@ -59,6 +59,9 @@ from .models import CustomUser
 from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+
 logger = logging.getLogger(__name__)
 
 
@@ -364,7 +367,7 @@ def map_rcsc_data_to_agency_model(rcsc_data):
     elif 'student' in rcsc_data.get('positionTitle', '').lower():
         user_role = CustomUser.ROLE_STUDENT
     else:
-        user_role = CustomUser.ROLE_STUDENT
+        user_role = CustomUser.ROLE_PUBLIC
 
     user_agency_data = {
         'user_role_agency': rcsc_data.get('positionTitle', ''),
@@ -1290,44 +1293,57 @@ def update_user_info(request):
         # Log the request data for debugging
         logger.debug(f"Request data: {request.data}")
 
-        # Update the user details based on the request data
+        # Fetch nested data for user, agency, and userAgency
+        user_data = request.data.get('user', {})
+        user_agency_data = request.data.get('userAgency', {})
+        
+        # Log the extracted data
+        logger.debug(f"User data to update: {user_data}")
+        logger.debug(f"User agency data to update: {user_agency_data}")
+
+        # Update the user details
         user_fields = [
-            'first_name', 'last_name', 'email', 'mob_number', 'father_name', 'mother_name',
-            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
+            'first_name', 'last_name', 'email', 'mob_number', 
+            'father_name', 'mother_name', 
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'
         ]
+        
         for field in user_fields:
-            setattr(user, field, request.data.get(field, getattr(user, field)))
+            new_value = user_data.get(field)
+            if new_value is not None:  # Update only if a new value is provided
+                setattr(user, field, new_value)
 
         # Save the updated user details
+        logger.debug("Saving user details...")
         user.save()
+        logger.debug("User details saved successfully")
 
         # Update the UserAgency details if it exists
         user_agency = getattr(user, 'agency_details', None)
         if user_agency:
-            user_agency.parent_occupation = request.data.get(
-                'parent_occupation', user_agency.parent_occupation)
-            user_agency.guardian_name = request.data.get(
-                'guardian_name', user_agency.guardian_name)
-            user_agency.guardian_occupation = request.data.get(
-                'guardian_occupation', user_agency.guardian_occupation)
-            user_agency.parent_status = request.data.get(
-                'parent_status', user_agency.parent_status)
-            user_agency.current_living_with = request.data.get(
-                'current_living_with', user_agency.current_living_with)
-            user_agency.save()
+            user_agency_fields = [
+                'parent_occupation', 'parent_status', 'guardian_name', 
+                'guardian_occupation', 'current_living_with'
+            ]
+            for field in user_agency_fields:
+                new_value = user_agency_data.get(field)
+                if new_value is not None:  # Update only if a new value is provided
+                    setattr(user_agency, field, new_value)
 
-        # Log the successful update
-        logger.info(
-            f"User details updated successfully for user ID: {user.id}")
+            logger.debug("Saving user agency details...")
+            user_agency.save()
+            logger.debug("User agency details saved successfully")
 
         # Return success response
         return Response({'message': 'User details updated successfully'}, status=status.HTTP_200_OK)
+
     except Exception as e:
         # Log the error
         logger.exception("Error updating user details")
 
         # Return error response
         return Response({'message': 'Failed to update user details. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['POST'])
@@ -1422,3 +1438,23 @@ class LoginGyalsung(APIView):
         except Exception as e:
             logger.error('Exception during login: %s', str(e))
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+@api_view(['POST'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def check_email_cid(request):
+    email = request.data.get('email')
+    cid = request.data.get('cid')
+
+    # Validate input
+    if not email or not cid:
+        return JsonResponse({'error': 'Email and CID are required.'}, status=400)
+
+    # Check if email or CID exists
+    user_exists = CustomUser.objects.filter(Q(email=email) | Q(identity_number=cid)).exists()
+
+    if user_exists:
+        return JsonResponse({'exists': True, 'message': 'Email or CID already exists.'}, status=200)
+    else:
+        return JsonResponse({'exists': False, 'message': 'Email and CID are available.'}, status=200)
