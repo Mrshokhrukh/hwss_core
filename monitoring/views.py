@@ -228,30 +228,32 @@ def generateServiceAndTreatment(request):
 
         # Loop through each rescreening
         for rescreening in rescreenings:
-            existing_instance = ServiceAndTreatment.objects.filter(
-                user=rescreening.user,
-                date=rescreening.submission_date.date(),
-            ).exists()
-
-            # If no existing instance found, create and save a new one
-            if not existing_instance:
-                service_and_treatment = ServiceAndTreatment.objects.create(
+            # Check if submission_date is not None
+            if rescreening.submission_date:
+                existing_instance = ServiceAndTreatment.objects.filter(
                     user=rescreening.user,
                     date=rescreening.submission_date.date(),
-                    assessment_status='Not Conducted',
-                    case_status='On Going',
-                    counseling='Waiting List',
-                    follow_up='',
-                    comments='',
-                )
-                service_and_treatment.save()
+                ).exists()
 
-                # Append the created ServiceAndTreatment instance to the list
-                service_and_treatments_created.append(service_and_treatment)
+                # If no existing instance found, create and save a new one
+                if not existing_instance:
+                    service_and_treatment = ServiceAndTreatment.objects.create(
+                        user=rescreening.user,
+                        date=rescreening.submission_date.date(),
+                        assessment_status='Not Conducted',
+                        case_status='On Going',
+                        counseling='Waiting List',
+                        follow_up='',
+                        comments='',
+                    )
+                    service_and_treatment.save()
 
-                # Update the rescreening to mark it as rescreened
-                rescreening.rescreened = True
-                rescreening.save()
+                    # Append the created ServiceAndTreatment instance to the list
+                    service_and_treatments_created.append(service_and_treatment)
+
+                    # Update the rescreening to mark it as rescreened
+                    rescreening.rescreened = True
+                    rescreening.save()
 
         # Retrieve all instances of ServiceAndTreatment
         service_and_treatments = ServiceAndTreatment.objects.all()

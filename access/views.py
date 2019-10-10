@@ -519,11 +519,14 @@ def register_user(request):
             agency_code = agency_data.get('agency_code')
             agency, created = Agency.objects.get_or_create(
                 agency_code=agency_code, defaults=agency_data)
-
+            email = user_data.get('email')
+            if not email:
+                return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
             # Create the user
             user = CustomUser.objects.create_user(
                 username=user_data.get('username'),
-                email=user_data.get('email'),
+                email=email,
                 identity_number=user_data.get('identity_number'),
                 first_name=user_data.get('first_name'),
                 middle_name=user_data.get('middle_name'),
@@ -977,7 +980,6 @@ class LoginView(APIView):
                 logger.info(
                     'Login response sent - Token: %s, User Role: %s', token.key, user_role)
 
-                print('returning token is:', token.key)
                 return Response({"token": token.key, "user_role": user_role, "user_id": user_id}, status=status.HTTP_200_OK)
             else:
                 # Check if the user exists with the given username

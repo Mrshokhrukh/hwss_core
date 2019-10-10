@@ -310,6 +310,17 @@ def populate_reporting_model():
         print(
             f"User: {user.username}, UserAgency: {user_agency}, Agency Name: {agency_name}")
 
+        # Check if there is at least one UserSubmission or Rescreening for the user
+        has_submission_or_rescreening = (
+            UserSubmission.objects.filter(user=user).exists() or
+            Rescreening.objects.filter(user=user).exists()
+        )
+
+        if not has_submission_or_rescreening:
+            # Skip creating ServiceAndTreatment if no related records exist
+            print(f"Skipping user {user.username} as no UserSubmission or Rescreening exists.")
+            continue
+
         # Retrieve or create ServiceAndTreatment instance for the user
         service_and_treatment = ServiceAndTreatment.objects.filter(
             user=user).last()
