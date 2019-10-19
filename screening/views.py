@@ -7,9 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from access.models import CustomUser
+from django.utils.decorators import method_decorator
 from measurement.models import UserSubmission
 from .models import CaseBasedSubmission, CaseScreening, CaseSubstance, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstance, EventSubstanceRiskMeasurement
 from django.utils import timezone
+from django.db.models import Prefetch
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .serializers import EventBasedSubmissionSerializer, CaseBasedSubmissionSerializer
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -113,14 +119,17 @@ def submit_case_screening(request):
             gad_data = json.loads(request.POST.get('gadData', '{}'))
             phq_data = json.loads(request.POST.get('phqData', '{}'))
             ace_data = json.loads(request.POST.get('aceData', '{}'))
-            assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
-            school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
+            assist_risk_severity = json.loads(
+                request.POST.get('assistRiskSeverity', '{}'))
+            school_env_data = json.loads(
+                request.POST.get('schoolEnvData', '{}'))
 
             # Retrieve the CustomUser instance based on the user ID
             user = CustomUser.objects.get(pk=user_id)
 
             # Retrieve the latest CaseScreening for the user
-            latest_case_screening = user.case_screenings.order_by('-date').first()
+            latest_case_screening = user.case_screenings.order_by(
+                '-date').first()
 
             # Create or update CaseBasedSubmission instance
             submission_instance = latest_case_screening.case_based_submissions.first()
@@ -129,13 +138,16 @@ def submit_case_screening(request):
                 # Update existing instance
                 submission_instance.gad_data = gad_data.get('responses', [])
                 submission_instance.gad_score = gad_data.get('totalScore')
-                submission_instance.gad_interpretation = gad_data.get('interpretation')
+                submission_instance.gad_interpretation = gad_data.get(
+                    'interpretation')
                 submission_instance.phq_data = phq_data.get('responses', [])
                 submission_instance.phq_score = phq_data.get('totalScore')
-                submission_instance.phq_interpretation = phq_data.get('interpretation')
+                submission_instance.phq_interpretation = phq_data.get(
+                    'interpretation')
                 submission_instance.ace_data = ace_data.get('responses', [])
                 submission_instance.ace_score = ace_data.get('totalScore')
-                submission_instance.ace_interpretation = ace_data.get('interpretation')
+                submission_instance.ace_interpretation = ace_data.get(
+                    'interpretation')
                 submission_instance.school_env_data = school_env_data
                 submission_instance.save()
             else:
@@ -158,7 +170,8 @@ def submit_case_screening(request):
             # Create CaseSubstanceRiskMeasurement instances
             for substance_name, severity in assist_risk_severity.items():
                 # Check if the substance exists in the database
-                substance, created = CaseSubstance.objects.get_or_create(name=substance_name)
+                substance, created = CaseSubstance.objects.get_or_create(
+                    name=substance_name)
                 # Extract score from severity
                 score = int(severity.split('(')[1].split(')')[0])
                 # Create new instance
@@ -181,8 +194,6 @@ def submit_case_screening(request):
         return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 
-
-
 @csrf_exempt
 def submit_event_screening(request):
     try:
@@ -192,7 +203,8 @@ def submit_event_screening(request):
         gad_data = json.loads(request.POST.get('gadData', '{}'))
         phq_data = json.loads(request.POST.get('phqData', '{}'))
         ace_data = json.loads(request.POST.get('aceData', '{}'))
-        assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
+        assist_risk_severity = json.loads(
+            request.POST.get('assistRiskSeverity', '{}'))
         school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
 
         # Retrieve the CustomUser instance based on the user ID
@@ -220,7 +232,8 @@ def submit_event_screening(request):
         # Create EventSubstanceRiskMeasurement instances
         for substance_name, severity in assist_risk_severity.items():
             # Check if the substance exists in the database
-            substance, _ = EventSubstance.objects.get_or_create(name=substance_name)
+            substance, _ = EventSubstance.objects.get_or_create(
+                name=substance_name)
             # Extract score from severity
             score = int(severity.split('(')[1].split(')')[0])
             # Create new instance
@@ -242,6 +255,7 @@ def submit_event_screening(request):
         # Return error response
         return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
+
 def calculate_age(born):
     today = date.today()
     age = today.year - born.year - \
@@ -256,7 +270,6 @@ def get_user_details(user):
         'age': (timezone.now().date() - user.date_of_birth).days // 365,
         'gender': user.gender,
     }
-
 
 
 @csrf_exempt
@@ -280,12 +293,13 @@ def get_event_screenings(request):
                 'rejection_reason': event.rejection_reason,
                 'registration_lockout_end_time': event.registration_lockout_end_time,
                 'selected_tool': event.selected_tool,
-                'users': list(event.users.values('id', 'username', 'email'))  # Adjust the fields as needed
+                # Adjust the fields as needed
+                'users': list(event.users.values('id', 'username', 'email'))
             }
             events_list.append(event_data)
 
         return JsonResponse(events_list, safe=False)
-    
+
 
 @csrf_exempt
 def update_event_screening(request):
@@ -317,3 +331,109 @@ def update_event_screening(request):
             return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+# EventBasedRecordViewSet
+@method_decorator(csrf_exempt, name='dispatch')
+class EventBasedRecordViewSet(viewsets.ModelViewSet):
+    queryset = EventBasedSubmission.objects.all().prefetch_related(
+        'user', 'event', 'service_and_treatment', 'referral',
+        Prefetch('event_substance_risk_measurements', queryset=EventSubstanceRiskMeasurement.objects.all())
+    )
+    serializer_class = EventBasedSubmissionSerializer
+    permission_classes = [AllowAny]  # Allow any user to access this view
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def full_event_records(self, request):
+        submissions = self.get_queryset()
+        response_data = []
+
+        for submission in submissions:
+            user = submission.user
+            event = submission.event
+            risk_measurements = submission.event_substance_risk_measurements.all()
+
+            data = {
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                },
+                'event': {
+                    'event_name': event.event_name,
+                    'event_purpose': event.event_purpose,
+                    'location': event.location,
+                    'duration': event.duration,
+                },
+                'submission': {
+                    'gad_score': submission.gad_score,
+                    'phq_score': submission.phq_score,
+                    'ace_score': submission.ace_score,
+                    'service_and_treatment': submission.service_and_treatment.name if submission.service_and_treatment else None,
+                    'referral': submission.referral.referral_type if submission.referral else None,
+                },
+                'substance_risk_measurements': [
+                    {
+                        'substance': risk.substance.name,
+                        'measurement': risk.measurement,
+                        'risk_flag': risk.risk_flag,
+                        'total_score': risk.total_score,
+                    } for risk in risk_measurements
+                ]
+            }
+
+            response_data.append(data)
+
+        return Response(response_data)
+
+# CaseBasedRecordViewSet
+@method_decorator(csrf_exempt, name='dispatch')
+class CaseBasedRecordViewSet(viewsets.ModelViewSet):
+    queryset = CaseBasedSubmission.objects.all().prefetch_related(
+        'user', 'case', 'service_and_treatment', 'referral',
+        Prefetch('case_substance_risk_measurements', queryset=CaseSubstanceRiskMeasurement.objects.all())
+    )
+    serializer_class = CaseBasedSubmissionSerializer
+    permission_classes = [AllowAny]  # Allow any user to access this view
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def full_case_records(self, request):
+        submissions = self.get_queryset()
+        response_data = []
+
+        for submission in submissions:
+            user = submission.user
+            case = submission.case
+            risk_measurements = submission.case_substance_risk_measurements.all()
+
+            data = {
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                },
+                'case': {
+                    'case_name': case.case_name,
+                    'purpose': case.purpose,
+                    'dzongkhag': case.dzongkhag,
+                    'date': case.date,
+                },
+                'submission': {
+                    'gad_score': submission.gad_score,
+                    'phq_score': submission.phq_score,
+                    'ace_score': submission.ace_score,
+                    'service_and_treatment': submission.service_and_treatment.name if submission.service_and_treatment else None,
+                    'referral': submission.referral.referral_type if submission.referral else None,
+                },
+                'substance_risk_measurements': [
+                    {
+                        'substance': risk.substance.name,
+                        'measurement': risk.measurement,
+                        'risk_flag': risk.risk_flag,
+                        'total_score': risk.total_score,
+                    } for risk in risk_measurements
+                ]
+            }
+
+            response_data.append(data)
+
+        return Response(response_data)
