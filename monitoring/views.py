@@ -220,22 +220,17 @@ def get_user_details(user):
 
 def generateServiceAndTreatment(request):
     try:
-        # Retrieve all rescreenings
         rescreenings = Rescreening.objects.all()
 
-        # List to store the created ServiceAndTreatment instances
         service_and_treatments_created = []
 
-        # Loop through each rescreening
         for rescreening in rescreenings:
-            # Check if submission_date is not None
             if rescreening.submission_date:
                 existing_instance = ServiceAndTreatment.objects.filter(
                     user=rescreening.user,
                     date=rescreening.submission_date.date(),
                 ).exists()
 
-                # If no existing instance found, create and save a new one
                 if not existing_instance:
                     service_and_treatment = ServiceAndTreatment.objects.create(
                         user=rescreening.user,
@@ -248,17 +243,13 @@ def generateServiceAndTreatment(request):
                     )
                     service_and_treatment.save()
 
-                    # Append the created ServiceAndTreatment instance to the list
                     service_and_treatments_created.append(service_and_treatment)
 
-                    # Update the rescreening to mark it as rescreened
                     rescreening.rescreened = True
                     rescreening.save()
 
-        # Retrieve all instances of ServiceAndTreatment
         service_and_treatments = ServiceAndTreatment.objects.all()
 
-        # Serialize the ServiceAndTreatment instances along with user details to JSON
         service_and_treatments_data = [{
             'user': get_user_details(obj.user),
             'date': obj.date,
@@ -269,7 +260,6 @@ def generateServiceAndTreatment(request):
             'comments': obj.comments,
         } for obj in service_and_treatments]
 
-        # Retrieve users who are not admins, students, or part of the public role
         counselors = CustomUser.objects.exclude(
             role__in=['student', 'public']
         ).exclude(
@@ -441,17 +431,13 @@ def update_referral_status(request):
 
 # function for getting users details:
 def get_user_monitoring_details(request):
-    # Retrieve the user ID from query parameters
     user_id = request.GET.get('user_id')
 
-    # Check if user_id is provided
     if user_id is None:
         return JsonResponse({'error': 'User ID is missing'}, status=400)
 
-    # Retrieve the user object based on the user ID
     user = get_object_or_404(CustomUser, pk=user_id)
 
-    # Retrieve the user's agency details
     try:
         user_agency = UserAgency.objects.get(user=user)
         agency_details = {
@@ -464,7 +450,6 @@ def get_user_monitoring_details(request):
     except UserAgency.DoesNotExist:
         agency_details = None
 
-    # Retrieve active agency details
     agency_active_details = []
     if user.active_agency:
         agency_active_details.append({
@@ -473,46 +458,38 @@ def get_user_monitoring_details(request):
             'present_village': user.active_agency.present_village,
         })
 
-    # Retrieve service and treatment details for the user
     service_and_treatment_details = list(
         ServiceAndTreatment.objects.filter(user=user).values())
 
-    # Retrieve referral details for the user
     referral_details = list(Referral.objects.filter(user=user).values())
 
-    # Retrieve [past diagnosis] details for the user from submission model
     user_submissions = UserSubmission.objects.filter(user=user)
     diagnosis_details = list(
         Submission.objects.filter(user_submission__in=user_submissions).values('diagnosis'))
 
-    # Retrieve rescreening details for the user
     rescreenings = Rescreening.objects.filter(user=user)
     rescreening_details = []
     for rescreening in rescreenings:
         rescreening_data = {
             'id': rescreening.id,
             'submission_date': rescreening.submission_date.strftime('%Y-%m-%d %H:%M:%S'),
-            # Include other relevant fields here
         }
         rescreening_details.append(rescreening_data)
 
-    # Retrieve SubstanceRiskMeasurement details for the user
     substance_risk_measurements = SubstanceRiskMeasurement.objects.filter(
         rescreening__in=rescreenings)
     substance_risk_measurement_details = []
     for measurement in substance_risk_measurements:
-        substance_name = measurement.substance.name  # Fetch the name of the substance
+        substance_name = measurement.substance.name  
         measurement_data = {
             'id': measurement.id,
             'substance_name': substance_name,
             'measurement': measurement.measurement,
             'risk_flag': measurement.risk_flag,
             'total_score': measurement.total_score,
-            # Include other relevant fields here
         }
         substance_risk_measurement_details.append(measurement_data)
 
-    # Construct the user details JSON response
     user_details = {
         'id': user.id,
         'username': user.username,
