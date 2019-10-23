@@ -27,116 +27,17 @@ logger = logging.getLogger(__name__)
 
 moderate_threshold = 14
 
-# @csrf_exempt
-# def save_submission(request):
-#     if request.method == 'POST':
-#         try:
-#             logger.info('Received submission data: %s', request.body)
-#             submission_data = json.loads(request.body)
-#         except json.JSONDecodeError as e:
-#             logger.error('Error decoding JSON: %s', str(e))
-#             return JsonResponse({'error': 'Invalid JSON format in request body'}, status=400)
-
-#         user_id = submission_data.get('user')
-#         logger.debug('Extracted user ID: %s', user_id)
-
-#         if user_id is None:
-#             logger.error('User ID is required')
-#             return JsonResponse({'error': 'User ID is required'}, status=400)
-
-#         try:
-#             user = CustomUser.objects.get(pk=user_id)
-#         except CustomUser.DoesNotExist:
-#             logger.error('User with ID %s does not exist', user_id)
-#             return JsonResponse({'error': f'User with ID {user_id} does not exist'}, status=400)
-
-#         test_type_name = submission_data.get('test_type_name')
-#         test_type, _ = TestType.objects.get_or_create(name=test_type_name)
-
-#         with transaction.atomic():
-#             existing_submissions = UserSubmission.objects.filter(
-#                 user=user, test_type=test_type)
-
-#             if existing_submissions.exists():
-#                 if submission_data.get('confirmation'):
-#                     logger.info(
-#                         'User %s confirmed submission for test type %s again', user_id, test_type_name)
-#                     # Remove existing submissions for the same test type
-#                     existing_submissions.delete()
-#                 else:
-#                     logger.warning(
-#                         'User %s has already submitted for test type %s', user_id, test_type_name)
-#                     return JsonResponse({'error': f'User {user_id} has already submitted for test type {test_type_name}'}, status=400)
-
-#             user_submission, created = UserSubmission.objects.get_or_create(
-#                 user=user, test_type=test_type)
-
-#             if not created:
-#                 logger.warning(
-#                     'User %s has already submitted for test type %s', user_id, test_type_name)
-#                 return JsonResponse({'error': f'User {user_id} has already submitted for test type {test_type_name}'}, status=400)
-
-#             for key, value in submission_data.items():
-#                 # Check if the key represents a question
-#                 if key.endswith('_question_1'):
-#                     question_set_name = value['question_set_name']
-#                     question_set = None
-
-#                     # Iterate through all questions in the submission data
-#                     for question_key, question_value in submission_data.items():
-#                         if question_key.startswith(question_set_name):
-#                             question = question_value['question']
-#                             answer = question_value['answer']
-#                             score = question_value['score']
-#                             substance = question_value['substance']
-#                             specify = question_value['specify']
-#                             diagnosis = question_value['diagnosis']
-
-#                             # Create or get the question set
-#                             if question_set is None:
-#                                 question_set, _ = QuestionSet.objects.get_or_create(
-#                                     name=question_set_name, test_type=test_type, user_submission=user_submission)
-
-#                             # Create the submission for each question in the set
-#                             Submission.objects.create(
-#                                 user_submission=user_submission,
-#                                 question=question,
-#                                 answer=answer,
-#                                 score=score,
-#                                 substance=substance,
-#                                 specify=specify,
-#                                 diagnosis=diagnosis,
-#                                 question_set=question_set
-#                             )
-
-#             logger.info('Submissions saved successfully')
-#             # Pass user_submission object to exec_measurement
-#             user_submission_instance = exec_measurement(user, user_submission)
-
-#             # Check if any substance or measurement calculation flags for moderate and above
-#             if substance and score is not None and score >= moderate_threshold:
-#                 # If flags exist, save the record for monitoring rescreening
-#                 save_rescreening_record(user, user_submission_instance)
-
-#             return JsonResponse({'message': 'Submissions saved successfully'}, status=201)
-
-#     else:
-#         logger.error('Only POST requests are allowed')
-#         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
-
 
 @csrf_exempt
 def save_submission(request):
     if request.method == 'POST':
         try:
-            logger.info('Received submission data: %s', request.body)
             submission_data = json.loads(request.body)
         except json.JSONDecodeError as e:
             logger.error('Error decoding JSON: %s', str(e))
             return JsonResponse({'error': 'Invalid JSON format in request body'}, status=400)
 
         user_id = submission_data.get('user')
-        logger.debug('Extracted user ID: %s', user_id)
 
         if user_id is None:
             logger.error('User ID is required')
@@ -159,7 +60,6 @@ def save_submission(request):
                 if submission_data.get('confirmation'):
                     logger.info(
                         'User %s confirmed submission for test type %s again', user_id, test_type_name)
-                    # Remove existing submissions for the same test type
                     existing_submissions.delete()
                 else:
                     logger.warning(
@@ -189,18 +89,12 @@ def save_submission(request):
 
 
 def is_eligible_for_lifetime_user(submission_data):
-    """
-    Checks if the user is eligible for LifetimeUser based on the specific question criteria.
-    """
     all_never_used = all(value['score'] == 0 for key, value in submission_data.items(
     ) if key.endswith('_question_1'))
     return all_never_used
 
 
 def register_lifetime_user(user, user_submission, submission_data):
-    """
-    Registers the user as a LifetimeUser and saves the submission.
-    """
     lifetime_user = LifetimeUser.objects.create(
         user=user, user_submission=user_submission)
     for key, value in submission_data.items():
@@ -213,16 +107,11 @@ def register_lifetime_user(user, user_submission, submission_data):
 
 
 def normal_saving_process(user, user_submission, submission_data, test_type):
-    """
-    Proceeds with the normal saving process and registers the user as an ActiveUser.
-    """
     for key, value in submission_data.items():
-        # Check if the key represents a question
         if key.endswith('_question_1'):
             question_set_name = value['question_set_name']
             question_set = None
 
-            # Iterate through all questions in the submission data
             for question_key, question_value in submission_data.items():
                 if question_key.startswith(question_set_name):
                     question = question_value['question']
@@ -232,12 +121,11 @@ def normal_saving_process(user, user_submission, submission_data, test_type):
                     specify = question_value['specify']
                     diagnosis = question_value['diagnosis']
 
-                    # Create or get the question set
                     if question_set is None:
                         question_set, _ = QuestionSet.objects.get_or_create(
                             name=question_set_name, test_type=test_type, user_submission=user_submission)
 
-                    # Create the submission for each question in the set
+                    # Create the submission and save scores
                     Submission.objects.create(
                         user_submission=user_submission,
                         question=question,
@@ -251,15 +139,15 @@ def normal_saving_process(user, user_submission, submission_data, test_type):
 
     logger.info('Submissions saved successfully')
 
-    # Pass user_submission object to exec_measurement
+    measurement_assist, created = MeasurementAssist.objects.get_or_create(
+        user=user, user_submission=user_submission
+    )
+
+    measurement, created = Measurement.objects.get_or_create(
+        user=user, user_submission=user_submission, assist=measurement_assist
+    )
     user_submission_instance = exec_measurement(user, user_submission)
 
-    # Check if any substance or measurement calculation flags for moderate and above
-    if substance and score is not None and score >= moderate_threshold:
-        # If flags exist, save the record for monitoring rescreening
-        save_rescreening_record(user, user_submission_instance)
-
-    # Register user as ActiveUser
     if not LifetimeUser.objects.filter(user=user, user_submission=user_submission).exists():
         active_user = ActiveUser.objects.create(
             user=user, user_submission=user_submission)
@@ -267,9 +155,6 @@ def normal_saving_process(user, user_submission, submission_data, test_type):
 
 
 def save_rescreening_record(user, user_submission):
-    """
-    Save a record for monitoring rescreening.
-    """
     try:
         submission_diagnosis = Submission.objects.get(
             user_submission=user_submission, question_set__name='Diagnosis')
@@ -286,9 +171,6 @@ def save_rescreening_record(user, user_submission):
 
 
 def calculate_score(submission, set_name):
-    """
-    Calculate the total score for the given submission and set name.
-    """
     logger.info('Calculating score for submission %s and set name %s',
                 submission.id, set_name)
     scores = [s.score or 0 for s in Submission.objects.filter(
@@ -299,9 +181,6 @@ def calculate_score(submission, set_name):
 
 
 def get_flag_color(risk_level):
-    """
-    Get the flag color based on the risk level.
-    """
     logger.info('Getting flag color for risk level: %s', risk_level)
     if risk_level == 'high risk':
         flag_color = 'red'
@@ -316,9 +195,6 @@ def get_flag_color(risk_level):
 
 
 def set_measurement_and_flag(measurement, total_score, thresholds, measurement_field, flag_field):
-    """
-    Set measurement and flag based on total score and thresholds.
-    """
     logger.info('Setting measurement and flag for total score: %s', total_score)
     for threshold, measurement_value, flag_value in thresholds:
         if total_score <= threshold:
@@ -335,9 +211,6 @@ def set_measurement_and_flag(measurement, total_score, thresholds, measurement_f
 
 
 def calculate_age(date_of_birth):
-    """
-    Calculate the age of the user based on the date of birth.
-    """
     logger.info('Calculating age for date of birth: %s', date_of_birth)
     today = datetime.date.today()
     age = today.year - date_of_birth.year - \
@@ -347,36 +220,26 @@ def calculate_age(date_of_birth):
 
 
 def get_substance_score(user, substance):
-    """
-    Retrieve the substance score for the given user and substance.
-    """
     logger.info('Retrieving substance score for user: %s, substance: %s',
                 user.username, substance)
-    # Retrieve the most recent submission for the user and substance
     submission = Submission.objects.filter(
-        user_submission__user=user, substance=substance).order_by('-created_at').first()
+        user_submission__user=user, substance__iexact=substance).order_by('-created_at').first()
 
     if submission:
         logger.info('Found submission for substance %s with score: %s',
                     substance, submission.score)
-        return submission.score if submission.score is not None else 0
+        return int(submission.score) if submission.score is not None else 0
     else:
         logger.warning('No submission found for substance %s', substance)
         return 0
 
 
 def calculate_phq_measurement_and_flag(user, submission, measurement):
-    """
-    Calculate PHQ measurement and flag for the given submission and user.
-    """
     phq2_score = calculate_score(submission, "PHQ2")
     phq9_score = calculate_score(submission, "PHQ9")
     total_score = phq2_score + phq9_score
 
-    logger.info('PHQ2 Score: %s', phq2_score)
-    logger.info('PHQ9 Score: %s', phq9_score)
-    logger.info('Total Score: %s', total_score)
-
+    measurement.phq_score = int(total_score)
     set_measurement_and_flag(measurement, total_score, [(4, "minimal", "green"), (9, "mild", "blue"), (
         14, "moderate", "yellow"), (19, "moderately severe", "orange")], "phq_measurement", "phq_flag")
 
@@ -396,30 +259,18 @@ def calculate_phq_measurement_and_flag(user, submission, measurement):
     else:
         logger.info('No Suicidal Question or Score found')
 
-    logger.info('PHQ Measurement: %s', measurement.phq_measurement)
-    logger.info('PHQ Flag: %s', measurement.phq_flag)
-
 
 def calculate_gad_measurement_and_flag(user, submission, measurement):
-    """
-    Calculate GAD measurement and flag for the given submission and user.
-    """
     gad2_score = calculate_score(submission, "GAD2")
     gad7_score = calculate_score(submission, "GAD7")
     total_score = gad2_score + gad7_score
 
-    logger.info('GAD2 Score: %s', gad2_score)
-    logger.info('GAD7 Score: %s', gad7_score)
-    logger.info('Total GAD Score: %s', total_score)
-
+    measurement.gad_score = int(total_score)
     set_measurement_and_flag(measurement, total_score, [(4, "minimal", "green"), (
         9, "mild", "blue"), (14, "moderate", "yellow")], "gad_measurement", "gad_flag")
 
 
 def calculate_substance_risk(age, substance_scores):
-    """
-    Calculate the risk levels for substances based on the user's age group and substance scores.
-    """
     # Define thresholds based on age
     if age <= 14:
         thresholds = {
@@ -484,21 +335,25 @@ def calculate_substance_risk(age, substance_scores):
     return risk_levels
 
 
-def update_measurement_assist(user, substance_risk_levels):
-    """
-    Update the measurement assist object based on substance risk levels.
-    """
-    logger.info('Updating measurement assist for user: %s', user.username)
-    measurement_assist, created = MeasurementAssist.objects.get_or_create(
-        user=user)
+def update_measurement_assist(user, user_submission, substance_risk_levels):
+    measurement_assist, _ = MeasurementAssist.objects.get_or_create(
+        user=user,
+        user_submission=user_submission
+    )
+    
     for substance, risk_level in substance_risk_levels.items():
         measurement_field = f'{substance.lower()}_measurement'
         flag_field = f'{substance.lower()}_flag'
-        logger.info('Updating %s measurement to: %s', substance, risk_level)
-        logger.info('Updating %s flag to: %s', substance,
-                    get_flag_color(risk_level))
+        score_field = f'{substance.lower()}_score'
+
+        # Ensure scores are not None, replace with 0 if necessary
+        substance_score = get_substance_score(user, substance)
+        substance_score = int(substance_score or 0)  # Force integer, handle None
+        
         setattr(measurement_assist, measurement_field, risk_level)
         setattr(measurement_assist, flag_field, get_flag_color(risk_level))
+        setattr(measurement_assist, score_field, substance_score)  # Save the correct score
+
     measurement_assist.save()
     logger.info('Measurement assist updated successfully')
 
@@ -512,19 +367,24 @@ def exec_measurement(user, user_submission):
     logger.info('Calculating measurements for user: %s', user.username)
     logger.info('User age: %s', age)
 
-    for submission in submissions:
-        logger.info('Processing submission for question set: %s',
-                    submission.question_set.name)
-        logger.info('Submission score: %s', submission.score)
+    # Initialize the measurement object for this submission
+    measurement, _ = Measurement.objects.get_or_create(
+        user=user, user_submission=user_submission)
 
+    for submission in submissions:
         question_set_name = submission.question_set.name
 
+        # Process PHQ submissions and calculate scores
         if question_set_name.startswith("PHQ"):
-            process_phq_submission(user, submission)
+            calculate_phq_measurement_and_flag(user, submission, measurement)
 
+        # Process GAD submissions and calculate scores
         elif question_set_name.startswith("GAD"):
-            process_gad_submission(user, submission)
+            calculate_gad_measurement_and_flag(user, submission, measurement)
 
+    measurement.save()
+
+    # Calculate substance risk and update MeasurementAssist
     process_substance_measurement(user, age, user_submission)
 
 
@@ -570,75 +430,129 @@ def process_gad_submission(user, submission):
 
 @transaction.atomic
 def process_substance_measurement(user, age, user_submission):
-    substance_scores = defaultdict(list)
+    substance_scores = defaultdict(lambda: {'total': 0, 'questions': {}, 'other_name': None})
     null_score_substances = []  # List to store substances with NULL score
-
+    
     submissions = Submission.objects.filter(
-        user_submission__user=user).select_related('question_set')
+        user_submission=user_submission
+    ).select_related('question_set')
+    
+    substance_field_mapping = {
+        'tobacco products (cigarettes, chewing tobacco etc)': 'tobacco',
+        'alcoholic beverages (beer, wine, spirits, ara etc.)': 'alcoholic',
+        'cannabis (marijuana, pot, grass, hash, black etc.)': 'cannabis',
+        'cocaine': 'cocaine',
+        'amphetamine-type stimulants (meth, ecstasy, yebe, diet pills etc.)': 'amphetamine',
+        'inhalants (dendrite, glue, petrol, paint thinner, etc.)': 'inhalants',
+        'sedatives or sleeping pills (n-10, diazepam etc.)': 'sedatives',
+        'hallucinogens (lsd, trips, ketamine, etc.)': 'hallucinogens',
+        'opioids (heroin, morphine, fentanyl, codeine, sp+, tramadol, bs etc.)': 'opioids',
+        'other - specify': 'other'
+    }
+    
+    # First pass: Collect all scores and track NULL scores
     for submission in submissions:
         if submission.substance:
-            substance_scores[submission.substance].append(submission.score)
+            substance_name = submission.substance.strip().lower()
+            
+            # Track NULL scores
             if submission.score is None:
-                # Add substance with NULL score to the list
                 null_score_substances.append(submission.substance)
-
-    repeated_substances = {substance: scores for substance,
-                           scores in substance_scores.items() if len(scores) > 1}
-
-    substance_scores = {substance: sum(
-        scores) for substance, scores in repeated_substances.items()}
-
-    logger.info('Substance scores for user: %s', substance_scores)
-
-    if null_score_substances:  # Check if there are substances with NULL score
-        # Update other_name field with the name of the first substance with NULL score
-        other_name = null_score_substances[0]
-    else:
-        other_name = None  # If no NULL score substances, set other_name to None
-
-    # Print substances with NULL score
+                logger.info(f"Found NULL score for substance: {submission.substance}")
+            
+            score = submission.score if submission.score is not None else 0
+            substance_scores[substance_name]['questions'][submission.question] = score
+    
     logger.info('Substances with NULL score: %s', null_score_substances)
-
-    substance_risk_levels = calculate_substance_risk(age, substance_scores)
-    logger.info('Substance risk levels: %s', substance_risk_levels)
-
+    
+    # Set other_name based on NULL scores
+    other_name = null_score_substances[0] if null_score_substances else None
+    logger.info(f"Setting other_name to: {other_name}")
+    
+    # Calculate total scores
+    for substance_name, data in substance_scores.items():
+        total_score = sum(data['questions'].values())
+        substance_scores[substance_name]['total'] = total_score
+        logger.info(f"Total score for {substance_name}: {total_score}")
+    
+    # Normalize scores for risk calculation
+    normalized_scores = {}
+    for substance_name, data in substance_scores.items():
+        field_name = None
+        for original, mapped in substance_field_mapping.items():
+            if substance_name == original.lower():
+                field_name = mapped
+                break
+        if field_name:
+            normalized_scores[field_name.capitalize()] = data['total']
+    
+    substance_risk_levels = calculate_substance_risk(age, normalized_scores)
+    logger.info('Calculated risk levels: %s', substance_risk_levels)
+    
+    # Create or update MeasurementAssist
     measurement_assist, created = MeasurementAssist.objects.get_or_create(
         user=user,
         user_submission=user_submission
     )
+    
+    # Set the other_name field
+    measurement_assist.other_name = other_name
+    logger.info(f"Set measurement_assist.other_name to: {other_name}")
+    
+    # Update measurements, flags, and scores
+    for substance, risk_level in substance_risk_levels.items():
+        field_base = substance.lower()
+        
+        original_substance = None
+        for substance_name, data in substance_scores.items():
+            mapped_field = None
+            for original, mapped in substance_field_mapping.items():
+                if substance_name == original.lower():
+                    mapped_field = mapped
+                    break
+            if mapped_field and mapped_field.capitalize() == substance:
+                original_substance = substance_name
+                break
 
-    measurement_assist.other_name = other_name  # Update other_name field
+        # Set measurement
+        measurement_field = f'{field_base}_measurement'
+        if hasattr(measurement_assist, measurement_field):
+            setattr(measurement_assist, measurement_field, risk_level)
+            logger.info(f"Set {measurement_field} to {risk_level}")
 
-    # Check for "Any Drug" substance and set its flag to "high risk" if the score is not null or 0
-    if 'Any Drug' in substance_risk_levels and substance_scores.get('Any Drug', 0) != 0:
+        # Set flag
+        flag_field = f'{field_base}_flag'
+        if hasattr(measurement_assist, flag_field):
+            flag_color = get_flag_color(risk_level)
+            setattr(measurement_assist, flag_field, flag_color)
+            logger.info(f"Set {flag_field} to {flag_color}")
+
+        # Set score
+        score_field = f'{field_base}_score'
+        if hasattr(measurement_assist, score_field):
+            total_score = substance_scores.get(original_substance, {'total': 0})['total']
+            setattr(measurement_assist, score_field, total_score)
+            logger.info(f"Set {score_field} to {total_score}")
+    
+    # Handle injection risk
+    any_drug_score = substance_scores.get('any drug', {'total': 0})['total']
+    if any_drug_score > 0:
         measurement_assist.injection_measurement = 'high risk'
         measurement_assist.injection_flag = 'red'
+        measurement_assist.injection_score = any_drug_score
+        logger.info(f"Set injection_measurement to high risk and injection_score to {any_drug_score}")
     else:
         measurement_assist.injection_measurement = 'no risk'
         measurement_assist.injection_flag = 'green'
-
-    measurement_assist.save()
-
-    if created:
-        for substance, risk_level in substance_risk_levels.items():
-            setattr(measurement_assist,
-                    f'{substance.lower()}_measurement', risk_level)
-            setattr(measurement_assist,
-                    f'{substance.lower()}_flag', get_flag_color(risk_level))
+        measurement_assist.injection_score = 0
+        logger.info("Set injection_measurement to no risk and injection_score to 0")
+    
+    # Save changes
+    try:
         measurement_assist.save()
-
-        logger.info('Measurement assist updated successfully')
-
-    else:
-        for substance, risk_level in substance_risk_levels.items():
-            setattr(measurement_assist,
-                    f'{substance.lower()}_measurement', risk_level)
-            setattr(measurement_assist,
-                    f'{substance.lower()}_flag', get_flag_color(risk_level))
-        measurement_assist.save()
-
-        logger.info(
-            'Measurement assist updated and old record overridden successfully')
+        logger.info('Measurement assist saved successfully')
+    except Exception as e:
+        logger.error(f"Failed to save measurement assist: {e}")
 
 
 class MeasurementListView(generics.ListAPIView):
@@ -647,7 +561,6 @@ class MeasurementListView(generics.ListAPIView):
     serializer_class = MeasurementSerializer
 
     def list(self, request, *args, **kwargs):
-        # Default return method with user details
         return self.get_default_format()
 
     def get_default_format(self):
@@ -840,7 +753,6 @@ class CombinedListView(generics.ListAPIView):
 
     @property
     def item_name(self):
-        # Define the name for the item based on view name
         if 'measurement' in self.kwargs.get('view_name', ''):
             return 'measurement'
         elif 'assist' in self.kwargs.get('view_name', ''):
@@ -850,12 +762,8 @@ class CombinedListView(generics.ListAPIView):
 
 
 def check_and_save_lifetime_user(request):
-    # Get all users
     users = CustomUser.objects.all()
-
-    # Loop through each user
     for user in users:
-        # Get the user's submissions under the ASSIST question_set
         submissions = Submission.objects.filter(
             user_submission__user=user,
             question_set__name='ASSIST',
@@ -864,15 +772,12 @@ def check_and_save_lifetime_user(request):
         )
 
         if submissions.exists():
-            # Get or create a user submission object
             user_submission, created = UserSubmission.objects.get_or_create(
                 user=user)
 
-            # Create or get the LifetimeUser instance for the user
             lifetime_user, created = LifetimeUser.objects.get_or_create(
                 user=user, user_submission=user_submission)
 
-            # Iterate through submissions and associate substances used with each occurrence
             for submission in submissions:
                 for substance_name in submission.substance.split(', '):
                     substance, created = MeasurementSubstance.objects.get_or_create(
@@ -888,14 +793,10 @@ def check_and_save_lifetime_user(request):
 
 
 def get_lifetime_and_active_users(request):
-    # Retrieve all records from LifetimeUser and ActiveUser models
     lifetime_users = LifetimeUser.objects.all()
     active_users = ActiveUser.objects.all()
-
-    # Get the CustomUser model
     CustomUser = get_user_model()
 
-    # Serialize the data
     lifetime_users_data = [{'user_id': user.user_id, 'username': user.user.username,
                             'full_name': f"{user.user.first_name} {user.user.last_name}",
                             'age': calculate_age(user.user.date_of_birth),
@@ -914,7 +815,6 @@ def get_lifetime_and_active_users(request):
                           'substances_used': [substance.name for substance in user.substances_used.all()]}
                          for user in active_users]
 
-    # Create response data
     response_data = {
         'lifetime_users': lifetime_users_data,
         'active_users': active_users_data
@@ -929,15 +829,9 @@ def calculate_age(born):
 
 
 def main_composer(request):
-    # Get all users
     users = CustomUser.objects.all()
-
-    # Loop through each user
     for user in users:
-        # Call the check_and_save_lifetime_user function for each user
         check_and_save_lifetime_user(request)
-
-    # Once all users are processed, call the get_lifetime_and_active_users function
     response = get_lifetime_and_active_users(request)
 
     return response
@@ -946,13 +840,12 @@ def main_composer(request):
 @csrf_exempt
 def fetch_school_env_entries(request):
     if request.method == 'GET':
-        submissions = Submission.objects.filter(question_set__name="SCHOOL ENV")
+        submissions = Submission.objects.filter(
+            question_set__name="SCHOOL ENV")
         data = {}
         for submission in submissions:
-            # Get the entire user object
             user = submission.user_submission.user
 
-            # Retrieve related fields from the user model
             user_data = {
                 "username": user.username,
                 "first_name": user.first_name,

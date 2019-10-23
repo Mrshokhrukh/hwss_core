@@ -18,6 +18,7 @@ class UserSubmission(models.Model):
     rescreened = models.BooleanField(default=False)
     mark_as_safe = models.BooleanField(default=False)
     is_old_case = models.BooleanField(default=False)
+
     def __str__(self):
         unique_string = f'{self.user.username}_{self.test_type.name}_{self.created_at.strftime("%Y-%m-%d_%H")}'
         return unique_string
@@ -50,9 +51,6 @@ class Submission(models.Model):
         return f'Submission for {self.user_submission.user.username}'
 
 
-# ------------------------------------------------
-# Measurement related models from here and below
-# ------------------------------------------------
 class MeasurementSubstance(models.Model):
     name = models.CharField(max_length=100)
 
@@ -60,58 +58,147 @@ class MeasurementSubstance(models.Model):
         return self.name
 
 
+RISK_CHOICES = [
+    ('high risk', 'High Risk'),
+    ('moderate risk', 'Moderate Risk'),
+    ('no risk', 'No Risk')
+]
+
+FLAG_CHOICES = [
+    ('red', 'Red'),
+    ('yellow', 'Yellow'),
+    ('green', 'Green')
+]
+
+INJECTION_RISK_CHOICES = [
+    ('high risk', 'High Risk')
+]
+
+INJECTION_FLAG_CHOICES = [
+    ('red', 'Red')
+]
+
+GAD_FLAG_CHOICES = [
+    ('red', 'Red'),
+    ('yellow', 'Yellow'),
+    ('blue', 'Blue'),
+    ('green', 'Green')
+]
+
+PHQ_FLAG_CHOICES = [
+    ('red', 'Red'),
+    ('orange', 'Orange'),
+    ('yellow', 'Yellow'),
+    ('blue', 'Blue'),
+    ('green', 'Green')
+]
+
+SUICIDAL_CHOICES = [
+    ('nearly everyday', 'Nearly every day'),
+    ('more than half the days', 'More than half the days'),
+    ('several days', 'Several days')
+]
+
+SUICIDAL_FLAG_CHOICES = [
+    ('red', 'Red'),
+    ('orange', 'Orange'),
+    ('yellow', 'Yellow')
+]
+
+ACE_CHOICES = [
+    ('high risk', 'High Risk'),
+    ('intermediate risk', 'Intermediate Risk'),
+    ('low risk', 'Low Risk')
+]
+
+OVERALL_FLAG_CHOICES = FLAG_CHOICES
+
+
 class MeasurementAssist(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='measurementassist')
     user_submission = models.ForeignKey(
         UserSubmission, on_delete=models.CASCADE, related_name='measurementassist')
-    alcoholic_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    alcoholic_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    tobacco_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    tobacco_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    cannabis_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    cannabis_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    cocaine_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    cocaine_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    amphetamine_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    amphetamine_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    inhalants_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    inhalants_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    sedatives_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    sedatives_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    hallucinogens_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    hallucinogens_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    opioids_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Ris,k')])
-    opioids_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    injection_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk')])
-    injection_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red')])
-    other_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')])
-    other_flag = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    other_name = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(
-        default=timezone.now)
+
+    # Alcoholic
+    alcoholic_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    alcoholic_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    alcoholic_score = models.FloatField(null=True, blank=True)
+
+    # Tobacco
+    tobacco_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    tobacco_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    tobacco_score = models.FloatField(null=True, blank=True)
+
+    # Cannabis
+    cannabis_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    cannabis_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    cannabis_score = models.FloatField(null=True, blank=True)
+
+    # Cocaine
+    cocaine_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    cocaine_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    cocaine_score = models.FloatField(null=True, blank=True)
+
+    # Amphetamine
+    amphetamine_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    amphetamine_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    amphetamine_score = models.FloatField(null=True, blank=True)
+
+    # Inhalants
+    inhalants_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    inhalants_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    inhalants_score = models.FloatField(null=True, blank=True)
+
+    # Sedatives
+    sedatives_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    sedatives_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    sedatives_score = models.FloatField(null=True, blank=True)
+
+    # Hallucinogens
+    hallucinogens_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    hallucinogens_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    hallucinogens_score = models.FloatField(null=True, blank=True)
+
+    # Opioids
+    opioids_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    opioids_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    opioids_score = models.FloatField(null=True, blank=True)
+
+    # Injection
+    injection_measurement = models.CharField(
+        max_length=50, choices=INJECTION_RISK_CHOICES, null=True, blank=True)
+    injection_flag = models.CharField(
+        max_length=50, choices=INJECTION_FLAG_CHOICES, null=True, blank=True)
+    injection_score = models.FloatField(null=True, blank=True)
+
+    # Other substances
+    other_measurement = models.CharField(
+        max_length=50, choices=RISK_CHOICES, null=True, blank=True)
+    other_flag = models.CharField(
+        max_length=50, choices=FLAG_CHOICES, null=True, blank=True)
+    other_score = models.FloatField(null=True, blank=True)
+    other_name = models.CharField(max_length=100, null=True, blank=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f'MeasurementAssist data for {self.user.username}'
@@ -121,32 +208,57 @@ class Measurement(models.Model):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='measurement')
     user_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.CASCADE, related_name='measurement')  # Add this field
-    gad_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('severe', 'Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
-    gad_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('blue', 'Blue'), ('green', 'Green')])
-    phq_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('severe', 'Severe'), ('moderately severe', 'Moderately Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')])
-    phq_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('orange', 'Orange'), ('yellow', 'Yellow'), ('blue', 'Blue'), ('green', 'Green')])
-    suicidal_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('nearly everyday', 'Nearly every day'), ('more than half the days', 'More than half the days'), ('several days', 'Several days')])
-    suicidal_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('orange', 'Orange'), ('yellow', 'Yellow')])
-    ace_measurement = models.CharField(max_length=50, blank=True, null=True, choices=[
-        ('high risk', 'High Risk'), ('intermediate risk', 'Intermediate Risk'), ('low risk', 'Low Risk'),])
-    ace_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
+        UserSubmission, on_delete=models.CASCADE, related_name='measurement')
+
+    # GAD
+    gad_measurement = models.CharField(max_length=50, choices=[
+        ('severe', 'Severe'),
+        ('moderate', 'Moderate'),
+        ('mild', 'Mild'),
+        ('minimal', 'Minimal')
+    ], null=True, blank=True)
+    gad_flag = models.CharField(
+        max_length=10, choices=GAD_FLAG_CHOICES, null=True, blank=True)
+    gad_score = models.FloatField(null=True, blank=True)
+
+    # PHQ
+    phq_measurement = models.CharField(max_length=50, choices=[
+        ('severe', 'Severe'),
+        ('moderately severe', 'Moderately Severe'),
+        ('moderate', 'Moderate'),
+        ('mild', 'Mild'),
+        ('minimal', 'Minimal')
+    ], null=True, blank=True)
+    phq_flag = models.CharField(
+        max_length=10, choices=PHQ_FLAG_CHOICES, null=True, blank=True)
+    phq_score = models.FloatField(null=True, blank=True)
+
+    # Suicidal
+    suicidal_measurement = models.CharField(
+        max_length=50, choices=SUICIDAL_CHOICES, null=True, blank=True)
+    suicidal_flag = models.CharField(
+        max_length=10, choices=SUICIDAL_FLAG_CHOICES, null=True, blank=True)
+    suicidal_score = models.FloatField(null=True, blank=True)
+
+    # ACE
+    ace_measurement = models.CharField(
+        max_length=50, choices=ACE_CHOICES, null=True, blank=True)
+    ace_flag = models.CharField(
+        max_length=10, choices=FLAG_CHOICES, null=True, blank=True)
+    ace_score = models.FloatField(null=True, blank=True)
+
+    # Overall
+    overall_flag = models.CharField(
+        max_length=10, choices=OVERALL_FLAG_CHOICES, null=True, blank=True)
+
+    # ASSIST (ForeignKey to MeasurementAssist)
     assist = models.OneToOneField(
         MeasurementAssist, on_delete=models.CASCADE, null=True, blank=True)
-    overall_flag = models.CharField(max_length=10, blank=True, null=True, choices=[
-        ('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')])
-    created_at = models.DateTimeField(
-        default=timezone.now)
+
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f'Measurement for {self.user.username}'
+        return f'Measurement data for {self.user.username}'
 
 
 class LifetimeUser(models.Model):

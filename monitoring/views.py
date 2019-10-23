@@ -1,53 +1,53 @@
 from datetime import date
+from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from measurement.models import Measurement, MeasurementAssist, Submission, UserSubmission
 from django.views.decorators.csrf import csrf_exempt
 from access.models import Agency, CustomUser, UserAgency
-from .models import Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
+from monitoring.serializers import FinalUserSubmissionSerializer
+from screening.models import CaseBasedSubmission, CaseScreening, EventBasedSubmission, EventScreening
+from .models import FinalUserSubmission, Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import json
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.http import require_GET
 from django.forms.models import model_to_dict
 from django.db import transaction
 from datetime import date
 from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
+from rest_framework import viewsets, status
+from rest_framework.response import Response
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 @csrf_exempt
 def submit_rescreening(request):
     if request.method == 'POST':
         user_id = request.POST.get('userId')
 
-        # Retrieve the CustomUser instance using the provided user_id
         user = get_object_or_404(CustomUser, id=user_id)
-
-        # Calculate the age of the user
         age = calculate_age(user.date_of_birth)
 
-        # Updated key to match the sent data
-        assist_data_json = request.POST.get('assistRiskSeverity')
+        assist_data_json = request.POST.get('assistRiskSeverity', '{}')
         assist_data = json.loads(assist_data_json) if assist_data_json else {}
 
-        # Start transaction to ensure data consistency
         with transaction.atomic():
-            # Create or update the Rescreening instance
             rescreening, created = Rescreening.objects.update_or_create(
                 user=user,
                 defaults={
-                    'gad_data': request.POST.get('gadData', {}),
+                    'gad_data': request.POST.get('gadData', '{}'),
                     'gad_score': json.loads(request.POST.get('gadData', '{}')).get('totalScore', 0),
-                    'phq_data': request.POST.get('phqData', {}),
+                    'phq_data': request.POST.get('phqData', '{}'),
                     'phq_score': json.loads(request.POST.get('phqData', '{}')).get('totalScore', 0),
-                    'ace_data': request.POST.get('aceData', {}),
+                    'ace_data': request.POST.get('aceData', '{}'),
                     'ace_score': json.loads(request.POST.get('aceData', '{}')).get('totalScore', 0),
-                    'school_env_data': request.POST.get('schoolEnvData', {}),
+                    'school_env_data': request.POST.get('schoolEnvData', '{}'),
                     'rescreened': True
                 }
             )
@@ -56,10 +56,10 @@ def submit_rescreening(request):
             for substance, risk_level in assist_data.items():
                 total_score_str = risk_level.split()[1]
                 total_score = float(total_score_str.strip('()'))
-                # Get the part before the space
                 risk_flag = risk_level.split()[0]
-                substance_instance, _ = Substance.objects.get_or_create(
-                    name=substance)
+
+                # Create or update substance risk measurement
+                substance_instance, _ = Substance.objects.get_or_create(name=substance)
                 SubstanceRiskMeasurement.objects.create(
                     substance=substance_instance,
                     rescreening=rescreening,
@@ -72,10 +72,8 @@ def submit_rescreening(request):
             user_submission.rescreened = True
             user_submission.save()
 
-        if created:
-            message = 'Rescreening data saved successfully.'
-        else:
-            message = 'Rescreening data updated successfully.'
+        # Return appropriate message depending on whether the rescreening was created or updated
+        message = 'Rescreening data saved successfully.' if created else 'Rescreening data updated successfully.'
 
         return JsonResponse({'message': message})
 
@@ -222,55 +220,123 @@ def generateServiceAndTreatment(request):
     try:
         rescreenings = Rescreening.objects.all()
 
-        service_and_treatments_created = []
+        # Collect existing service and treatments to avoid duplicates
+        existing_service_and_treatments = ServiceAndTreatment.objects.filter(
+            user__in=[res.user for res in rescreenings],
+            date__in=[res.submission_date.date()
+                      for res in rescreenings if res.submission_date]
+        ).values_list('user', 'date')
 
+        # Collecting newly created ServiceAndTreatment records
+        new_service_and_treatments = []
         for rescreening in rescreenings:
-            if rescreening.submission_date:
-                existing_instance = ServiceAndTreatment.objects.filter(
+            if rescreening.submission_date and (rescreening.user, rescreening.submission_date.date()) not in existing_service_and_treatments:
+                new_service_and_treatments.append(ServiceAndTreatment(
                     user=rescreening.user,
                     date=rescreening.submission_date.date(),
-                ).exists()
+                    assessment_status='Not Conducted',
+                    case_status='On Going',
+                    counseling='Waiting List',
+                    follow_up='',
+                    comments=''
+                ))
+                rescreening.rescreened = True
 
-                if not existing_instance:
-                    service_and_treatment = ServiceAndTreatment.objects.create(
-                        user=rescreening.user,
-                        date=rescreening.submission_date.date(),
-                        assessment_status='Not Conducted',
-                        case_status='On Going',
-                        counseling='Waiting List',
-                        follow_up='',
-                        comments='',
-                    )
-                    service_and_treatment.save()
+        ServiceAndTreatment.objects.bulk_create(new_service_and_treatments)
+        Rescreening.objects.bulk_update(rescreenings, ['rescreened'])
 
-                    service_and_treatments_created.append(service_and_treatment)
+        # Collecting data for CaseScreening and CaseBasedSubmission
+        case_screenings = CaseScreening.objects.all()
+        case_based_submissions = CaseBasedSubmission.objects.filter(
+            case__in=case_screenings
+        )
 
-                    rescreening.rescreened = True
-                    rescreening.save()
+        # Collecting data for EventScreening and EventBasedSubmission
+        event_screenings = EventScreening.objects.all()
+        event_based_submissions = EventBasedSubmission.objects.filter(
+            event__in=event_screenings
+        )
 
-        service_and_treatments = ServiceAndTreatment.objects.all()
+        # Formatting ServiceAndTreatment data for the response
+        service_and_treatments_data = [
+            {
+                'user': get_user_details(obj.user),
+                'date': obj.date,
+                'assessment_status': obj.assessment_status,
+                'case_status': obj.case_status,
+                'counseling': obj.counseling,
+                'follow_up': obj.follow_up,
+                'comments': obj.comments,
+            }
+            for obj in ServiceAndTreatment.objects.all()
+        ]
 
-        service_and_treatments_data = [{
-            'user': get_user_details(obj.user),
-            'date': obj.date,
-            'assessment_status': obj.assessment_status,
-            'case_status': obj.case_status,
-            'counseling': obj.counseling,
-            'follow_up': obj.follow_up,
-            'comments': obj.comments,
-        } for obj in service_and_treatments]
+        # Formatting CaseScreening and CaseBasedSubmission data
+        case_screening_data = [
+            {
+                'user': get_user_details(case.user),
+                'case_name': case.case_name,
+                'purpose': case.purpose,
+                'date': case.date,
+                'dzongkhag': case.dzongkhag,
+                'counselor': case.counselor,
+            }
+            for case in case_screenings
+        ]
 
+        case_based_submission_data = [
+            {
+                'user': get_user_details(sub.user),
+                'case_name': sub.case.case_name,
+                'gad_score': sub.gad_score,
+                'phq_score': sub.phq_score,
+                'ace_score': sub.ace_score,
+            }
+            for sub in case_based_submissions
+        ]
+
+        # Formatting EventScreening and EventBasedSubmission data
+        event_screening_data = [
+            {
+                'event_name': event.event_name,
+                'location': event.location,
+                'counselor': event.counselor,
+                'start_date': event.start_date,
+                'end_date': event.end_date,
+            }
+            for event in event_screenings
+        ]
+
+        event_based_submission_data = [
+            {
+                'user': get_user_details(sub.user),
+                'event_name': sub.event.event_name,
+                'gad_score': sub.gad_score,
+                'phq_score': sub.phq_score,
+                'ace_score': sub.ace_score,
+            }
+            for sub in event_based_submissions
+        ]
+
+        # Fetching counselor data (optimized)
         counselors = CustomUser.objects.exclude(
-            role__in=['student', 'public']
-        ).exclude(
-            role__contains='_admin'
+            Q(role__in=['student', 'public']) | Q(role__contains='_admin')
         ).values('first_name', 'middle_name', 'last_name', 'active_agency__agency_name', 'role')
 
-        return JsonResponse({'message': 'ServiceAndTreatment records updated successfully',
-                             'data': service_and_treatments_data,
-                             'counselors': list(counselors)}, status=200)
+        # Returning combined JSON response
+        return JsonResponse({
+            'message': 'ServiceAndTreatment, CaseScreening, and EventScreening records updated successfully',
+            'service_and_treatments_data': service_and_treatments_data,
+            'case_screening_data': case_screening_data,
+            'case_based_submission_data': case_based_submission_data,
+            'event_screening_data': event_screening_data,
+            'event_based_submission_data': event_based_submission_data,
+            'counselors': list(counselors)
+        }, status=200)
+
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.error(f"Error in generateServiceAndTreatment: {e}")
+        return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
 
 
 @csrf_exempt
@@ -480,7 +546,7 @@ def get_user_monitoring_details(request):
         rescreening__in=rescreenings)
     substance_risk_measurement_details = []
     for measurement in substance_risk_measurements:
-        substance_name = measurement.substance.name  
+        substance_name = measurement.substance.name
         measurement_data = {
             'id': measurement.id,
             'substance_name': substance_name,
@@ -542,17 +608,21 @@ def accept_referral(request):
         referred_to_user_id = data.get('referredToUserId')
         patient_id = data.get('patientId')
 
-        logger.debug(f"referredToUserId: {referred_to_user_id}, patientId: {patient_id}")
+        logger.debug(
+            f"referredToUserId: {referred_to_user_id}, patientId: {patient_id}")
 
         # Get the referred counselor and patient
-        referred_counselor = get_object_or_404(CustomUser, id=referred_to_user_id)
+        referred_counselor = get_object_or_404(
+            CustomUser, id=referred_to_user_id)
         referred_patient = get_object_or_404(CustomUser, id=patient_id)
 
-        logger.debug(f"Referred counselor: {referred_counselor}, Referred patient: {referred_patient}")
+        logger.debug(
+            f"Referred counselor: {referred_counselor}, Referred patient: {referred_patient}")
 
         try:
             # Check if a referral exists
-            referral = Referral.objects.filter(referred_to=referred_counselor, user=referred_patient).first()
+            referral = Referral.objects.filter(
+                referred_to=referred_counselor, user=referred_patient).first()
 
             logger.debug(f"Referral query result: {referral}")
 
@@ -601,3 +671,123 @@ def reject_referral(request):
             return JsonResponse({'error': 'Referral does not exist.'}, status=404)
     else:
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+def check_and_create_final_submission(user):
+    # Fetch the most recent rescreening and original submission
+    rescreening = Rescreening.objects.filter(user=user).order_by('-submission_date').first()
+    original_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
+
+    if not original_submission:
+        return None  # Early return if no original submission is found
+
+    # Prepare final submission data
+    final_submission_data = {
+        "user": user,
+        "initial_submission": original_submission,
+        "submission_date": timezone.now(),
+    }
+
+    # Handle PHQ, GAD, and ACE Data (rescreening first, fallback to original)
+    def update_data(field, rescreening_data, original_test_type):
+        if rescreening and getattr(rescreening, f"{field}_data", None):
+            final_submission_data.update({
+                f'{field}_data': getattr(rescreening, f'{field}_data'),
+                f'{field}_score': getattr(rescreening, f'{field}_score'),
+                f'{field}_interpretation': getattr(rescreening, f'{field}_interpretation'),
+            })
+        else:
+            original_measurement = Measurement.objects.filter(
+                user_submission=original_submission
+            ).first()
+            if original_measurement:
+                final_submission_data.update({
+                    f'{field}_data': None,  # Original submission doesn't store data as JSON
+                    f'{field}_score': getattr(original_measurement, f'{field}_score', None),
+                    f'{field}_interpretation': getattr(original_measurement, f'{field}_flag', None),
+                })
+
+    update_data('phq', rescreening, 'PHQ')
+    update_data('gad', rescreening, 'GAD')
+    update_data('ace', rescreening, 'ACE')
+
+    # Handle ASSIST data separately (from different models for rescreening vs. original)
+    if rescreening:
+        assist_data = SubstanceRiskMeasurement.objects.filter(rescreening=rescreening)
+        if assist_data.exists():
+            assist_data_list = list(assist_data.values('substance', 'measurement', 'risk_flag', 'total_score'))
+            final_submission_data.update({'assist_data': assist_data_list})
+    else:
+        assist_sub = MeasurementAssist.objects.filter(user=user).first()
+        if assist_sub:
+            final_submission_data.update({
+                'assist_data': {
+                    "alcoholic_measurement": assist_sub.alcoholic_measurement,
+                    "alcoholic_flag": assist_sub.alcoholic_flag,
+                    "tobacco_measurement": assist_sub.tobacco_measurement,
+                    "tobacco_flag": assist_sub.tobacco_flag,
+                    "cannabis_measurement": assist_sub.cannabis_measurement,
+                    "cannabis_flag": assist_sub.cannabis_flag,
+                    "cocaine_measurement": assist_sub.cocaine_measurement,
+                    "cocaine_flag": assist_sub.cocaine_flag,
+                    "amphetamine_measurement": assist_sub.amphetamine_measurement,
+                    "amphetamine_flag": assist_sub.amphetamine_flag,
+                    "inhalants_measurement": assist_sub.inhalants_measurement,
+                    "inhalants_flag": assist_sub.inhalants_flag,
+                    "sedatives_measurement": assist_sub.sedatives_measurement,
+                    "sedatives_flag": assist_sub.sedatives_flag,
+                    "hallucinogens_measurement": assist_sub.hallucinogens_measurement,
+                    "hallucinogens_flag": assist_sub.hallucinogens_flag,
+                    "opioids_measurement": assist_sub.opioids_measurement,
+                    "opioids_flag": assist_sub.opioids_flag,
+                    "injection_measurement": assist_sub.injection_measurement,
+                    "injection_flag": assist_sub.injection_flag,
+                    "other_measurement": assist_sub.other_measurement,
+                    "other_flag": assist_sub.other_flag,
+                    "other_name": assist_sub.other_name,
+                }
+            })
+
+    # Create or update the FinalUserSubmission
+    final_submission, created = FinalUserSubmission.objects.update_or_create(
+        user=user,
+        initial_submission=original_submission,
+        defaults=final_submission_data,
+    )
+
+    return final_submission
+
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_final_submissions(request):
+    users_with_rescreenings = CustomUser.objects.filter(
+        rescreenings__isnull=False
+    ).distinct()
+
+    print('Users with rescreenings:', users_with_rescreenings)
+
+    # Run `check_and_create_final_submission` for each user with a rescreening
+    for user in users_with_rescreenings:
+        check_and_create_final_submission(user)
+
+    # Retrieve and return all final submissions after ensuring they are up to date
+    final_submissions = FinalUserSubmission.objects.all().order_by('-submission_date')
+    serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
+    return Response(serializer.data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def retrieve_final_submission(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+    
+    check_and_create_final_submission(user)
+
+    final_submissions = FinalUserSubmission.objects.filter(user=user).order_by('-submission_date')
+    
+    serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
+    return Response(serializer.data)

@@ -2,10 +2,11 @@ from django.db import models
 from django.utils import timezone
 from access.models import CustomUser
 from multiselectfield import MultiSelectField
-from measurement.models import Submission, Measurement, MeasurementAssist
+from measurement.models import Submission, Measurement, MeasurementAssist, UserSubmission
 from django.contrib.auth import get_user_model
 
 User = CustomUser
+
 
 class ServiceAndTreatment(models.Model):
     DATE_CHOICES = (
@@ -65,11 +66,15 @@ class ServiceAndTreatment(models.Model):
         ('Referred', 'Referred'),
         ('Referred Back', 'Referred Back'),
     )
-    referred = models.CharField(max_length=20, choices=REFERRED_CHOICES, default='Not Referred')
-    referral_instance = models.ForeignKey('Referral', on_delete=models.CASCADE, related_name='service_and_treatments', null=True, blank=True)
+    referred = models.CharField(
+        max_length=20, choices=REFERRED_CHOICES, default='Not Referred')
+    referral_instance = models.ForeignKey(
+        'Referral', on_delete=models.CASCADE, related_name='service_and_treatments', null=True, blank=True)
+
 
 class ServiceAndTreatmentHistory(models.Model):
-    service_and_treatment = models.ForeignKey(ServiceAndTreatment, on_delete=models.CASCADE)
+    service_and_treatment = models.ForeignKey(
+        ServiceAndTreatment, on_delete=models.CASCADE)
     updated_by = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='service_and_treatment_histories')
     updated_at = models.DateTimeField(default=timezone.now)
@@ -143,9 +148,51 @@ class SubstanceRiskMeasurement(models.Model):
         Substance, on_delete=models.CASCADE, related_name='risk_measurements')
     rescreening = models.ForeignKey(
         Rescreening, on_delete=models.CASCADE, related_name='substance_risk_measurements')
-    measurement = models.FloatField(help_text="Measurement value for the substance")
-    risk_flag = models.CharField(max_length=250, help_text="Risk flag based on measurement")
-    total_score = models.FloatField(help_text="Total score for the substance", null=True, blank=True)  # Add a new field for total score
+    measurement = models.FloatField(
+        help_text="Measurement value for the substance")
+    risk_flag = models.CharField(
+        max_length=250, help_text="Risk flag based on measurement")
+    total_score = models.FloatField(
+        help_text="Total score for the substance", null=True, blank=True)
 
     def __str__(self):
         return f"Risk Measurement for {self.substance} in Rescreening for {self.rescreening.user.username}"
+
+
+class FinalUserSubmission(models.Model):
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='final_submissions')
+    initial_submission = models.ForeignKey(
+        UserSubmission, on_delete=models.SET_NULL, null=True, blank=True, related_name='final_submissions')
+
+    phq_data = models.JSONField(null=True, blank=True)
+    phq_score = models.IntegerField(null=True, blank=True)
+    phq_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of PHQ score")
+
+    gad_data = models.JSONField(null=True, blank=True)
+    gad_score = models.IntegerField(null=True, blank=True)
+    gad_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of GAD score")
+
+    ace_data = models.JSONField(null=True, blank=True)
+    ace_score = models.IntegerField(null=True, blank=True)
+    ace_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
+
+    assist_data = models.JSONField(null=True, blank=True)
+    assist_score = models.IntegerField(null=True, blank=True)
+    assist_interpretation = models.CharField(
+        max_length=255, null=True, blank=True, help_text="Interpretation of ASSIST score")
+
+    rescreened = models.BooleanField(default=False)
+    rescreening_count = models.IntegerField(default=0, null=True, blank=True)
+    submission_date = models.DateTimeField(auto_now_add=True)
+
+    # Relations to capture treatment history or services provided
+    service_and_treatment = models.ForeignKey(
+        'ServiceAndTreatment', on_delete=models.SET_NULL, related_name='final_submissions', null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"Final submission for {self.user.username} on {self.submission_date.strftime('%Y-%m-%d')}"

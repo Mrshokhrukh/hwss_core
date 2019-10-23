@@ -1,63 +1,53 @@
 from django.contrib import admin
-from .models import ActiveUser, LifetimeUser, UserSubmission, Submission, Measurement, MeasurementAssist, MeasurementSubstance, TestType, QuestionSet
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from access.models import CustomUser
+from .models import (
+    TestType, UserSubmission, QuestionSet, Submission, MeasurementSubstance,
+    MeasurementAssist, Measurement, LifetimeUser, ActiveUser
+)
 
 
-class SubmissionInline(admin.StackedInline):
-    model = Submission
-    extra = 1
-    readonly_fields = ['question', 'answer', 'score', 'substance',
-                       'specify', 'diagnosis', 'created_at']  # Add readonly fields
+class TestTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 
-class MeasurementInline(admin.StackedInline):
-    model = Measurement
-    extra = 1
-    readonly_fields = ['gad_measurement', 'gad_flag', 'phq_measurement', 'phq_flag', 'suicidal_measurement',
-                       'suicidal_flag', 'ace_measurement', 'ace_flag', 'overall_flag', 'created_at']  # Add readonly fields
-
-
-class MeasurementAssistInline(admin.StackedInline):
-    model = MeasurementAssist
-    extra = 1
-    readonly_fields = ['alcoholic_measurement', 'alcoholic_flag', 'tobacco_measurement', 'tobacco_flag', 'cannabis_measurement', 'cannabis_flag', 'cocaine_measurement', 'cocaine_flag', 'amphetamine_measurement', 'amphetamine_flag', 'inhalants_measurement',
-                       'inhalants_flag', 'sedatives_measurement', 'sedatives_flag', 'hallucinogens_measurement', 'hallucinogens_flag', 'opioids_measurement', 'opioids_flag', 'other_measurement', 'other_flag', 'other_name', 'created_at']  # Add readonly fields
-
-
-class TestTypeInline(admin.StackedInline):
-    model = TestType
-    extra = 1
-    readonly_fields = ['name']  # Add readonly fields
-
-
-class QuestionSetInline(admin.StackedInline):
+class QuestionSetInline(admin.TabularInline):
     model = QuestionSet
     extra = 1
-    readonly_fields = ['name']  # Add readonly fields
 
 
-@admin.register(UserSubmission)
+# Removed SubmissionInline from this part
 class UserSubmissionAdmin(admin.ModelAdmin):
-    inlines = [SubmissionInline, MeasurementInline,
-               MeasurementAssistInline, QuestionSetInline]
-    list_display = ['user', 'created_at', 'rescreened', 'is_old_case', 'mark_as_safe']
+    list_display = ('user', 'test_type', 'created_at',
+                    'rescreened', 'mark_as_safe', 'is_old_case')
+    list_filter = ('test_type', 'created_at', 'rescreened',
+                   'mark_as_safe', 'is_old_case')
+    search_fields = ('user__username', 'test_type__name')
+    inlines = [QuestionSetInline]  # Removed SubmissionInline from here
+    readonly_fields = ('created_at',)
 
 
-class CustomUserAdmin(BaseUserAdmin):
-    inlines = [MeasurementAssistInline, MeasurementInline]
-
-
-@admin.register(LifetimeUser)
 class LifetimeUserAdmin(admin.ModelAdmin):
     list_display = ('user', 'user_submission')
-    list_filter = ('user_submission',)
+    search_fields = ('user__username',)
+    filter_horizontal = ('substances_used',)
 
 
-@admin.register(ActiveUser)
 class ActiveUserAdmin(admin.ModelAdmin):
     list_display = ('user', 'user_submission')
-    list_filter = ('user_submission',)
+    search_fields = ('user__username',)
+    filter_horizontal = ('substances_used',)
 
 
-admin.site.site_header = "Your Admin Panel Header"
+class MeasurementAdmin(admin.ModelAdmin):
+    list_display = ('user', 'overall_flag', 'created_at')
+    search_fields = ('user__username',)
+    readonly_fields = ('created_at',)
+
+
+admin.site.register(TestType, TestTypeAdmin)
+admin.site.register(UserSubmission, UserSubmissionAdmin)
+admin.site.register(LifetimeUser, LifetimeUserAdmin)
+admin.site.register(ActiveUser, ActiveUserAdmin)
+admin.site.register(Measurement, MeasurementAdmin)
+admin.site.register(MeasurementSubstance)
+admin.site.register(MeasurementAssist)
