@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ServiceAndTreatmentViewSet, list_final_submissions, process_rescreening,
+    ReferralViewSet, ServiceAndTreatmentViewSet, list_final_submissions, process_rescreening,
     getReferralList, retrieve_final_submission, submit_rescreening,
     generateServiceAndTreatment, get_user_monitoring_details,
     update_service_and_treatment, update_referral_status, accept_referral, reject_referral
@@ -9,6 +9,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'service-and-treatment', ServiceAndTreatmentViewSet)
+router.register(r'referrals', ReferralViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

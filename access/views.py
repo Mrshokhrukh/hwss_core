@@ -2,35 +2,22 @@
 # -------- IMPORTS PART OF THE VIEWS -----------//
 # ----------------------------------------------//
 
-from rest_framework import serializers
-
 from screening.models import CaseScreening, EventScreening
 from .models import CustomUser, Agency, UserAgency
-from django.contrib.auth.hashers import make_password
-from pathlib import Path
 import json
 import time
 import base64
-import os
 import logging
 import requests
 import traceback
-from django.utils import timezone
-from django.db.models import F
 from datetime import date, datetime
-import token
-
-from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import JsonResponse
 from django.core.mail import send_mail
-from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from requests.exceptions import RequestException
 from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
 
@@ -38,7 +25,7 @@ from django.middleware.csrf import get_token
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -48,19 +35,15 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth import authenticate
 from .models import CustomUser, Agency, PreRecordedUser, UserAgency
-from .serializers import CustomUserSerializer, AgencySerializer, PreRecordedUserSerializer, UserAgencySerializer
-from .fetchcitizendetails import get_citizen_details, map_citizen_details_to_model
+from .serializers import CustomUserSerializer, AgencySerializer, UserAgencySerializer
 from django.contrib.auth.tokens import default_token_generator
 
-from .constants import USER_DATA_FILE_PATH, AGENCY_DATA_FILE_PATH, GLOBAL_FILE_PATH
-from django.db import IntegrityError, transaction
-from django.http import QueryDict
+from .constants import GLOBAL_FILE_PATH
+from django.db import transaction
 from .models import CustomUser
-from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
 
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
@@ -966,8 +949,6 @@ class LoginView(APIView):
             username = request.data.get('username')
             password = request.data.get('password')
 
-            logger.info('Login request received - Username: %s', username)
-
             user = authenticate(username=username, password=password)
 
             if user is not None:
@@ -977,21 +958,13 @@ class LoginView(APIView):
 
                 user_id = user.id
 
-                logger.info(
-                    'Login response sent - Token: %s, User Role: %s', token.key, user_role)
-
                 return Response({"token": token.key, "user_role": user_role, "user_id": user_id}, status=status.HTTP_200_OK)
             else:
-                # Check if the user exists with the given username
                 if CustomUser.objects.filter(username=username).exists():
-                    # User exists, but the password is wrong
                     logger.warning(
                         'Authentication failed for username: %s - Wrong password', username)
                     return Response({"error": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    # User with the given username does not exist
-                    logger.warning(
-                        'User with username: %s not found', username)
                     return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
@@ -1019,7 +992,6 @@ class GetUserDetailsView(APIView):
 
             user = request.user
 
-            # Ensure to convert date and datetime fields to string (e.g., user.date_of_birth.isoformat() if user.date_of_birth else None)
             user_data = {
                 'id': user.id,
                 'username': user.username,
@@ -1046,7 +1018,6 @@ class GetUserDetailsView(APIView):
                 'is_gyalsung': user.is_gyalsung,
                 'academy_code': user.academy_code,
                 'date_joined': user.date_joined.isoformat() if user.date_joined else None,
-                # Use get_FOO_display() for ChoiceField to get the readable value
                 'role': user.role,
                 'access_level': user.access_level,
             }
@@ -1082,9 +1053,6 @@ class GetUserDetailsView(APIView):
             response_data = {"user": user_data,
                              "agency": agency_data, "userAgency": user_agency_data}
 
-            logger.info(
-                f"Returning response data: {json.dumps(response_data)}")
-
             return JsonResponse(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -1102,7 +1070,6 @@ class PasswordResetRequestView(APIView):
 
         if user:
             token = default_token_generator.make_token(user)
-            # Adjust the URL to point to your frontend's password reset page
             password_reset_url = f"{settings.FRONTEND_URL}/password-reset/{token}/"
             send_mail(
                 'Password Reset Request',
@@ -1123,7 +1090,6 @@ class PasswordResetView(APIView):
         password = request.data.get('password')
         User = get_user_model()
         try:
-            # This assumes the email is sent as part of the request
             user_email = request.data.get('email')
             user = User.objects.get(email=user_email)
 

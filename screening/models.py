@@ -41,11 +41,8 @@ class CaseScreening(models.Model):
         ('Zhemgang', 'Zhemgang'),
     ]
     dzongkhag = models.CharField(max_length=50, choices=DZONGKHAG_CHOICES)
-    
     date = models.DateField(null=True, blank=True)
-
     counselor = models.CharField(max_length=255)
-
     registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
@@ -53,18 +50,13 @@ class CaseScreening(models.Model):
 
     
     def save(self, *args, **kwargs):
-        if not self.id:  # Check if it's a new instance
-            # Check if the user has reached the daily registration limit
+        if not self.id: 
             today = timezone.now().date()
             if self.user.case_screenings.filter(date=today).count() >= 10:
                 self.user.is_locked = True
             else:
-                # Increment the count of cases registered today
                 self.user.cases_registered_today = self.user.case_screenings.filter(date=today).count() + 1
-
-            # Calculate the end time of the registration lockout period
-            self.registration_lockout_end_time = timezone.now() + timezone.timedelta(hours=24)  # Lockout for 24 hours
-        
+            self.registration_lockout_end_time = timezone.now() + timezone.timedelta(hours=24) 
         super().save(*args, **kwargs)
 
 class ScreenedUser(models.Model):
@@ -100,9 +92,9 @@ class CaseBasedSubmission(models.Model):
     def __str__(self):
         return f"Case Based Submission for {self.case}"
 
+
 class CaseSubstance(models.Model):
     name = models.CharField(max_length=100)
-
     def __str__(self):
         return self.name
 

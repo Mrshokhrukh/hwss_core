@@ -73,10 +73,10 @@ class UserAgency(models.Model):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=255, unique=True, null=True)
+    username = models.CharField(max_length=255, unique=True, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    identity_number = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    identity_number = models.CharField(max_length=255, null=True, blank=True)
     nationality = models.CharField(max_length=255, null=True, blank=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     middle_name = models.CharField(max_length=255, blank=True, null=True)
@@ -100,6 +100,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
+    is_old_case_user = models.BooleanField(default=False)
 
     ROLE_STUDENT = 'student'
     ROLE_PUBLIC = 'general_public'
@@ -141,6 +142,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['identity_number'],
+                name='unique_identity_number_when_not_old_user',
+                condition=models.Q(is_old_case_user=False)
+            )
+        ]
 
 
 class PreRecordedUser(models.Model):

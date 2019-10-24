@@ -49,33 +49,34 @@ class ServiceAndTreatment(models.Model):
          'Detention-based SUD Treatment and Care'),
     )
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
     assessment = GenericForeignKey('content_type', 'object_id')
 
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    date = models.DateField(default=None)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
     assessment_status = models.CharField(
-        max_length=20, choices=ASSESSMENT_STATUS_CHOICES, default='Not Conducted')
+        max_length=20, choices=ASSESSMENT_STATUS_CHOICES, default='Not Conducted', null=True, blank=True)
     case_status = models.CharField(
-        max_length=20, choices=CASE_STATUS_CHOICES, default='On Going')
+        max_length=20, choices=CASE_STATUS_CHOICES, default='On Going', null=True, blank=True)
     counseling = models.CharField(
-        max_length=20, choices=COUNSELLING_CHOICES, default='Waiting List')
+        max_length=20, choices=COUNSELLING_CHOICES, default='Waiting List', null=True, blank=True)
     follow_up = models.CharField(
-        max_length=255, choices=FOLLOW_UP_CHOICES, blank=True)
+        max_length=255, choices=FOLLOW_UP_CHOICES, blank=True, null=True)
     comments = models.TextField(null=True, blank=True)
     updated_by = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='updated_by')
-    updated_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
     REFERRED_CHOICES = (
         ('Not Referred', 'Not Referred'),
         ('Referred', 'Referred'),
         ('Referred Back', 'Referred Back'),
     )
     referred = models.CharField(
-        max_length=20, choices=REFERRED_CHOICES, default='Not Referred')
+        max_length=20, choices=REFERRED_CHOICES, default='Not Referred', null=True, blank=True)
     referral_instance = models.ForeignKey(
         'Referral', on_delete=models.CASCADE, related_name='service_and_treatments', null=True, blank=True)
+
 
 
 class ServiceAndTreatmentHistory(models.Model):

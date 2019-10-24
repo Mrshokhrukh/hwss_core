@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from gyalsung_users.models import GyalsungUserProfile
 from measurement.models import Measurement, MeasurementAssist, Submission, UserSubmission
 from django.views.decorators.csrf import csrf_exempt
 from access.models import Agency, CustomUser, UserAgency
@@ -23,40 +24,48 @@ from django.db.models import Prefetch
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import ServiceAndTreatmentSerializer
+from django.contrib.contenttypes.models import ContentType
+from .serializers import ReferralSerializer, ServiceAndTreatmentSerializer
 from django.utils.decorators import method_decorator
 import logging
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(csrf_exempt, name='dispatch')
-@permission_classes([AllowAny])
+
+method_decorator(csrf_exempt, name='dispatch')
+
+
 class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
     queryset = ServiceAndTreatment.objects.all()
     serializer_class = ServiceAndTreatmentSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'], url_path='get-service-and-treatment')
     def get_service_and_treatment(self, request):
+        response = create_service_and_treatments(request)
+
+        if response.get('status') == 'error':
+            return Response(response, status=400)
+
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
 
 @csrf_exempt
 def submit_rescreening(request):
     if request.method == 'POST':
         user_id = request.POST.get('userId')
-        rescreened_by_id = request.POST.get('rescreened_by')  # Retrieve rescreened_by from the request
+        rescreened_by_id = request.POST.get('rescreened_by')
 
         user = get_object_or_404(CustomUser, id=user_id)
-        rescreened_by_user = get_object_or_404(CustomUser, id=rescreened_by_id)  # Fetch the rescreened_by user
+        rescreened_by_user = get_object_or_404(CustomUser, id=rescreened_by_id)
 
         age = calculate_age(user.date_of_birth)
 
         assist_data_json = request.POST.get('assistRiskSeverity', '{}')
         assist_data = json.loads(assist_data_json) if assist_data_json else {}
 
-        # Extract interpretation data from the incoming request
         gad_data_json = request.POST.get('gadData', '{}')
         gad_data = json.loads(gad_data_json) if gad_data_json else {}
         gad_score = gad_data.get('totalScore', 0)
@@ -78,17 +87,17 @@ def submit_rescreening(request):
                 defaults={
                     'gad_data': gad_data_json,
                     'gad_score': gad_score,
-                    'gad_interpretation': gad_interpretation,  # Save GAD interpretation
+                    'gad_interpretation': gad_interpretation,  
                     'phq_data': phq_data_json,
                     'phq_score': phq_score,
-                    'phq_interpretation': phq_interpretation,  # Save PHQ interpretation
+                    'phq_interpretation': phq_interpretation,  
                     'ace_data': ace_data_json,
                     'ace_score': ace_score,
-                    'ace_interpretation': ace_interpretation,  # Save ACE interpretation
+                    'ace_interpretation': ace_interpretation,  
                     'school_env_data': request.POST.get('schoolEnvData', '{}'),
                     'rescreened': True,
-                    'screened_by': rescreened_by_user,  # Save the rescreened_by user
-                    'rescreening_date': timezone.now()  # Save the current date/time for rescreening
+                    'screened_by': rescreened_by_user,  
+                    'rescreening_date': timezone.now() 
                 }
             )
 
@@ -99,7 +108,8 @@ def submit_rescreening(request):
                 risk_flag = risk_level.split()[0]
 
                 # Create or update substance risk measurement
-                substance_instance, _ = Substance.objects.get_or_create(name=substance)
+                substance_instance, _ = Substance.objects.get_or_create(
+                    name=substance)
                 SubstanceRiskMeasurement.objects.create(
                     substance=substance_instance,
                     rescreening=rescreening,
@@ -165,7 +175,7 @@ def get_non_green_flags(request):
         if submission.user.active_agency:
             user_agency_data = {}
             try:
-                user_agency = submission.user.agency_details 
+                user_agency = submission.user.agency_details
                 user_agency_data = {
                     'agency_name': user_agency.agency.agency_name,
                     'user_role_agency': user_agency.user_role_agency,
@@ -175,7 +185,7 @@ def get_non_green_flags(request):
                     'user_dzongkhag': submission.user.active_agency.present_dzongkhag,
                 }
             except UserAgency.DoesNotExist:
-                user_agency_data = {}  
+                user_agency_data = {}
             submission_data['user_agency_data'] = user_agency_data
 
         # Check MeasurementAssist flags
@@ -365,9 +375,6 @@ def generateServiceAndTreatment(request):
 def update_service_and_treatment(request):
     if request.method == 'POST':
         try:
-            logger.info(
-                'Received POST request to update service and treatment')
-
             # Get the update data from the request body
             data = json.loads(request.body)
             update_data = data.get('updateData')
@@ -387,12 +394,10 @@ def update_service_and_treatment(request):
             counselor = get_user_model().objects.get(id=counselor_id)
 
             for service_and_treatment in service_and_treatments:
-                # Create a ServiceAndTreatmentHistory instance to store the changes
                 history_entry = ServiceAndTreatmentHistory.objects.create(
                     service_and_treatment=service_and_treatment,
                     updated_by=counselor,
                     updated_at=timezone.now(),
-                    # Assuming you want to store all changes as JSON
                     changes=json.dumps(update_data)
                 )
                 history_entry.save()
@@ -695,8 +700,10 @@ def reject_referral(request):
 
 
 def check_and_create_final_submission(user):
-    rescreening = Rescreening.objects.filter(user=user).order_by('-submission_date').first()
-    original_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
+    rescreening = Rescreening.objects.filter(
+        user=user).order_by('-submission_date').first()
+    original_submission = UserSubmission.objects.filter(
+        user=user).order_by('-created_at').first()
 
     if not original_submission:
         return None  # Early exit if no original submission is found
@@ -717,24 +724,29 @@ def check_and_create_final_submission(user):
             })
         elif original_measurement:
             final_submission_data.update({
-                f'{field}_data': None,  # Original submission doesn't store data as JSON
+                # Original submission doesn't store data as JSON
+                f'{field}_data': None,
                 f'{field}_score': getattr(original_measurement, f'{field}_score', None),
                 f'{field}_interpretation': getattr(original_measurement, f'{field}_measurement', None),
             })
 
-    original_measurement = Measurement.objects.filter(user_submission=original_submission).first()
+    original_measurement = Measurement.objects.filter(
+        user_submission=original_submission).first()
 
     for field in ['phq', 'gad', 'ace']:
         update_data(field, rescreening, original_measurement)
 
     # Handle ASSIST data separately for rescreening or fallback to original submission
     if rescreening:
-        assist_data = SubstanceRiskMeasurement.objects.filter(rescreening=rescreening)
+        assist_data = SubstanceRiskMeasurement.objects.filter(
+            rescreening=rescreening)
         if assist_data.exists():
-            assist_data_list = assist_data.values('substance__name', 'measurement', 'risk_flag', 'total_score')
+            assist_data_list = assist_data.values(
+                'substance__name', 'measurement', 'risk_flag', 'total_score')
             final_submission_data['assist_data'] = list(assist_data_list)
         else:
-            assist_sub = MeasurementAssist.objects.filter(user_submission=original_submission).first()
+            assist_sub = MeasurementAssist.objects.filter(
+                user_submission=original_submission).first()
             if assist_sub:
                 final_submission_data['assist_data'] = {
                     "alcoholic_measurement": assist_sub.alcoholic_measurement,
@@ -770,11 +782,13 @@ def check_and_create_final_submission(user):
 
     return final_submission
 
+
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def list_final_submissions(request):
-    users_with_rescreenings = CustomUser.objects.filter(rescreenings__isnull=False).distinct()
+    users_with_rescreenings = CustomUser.objects.filter(
+        rescreenings__isnull=False).distinct()
 
     for user in users_with_rescreenings:
         check_and_create_final_submission(user)
@@ -783,6 +797,7 @@ def list_final_submissions(request):
     serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
     return Response(serializer.data)
 
+
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -790,6 +805,117 @@ def retrieve_final_submission(request, user_id):
     user = get_object_or_404(CustomUser, pk=user_id)
     check_and_create_final_submission(user)
 
-    final_submissions = FinalUserSubmission.objects.filter(user=user).order_by('-submission_date')
+    final_submissions = FinalUserSubmission.objects.filter(
+        user=user).order_by('-submission_date')
     serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
     return Response(serializer.data)
+
+
+class ReferralViewSet(viewsets.ModelViewSet):
+    queryset = Referral.objects.all()
+    serializer_class = ReferralSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Referral.objects.all()
+        user = self.request.query_params.get('user', None)
+        referred_by = self.request.query_params.get('referred_by', None)
+
+        if user is not None:
+            queryset = queryset.filter(user=user)
+        if referred_by is not None:
+            queryset = queryset.filter(referred_by=referred_by)
+
+        return queryset
+
+    @action(detail=False, methods=['get'], url_path='by-status')
+    def filter_by_status(self, request):
+        status = request.query_params.get('status', None)
+        if status is not None:
+            referrals = self.get_queryset().filter(referral_status=status)
+            serializer = self.get_serializer(referrals, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"detail": "Status parameter is required"}, status=400)
+
+    @action(detail=True, methods=['get'], url_path='referred-to')
+    def referred_to_details(self, request, pk=None):
+        referral = self.get_object()
+        referred_to_user = referral.referred_to
+        if referred_to_user:
+            user_serializer = CustomUserSerializer(referred_to_user)
+            return Response(user_serializer.data)
+        return Response({"detail": "No referred_to user found for this referral."}, status=404)
+
+
+def create_service_and_treatments(request):
+    try:
+        with transaction.atomic():
+            case_based_submissions = CaseBasedSubmission.objects.all()
+            case_content_type = ContentType.objects.get_for_model(CaseBasedSubmission)
+
+            for case_submission in case_based_submissions:
+                if not ServiceAndTreatment.objects.filter(content_type=case_content_type, object_id=case_submission.id).exists():
+                    ServiceAndTreatment.objects.create(
+                        content_type=case_content_type,
+                        object_id=case_submission.id,
+                        user=case_submission.user,
+                        date=timezone.now(),
+                        assessment_status='Not Conducted',
+                        case_status='On Going',
+                        counseling='Waiting List',
+                        updated_by=None
+                    )
+
+            event_based_submissions = EventBasedSubmission.objects.all()
+            event_content_type = ContentType.objects.get_for_model(EventBasedSubmission)
+
+            for event_submission in event_based_submissions:
+                if not ServiceAndTreatment.objects.filter(content_type=event_content_type, object_id=event_submission.id).exists():
+                    ServiceAndTreatment.objects.create(
+                        content_type=event_content_type,
+                        object_id=event_submission.id,
+                        user=event_submission.user,
+                        date=timezone.now(),
+                        assessment_status='Not Conducted',
+                        case_status='On Going',
+                        counseling='Waiting List',
+                        updated_by=None
+                    )
+
+            final_user_submissions = FinalUserSubmission.objects.all()
+            final_content_type = ContentType.objects.get_for_model(FinalUserSubmission)
+
+            for final_submission in final_user_submissions:
+                if not ServiceAndTreatment.objects.filter(content_type=final_content_type, object_id=final_submission.id).exists():
+                    ServiceAndTreatment.objects.create(
+                        content_type=final_content_type,
+                        object_id=final_submission.id,
+                        user=final_submission.user,
+                        date=timezone.now(),
+                        assessment_status='Not Conducted',
+                        case_status='On Going',
+                        counseling='Waiting List',
+                        updated_by=None
+                    )
+
+            gyalsung_profiles = GyalsungUserProfile.objects.all()
+            gyalsung_content_type = ContentType.objects.get_for_model(GyalsungUserProfile)
+
+            for gyalsung_profile in gyalsung_profiles:
+                if not ServiceAndTreatment.objects.filter(content_type=gyalsung_content_type, object_id=gyalsung_profile.id).exists():
+                    ServiceAndTreatment.objects.create(
+                        content_type=gyalsung_content_type,
+                        object_id=gyalsung_profile.id,
+                        user=None,  # No user field for GyalsungUserProfile
+                        date=timezone.now(),
+                        assessment_status='Not Conducted',
+                        case_status='On Going',
+                        counseling='Waiting List',
+                        updated_by=None
+                    )
+
+        return JsonResponse({'status': 'success', 'message': 'Service and Treatment records created successfully.'})
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})

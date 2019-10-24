@@ -31,7 +31,6 @@ class FinalUserSubmissionSerializer(serializers.ModelSerializer):
         read_only_fields = ['submission_date', 'rescreening_count']
 
 
-# CustomUser serializer with related agency and active agency, excluding password and other sensitive fields
 class AgencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Agency
@@ -66,6 +65,24 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'is_active': {'write_only': True},
         }
 
+class ReferredBySerializer(serializers.ModelSerializer):
+    active_agency = AgencySerializer()
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'id', 'username', 'first_name', 
+            'middle_name', 'last_name', 'email', 
+            'mob_number', 'active_agency'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'last_login': {'write_only': True},
+            'is_superuser': {'write_only': True},
+            'is_staff': {'write_only': True},
+            'is_active': {'write_only': True},
+        }
+
 # Serializers for related models (e.g., FinalUserSubmission, EventBasedSubmission, etc.)
 class FinalUserSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,7 +104,6 @@ class GyalsungUserProfileSerializer(serializers.ModelSerializer):
         model = GyalsungUserProfile
         fields = '__all__'
 
-# Referral Serializer to handle referral_instance
 class ReferralSerializer(serializers.ModelSerializer):
     class Meta:
         model = Referral
@@ -96,12 +112,11 @@ class ReferralSerializer(serializers.ModelSerializer):
 # Main ServiceAndTreatment Serializer
 class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    referral_instance = ReferralSerializer()  # Serialize the referral_instance field
+    referral_instance = ReferralSerializer() 
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         
-        # Dynamically get the related assessment based on content_type and object_id
         content_type = ContentType.objects.get_for_id(instance.content_type_id)
         model_class = content_type.model_class()
         
@@ -122,13 +137,11 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
         else:
             assessment_serializer = None
 
-        # If a serializer is found, include its data, otherwise show an appropriate message
         if assessment_serializer:
             representation['screening_data'] = assessment_serializer.data
         else:
             representation['screening_data'] = "Data not available"
 
-        # Remove content_type and object_id as they are not needed in the response
         representation.pop('content_type')
         representation.pop('object_id')
 
@@ -137,3 +150,34 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceAndTreatment
         fields = '__all__'
+
+
+# Referral Serializer to handle referral_instance
+class ReferralSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer()
+    referred_to = ReferredBySerializer()
+    referred_by = ReferredBySerializer()
+    assessment = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Referral
+        fields = '__all__'
+
+    def get_assessment(self, obj):
+        content_type = ContentType.objects.get_for_id(obj.content_type_id)
+        model_class = content_type.model_class()
+        try:
+            assessment_object = model_class.objects.get(id=obj.object_id)
+        except model_class.DoesNotExist:
+            assessment_object = None
+
+        # Use the appropriate serializer based on the model
+        if isinstance(assessment_object, FinalUserSubmission):
+            return FinalUserSubmissionSerializer(assessment_object).data
+        elif isinstance(assessment_object, EventBasedSubmission):
+            return EventBasedSubmissionSerializer(assessment_object).data
+        elif isinstance(assessment_object, CaseBasedSubmission):
+            return CaseBasedSubmissionSerializer(assessment_object).data
+        elif isinstance(assessment_object, GyalsungUserProfile):
+            return GyalsungUserProfileSerializer(assessment_object).data
+        return None

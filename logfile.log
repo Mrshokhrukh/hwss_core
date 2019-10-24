@@ -13651,3 +13651,917 @@ Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
 "GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
 Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
 "GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Internal Server Error: /api/v1/access/authenticate-token/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "172.30.85.156", port 5432 failed: Connection timed out (0x0000274C/10060)
+	Is the server running on that host and accepting TCP/IP connections?
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\authentication.py", line 196, in authenticate
+    return self.authenticate_credentials(token)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\authentication.py", line 201, in authenticate_credentials
+    token = model.objects.select_related('user').get(key=key)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+          ^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1572, in execute_sql
+    cursor = self.connection.cursor()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: connection to server at "172.30.85.156", port 5432 failed: Connection timed out (0x0000274C/10060)
+	Is the server running on that host and accepting TCP/IP connections?
+
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 236050
+Internal Server Error: /api/v1/access/authenticate-token/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "172.30.85.156", port 5432 failed: Connection timed out (0x0000274C/10060)
+	Is the server running on that host and accepting TCP/IP connections?
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 497, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 414, in initial
+    self.perform_authentication(request)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 324, in perform_authentication
+    request.user
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\request.py", line 231, in user
+    self._authenticate()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\request.py", line 384, in _authenticate
+    user_auth_tuple = authenticator.authenticate(self)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\authentication.py", line 196, in authenticate
+    return self.authenticate_credentials(token)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\authentication.py", line 201, in authenticate_credentials
+    token = model.objects.select_related('user').get(key=key)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 645, in get
+    num = len(clone)
+          ^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 382, in __len__
+    self._fetch_all()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 1928, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1572, in execute_sql
+    cursor = self.connection.cursor()
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\backends\postgresql\base.py", line 332, in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: connection to server at "172.30.85.156", port 5432 failed: Connection timed out (0x0000274C/10060)
+	Is the server running on that host and accepting TCP/IP connections?
+
+"POST /api/v1/access/authenticate-token/ HTTP/1.1" 500 236050
+Internal Server Error: /api/v1/monitoring/generate-service-and-treatment/
+"GET /api/v1/monitoring/generate-service-and-treatment/ HTTP/1.1" 500 41
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 3513
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/v1/monitoring/service-and-treatment/referrals/
+"GET /api/v1/monitoring/service-and-treatment/referrals/ HTTP/1.1" 404 56186
+Not Found: /api/v1/monitoring/service-and-treatment/referrals/
+"GET /api/v1/monitoring/service-and-treatment/referrals/ HTTP/1.1" 404 56186
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/v1/monitoring/service-and-treatment/referrals/
+"GET /api/v1/monitoring/service-and-treatment/referrals/ HTTP/1.1" 404 56186
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/v1/monitoring/service-and-treatment/referrals/
+"GET /api/v1/monitoring/service-and-treatment/referrals/ HTTP/1.1" 404 56186
+Internal Server Error: /api/v1/monitoring/referrals/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\mixins.py", line 46, in list
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 538, in to_representation
+    ret[field.field_name] = field.to_representation(attribute)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 523, in to_representation
+    for field in fields:
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 384, in _readable_fields
+    for field in self.fields.values():
+                 ^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 372, in fields
+    for key, value in self.get_fields().items():
+                      ^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 1079, in get_fields
+    field_names = self.get_field_names(declared_fields, info)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 1175, in get_field_names
+    assert field_name in fields, (
+AssertionError: The field 'agency_details' was declared on serializer ReferredBySerializer, but has not been included in the 'fields' option.
+"GET /api/v1/monitoring/referrals/ HTTP/1.1" 500 179752
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/v1/monitoring/get-service-and-treatment/
+"GET /api/v1/monitoring/get-service-and-treatment/ HTTP/1.1" 404 13494
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/v1/monitoringreferrals/
+"GET /api/v1/monitoringreferrals/ HTTP/1.1" 404 3561
+Not Found: /api/v1/monitoring/final-submission/
+"GET /api/v1/monitoring/final-submission/ HTTP/1.1" 404 13467
+Not Found: /api/v1/measurement/final-submission/
+"GET /api/v1/measurement/final-submission/ HTTP/1.1" 404 5506
+Not Found: /api/v1/monitoring/final-submission/
+"GET /api/v1/monitoring/final-submission/ HTTP/1.1" 404 13467
+Not Found: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 404 56330
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Internal Server Error: /api/v1/monitoring/generate-service-and-treatment/
+"GET /api/v1/monitoring/generate-service-and-treatment/ HTTP/1.1" 500 41
+Internal Server Error: /api/v1/monitoring/generate-service-and-treatment/
+"GET /api/v1/monitoring/generate-service-and-treatment/ HTTP/1.1" 500 41
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 186033
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 186033
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Internal Server Error: /api/v1/monitoring/generate-service-and-treatment/
+"GET /api/v1/monitoring/generate-service-and-treatment/ HTTP/1.1" 500 41
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 184888
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 184888
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 184888
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 186025
+Internal Server Error: /api/v1/monitoring/service-and-treatment/get-service-and-treatment/
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 110, in get_for_id
+    ct = self._cache[self.db][id]
+         ~~~~~~~~~~~~~~~~~~~~^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\viewsets.py", line 124, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\views.py", line 52, in get_service_and_treatment
+    return Response(serializer.data)
+                    ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 795, in data
+    ret = super().data
+          ^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 249, in data
+    self._data = self.to_representation(self.instance)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 713, in to_representation
+    return [
+           ^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\rest_framework\serializers.py", line 714, in <listcomp>
+    self.child.to_representation(item) for item in iterable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\monitoring\serializers.py", line 123, in to_representation
+    content_type = ContentType.objects.get_for_id(instance.content_type_id)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\contrib\contenttypes\models.py", line 114, in get_for_id
+    ct = self.get(pk=id)
+         ^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Office Works\The PEMA\hwss_k8s\hwss_core\venv\Lib\site-packages\django\db\models\query.py", line 649, in get
+    raise self.model.DoesNotExist(
+django.contrib.contenttypes.models.ContentType.DoesNotExist: ContentType matching query does not exist.
+"GET /api/v1/monitoring/service-and-treatment/get-service-and-treatment/ HTTP/1.1" 500 186025
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3885
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3937
