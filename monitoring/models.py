@@ -4,6 +4,8 @@ from access.models import CustomUser
 from multiselectfield import MultiSelectField
 from measurement.models import Submission, Measurement, MeasurementAssist, UserSubmission
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 User = CustomUser
 
@@ -47,6 +49,10 @@ class ServiceAndTreatment(models.Model):
          'Detention-based SUD Treatment and Care'),
     )
 
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    assessment = GenericForeignKey('content_type', 'object_id')
+
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateField(default=None)
     assessment_status = models.CharField(
@@ -87,6 +93,10 @@ class Referral(models.Model):
         ('Accepted', 'Accepted'),
         ('Rejected', 'Rejected'),
     )
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    assessment = GenericForeignKey('content_type', 'object_id')
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     referred_by = models.ForeignKey(

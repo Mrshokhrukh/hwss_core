@@ -22,9 +22,25 @@ from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from .serializers import ServiceAndTreatmentSerializer
+from django.utils.decorators import method_decorator
 import logging
 
 logger = logging.getLogger(__name__)
+
+@method_decorator(csrf_exempt, name='dispatch')
+@permission_classes([AllowAny])
+class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
+    queryset = ServiceAndTreatment.objects.all()
+    serializer_class = ServiceAndTreatmentSerializer
+
+    @action(detail=False, methods=['get'], url_path='get-service-and-treatment')
+    def get_service_and_treatment(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
 
 @csrf_exempt
 def submit_rescreening(request):
@@ -149,7 +165,7 @@ def get_non_green_flags(request):
         if submission.user.active_agency:
             user_agency_data = {}
             try:
-                user_agency = submission.user.agency_details  # Accessing the UserAgency object
+                user_agency = submission.user.agency_details 
                 user_agency_data = {
                     'agency_name': user_agency.agency.agency_name,
                     'user_role_agency': user_agency.user_role_agency,
@@ -159,39 +175,28 @@ def get_non_green_flags(request):
                     'user_dzongkhag': submission.user.active_agency.present_dzongkhag,
                 }
             except UserAgency.DoesNotExist:
-                # Handle the case where UserAgency object does not exist for the CustomUser
-                user_agency_data = {}  # Set user_agency_data to empty dictionary or handle as needed
+                user_agency_data = {}  
             submission_data['user_agency_data'] = user_agency_data
 
         # Check MeasurementAssist flags
         if measurement_assist:
-            # Iterate over each field in MeasurementAssist
             for field in measurement_assist._meta.fields:
-                # Check if the field represents a flag
                 if field.name.endswith('_flag'):
                     flag_value = getattr(measurement_assist, field.name)
-                    # If the flag is not green, add it to flags dictionary
                     if flag_value != 'green':
                         submission_data['flags'][field.name] = flag_value
 
-        # Check Measurement flags
         if measurement:
-            # Iterate over each field in Measurement
             for field in measurement._meta.fields:
-                # Check if the field represents a flag
                 if field.name.endswith('_flag'):
                     flag_value = getattr(measurement, field.name)
-                    # If the flag is not green, add it to flags dictionary
                     if flag_value != 'green':
                         submission_data['flags'][field.name] = flag_value
 
-        # If there are non-green flags, add the submission data to the rescreening list
         if submission_data['flags']:
-            # Add measurement data if available
             if measurement:
                 submission_data['measurement_data'] = model_to_dict(
                     measurement)
-            # Add measurement assist data if available
             if measurement_assist:
                 submission_data['measurement_assist_data'] = model_to_dict(
                     measurement_assist)
@@ -202,14 +207,12 @@ def get_non_green_flags(request):
 
 @csrf_exempt
 def process_rescreening(request):
-    # Retrieve saved records from Rescreening table
     rescreening_records = get_non_green_flags(request)
 
     # Log the data being returned
     logger.debug("Response data:")
     logger.debug(rescreening_records)
 
-    # Convert the dictionary to JSON and return it as JsonResponse
     return JsonResponse(rescreening_records)
 
 
@@ -244,14 +247,12 @@ def generateServiceAndTreatment(request):
     try:
         rescreenings = Rescreening.objects.all()
 
-        # Collect existing service and treatments to avoid duplicates
         existing_service_and_treatments = ServiceAndTreatment.objects.filter(
             user__in=[res.user for res in rescreenings],
             date__in=[res.submission_date.date()
                       for res in rescreenings if res.submission_date]
         ).values_list('user', 'date')
 
-        # Collecting newly created ServiceAndTreatment records
         new_service_and_treatments = []
         for rescreening in rescreenings:
             if rescreening.submission_date and (rescreening.user, rescreening.submission_date.date()) not in existing_service_and_treatments:
@@ -269,19 +270,16 @@ def generateServiceAndTreatment(request):
         ServiceAndTreatment.objects.bulk_create(new_service_and_treatments)
         Rescreening.objects.bulk_update(rescreenings, ['rescreened'])
 
-        # Collecting data for CaseScreening and CaseBasedSubmission
         case_screenings = CaseScreening.objects.all()
         case_based_submissions = CaseBasedSubmission.objects.filter(
             case__in=case_screenings
         )
 
-        # Collecting data for EventScreening and EventBasedSubmission
         event_screenings = EventScreening.objects.all()
         event_based_submissions = EventBasedSubmission.objects.filter(
             event__in=event_screenings
         )
 
-        # Formatting ServiceAndTreatment data for the response
         service_and_treatments_data = [
             {
                 'user': get_user_details(obj.user),
@@ -295,7 +293,6 @@ def generateServiceAndTreatment(request):
             for obj in ServiceAndTreatment.objects.all()
         ]
 
-        # Formatting CaseScreening and CaseBasedSubmission data
         case_screening_data = [
             {
                 'user': get_user_details(case.user),
