@@ -30,25 +30,49 @@ logger = logging.getLogger(__name__)
 def submit_rescreening(request):
     if request.method == 'POST':
         user_id = request.POST.get('userId')
+        rescreened_by_id = request.POST.get('rescreened_by')  # Retrieve rescreened_by from the request
 
         user = get_object_or_404(CustomUser, id=user_id)
+        rescreened_by_user = get_object_or_404(CustomUser, id=rescreened_by_id)  # Fetch the rescreened_by user
+
         age = calculate_age(user.date_of_birth)
 
         assist_data_json = request.POST.get('assistRiskSeverity', '{}')
         assist_data = json.loads(assist_data_json) if assist_data_json else {}
 
+        # Extract interpretation data from the incoming request
+        gad_data_json = request.POST.get('gadData', '{}')
+        gad_data = json.loads(gad_data_json) if gad_data_json else {}
+        gad_score = gad_data.get('totalScore', 0)
+        gad_interpretation = gad_data.get('interpretation', '')
+
+        phq_data_json = request.POST.get('phqData', '{}')
+        phq_data = json.loads(phq_data_json) if phq_data_json else {}
+        phq_score = phq_data.get('totalScore', 0)
+        phq_interpretation = phq_data.get('interpretation', '')
+
+        ace_data_json = request.POST.get('aceData', '{}')
+        ace_data = json.loads(ace_data_json) if ace_data_json else {}
+        ace_score = ace_data.get('totalScore', 0)
+        ace_interpretation = ace_data.get('interpretation', '')
+
         with transaction.atomic():
             rescreening, created = Rescreening.objects.update_or_create(
                 user=user,
                 defaults={
-                    'gad_data': request.POST.get('gadData', '{}'),
-                    'gad_score': json.loads(request.POST.get('gadData', '{}')).get('totalScore', 0),
-                    'phq_data': request.POST.get('phqData', '{}'),
-                    'phq_score': json.loads(request.POST.get('phqData', '{}')).get('totalScore', 0),
-                    'ace_data': request.POST.get('aceData', '{}'),
-                    'ace_score': json.loads(request.POST.get('aceData', '{}')).get('totalScore', 0),
+                    'gad_data': gad_data_json,
+                    'gad_score': gad_score,
+                    'gad_interpretation': gad_interpretation,  # Save GAD interpretation
+                    'phq_data': phq_data_json,
+                    'phq_score': phq_score,
+                    'phq_interpretation': phq_interpretation,  # Save PHQ interpretation
+                    'ace_data': ace_data_json,
+                    'ace_score': ace_score,
+                    'ace_interpretation': ace_interpretation,  # Save ACE interpretation
                     'school_env_data': request.POST.get('schoolEnvData', '{}'),
-                    'rescreened': True
+                    'rescreened': True,
+                    'screened_by': rescreened_by_user,  # Save the rescreened_by user
+                    'rescreening_date': timezone.now()  # Save the current date/time for rescreening
                 }
             )
 
@@ -674,14 +698,12 @@ def reject_referral(request):
 
 
 def check_and_create_final_submission(user):
-    # Fetch the most recent rescreening and original submission
     rescreening = Rescreening.objects.filter(user=user).order_by('-submission_date').first()
     original_submission = UserSubmission.objects.filter(user=user).order_by('-created_at').first()
 
     if not original_submission:
-        return None  # Early return if no original submission is found
+        return None  # Early exit if no original submission is found
 
-    # Prepare final submission data
     final_submission_data = {
         "user": user,
         "initial_submission": original_submission,
@@ -689,39 +711,35 @@ def check_and_create_final_submission(user):
     }
 
     # Handle PHQ, GAD, and ACE Data (rescreening first, fallback to original)
-    def update_data(field, rescreening_data, original_test_type):
+    def update_data(field, rescreening, original_measurement):
         if rescreening and getattr(rescreening, f"{field}_data", None):
             final_submission_data.update({
                 f'{field}_data': getattr(rescreening, f'{field}_data'),
                 f'{field}_score': getattr(rescreening, f'{field}_score'),
                 f'{field}_interpretation': getattr(rescreening, f'{field}_interpretation'),
             })
-        else:
-            original_measurement = Measurement.objects.filter(
-                user_submission=original_submission
-            ).first()
-            if original_measurement:
-                final_submission_data.update({
-                    f'{field}_data': None,  # Original submission doesn't store data as JSON
-                    f'{field}_score': getattr(original_measurement, f'{field}_score', None),
-                    f'{field}_interpretation': getattr(original_measurement, f'{field}_flag', None),
-                })
+        elif original_measurement:
+            final_submission_data.update({
+                f'{field}_data': None,  # Original submission doesn't store data as JSON
+                f'{field}_score': getattr(original_measurement, f'{field}_score', None),
+                f'{field}_interpretation': getattr(original_measurement, f'{field}_measurement', None),
+            })
 
-    update_data('phq', rescreening, 'PHQ')
-    update_data('gad', rescreening, 'GAD')
-    update_data('ace', rescreening, 'ACE')
+    original_measurement = Measurement.objects.filter(user_submission=original_submission).first()
 
-    # Handle ASSIST data separately (from different models for rescreening vs. original)
+    for field in ['phq', 'gad', 'ace']:
+        update_data(field, rescreening, original_measurement)
+
+    # Handle ASSIST data separately for rescreening or fallback to original submission
     if rescreening:
         assist_data = SubstanceRiskMeasurement.objects.filter(rescreening=rescreening)
         if assist_data.exists():
-            assist_data_list = list(assist_data.values('substance', 'measurement', 'risk_flag', 'total_score'))
-            final_submission_data.update({'assist_data': assist_data_list})
-    else:
-        assist_sub = MeasurementAssist.objects.filter(user=user).first()
-        if assist_sub:
-            final_submission_data.update({
-                'assist_data': {
+            assist_data_list = assist_data.values('substance__name', 'measurement', 'risk_flag', 'total_score')
+            final_submission_data['assist_data'] = list(assist_data_list)
+        else:
+            assist_sub = MeasurementAssist.objects.filter(user_submission=original_submission).first()
+            if assist_sub:
+                final_submission_data['assist_data'] = {
                     "alcoholic_measurement": assist_sub.alcoholic_measurement,
                     "alcoholic_flag": assist_sub.alcoholic_flag,
                     "tobacco_measurement": assist_sub.tobacco_measurement,
@@ -746,9 +764,7 @@ def check_and_create_final_submission(user):
                     "other_flag": assist_sub.other_flag,
                     "other_name": assist_sub.other_name,
                 }
-            })
 
-    # Create or update the FinalUserSubmission
     final_submission, created = FinalUserSubmission.objects.update_or_create(
         user=user,
         initial_submission=original_submission,
@@ -757,37 +773,26 @@ def check_and_create_final_submission(user):
 
     return final_submission
 
-
-
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def list_final_submissions(request):
-    users_with_rescreenings = CustomUser.objects.filter(
-        rescreenings__isnull=False
-    ).distinct()
+    users_with_rescreenings = CustomUser.objects.filter(rescreenings__isnull=False).distinct()
 
-    print('Users with rescreenings:', users_with_rescreenings)
-
-    # Run `check_and_create_final_submission` for each user with a rescreening
     for user in users_with_rescreenings:
         check_and_create_final_submission(user)
 
-    # Retrieve and return all final submissions after ensuring they are up to date
     final_submissions = FinalUserSubmission.objects.all().order_by('-submission_date')
     serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
     return Response(serializer.data)
-
 
 @csrf_exempt
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def retrieve_final_submission(request, user_id):
     user = get_object_or_404(CustomUser, pk=user_id)
-    
     check_and_create_final_submission(user)
 
     final_submissions = FinalUserSubmission.objects.filter(user=user).order_by('-submission_date')
-    
     serializer = FinalUserSubmissionSerializer(final_submissions, many=True)
     return Response(serializer.data)

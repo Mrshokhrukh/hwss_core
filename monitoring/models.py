@@ -118,6 +118,9 @@ class Substance(models.Model):
 class Rescreening(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name='rescreenings')
+    screened_by = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, related_name='screened_rescreenings', null=True, blank=True)
+    rescreening_date = models.DateTimeField(default=timezone.now)
     gad_data = models.JSONField(null=True, blank=True)
     gad_score = models.IntegerField(null=True, blank=True)
     gad_interpretation = models.CharField(
@@ -134,10 +137,6 @@ class Rescreening(models.Model):
     rescreened = models.BooleanField(default=False)
     rescreening_count = models.IntegerField(default=0, null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
-    service_and_treatment = models.ForeignKey(
-        'ServiceAndTreatment', on_delete=models.SET_NULL, related_name='rescreenings', null=True, blank=True)
-    referral = models.ForeignKey(
-        'Referral', on_delete=models.SET_NULL, related_name='rescreenings', null=True, blank=True)
 
     def __str__(self):
         return f"Rescreening for {self.user.username}"
@@ -163,7 +162,7 @@ class FinalUserSubmission(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name='final_submissions')
     initial_submission = models.ForeignKey(
-        UserSubmission, on_delete=models.SET_NULL, null=True, blank=True, related_name='final_submissions')
+        'measurement.UserSubmission', on_delete=models.SET_NULL, null=True, blank=True, related_name='final_submissions')
 
     phq_data = models.JSONField(null=True, blank=True)
     phq_score = models.IntegerField(null=True, blank=True)
@@ -181,17 +180,22 @@ class FinalUserSubmission(models.Model):
         max_length=255, null=True, blank=True, help_text="Interpretation of ACE score")
 
     assist_data = models.JSONField(null=True, blank=True)
-    assist_score = models.IntegerField(null=True, blank=True)
-    assist_interpretation = models.CharField(
-        max_length=255, null=True, blank=True, help_text="Interpretation of ASSIST score")
 
     rescreened = models.BooleanField(default=False)
     rescreening_count = models.IntegerField(default=0, null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
 
+    rescreened_by = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='final_rescreened_by'
+    )
+
     # Relations to capture treatment history or services provided
     service_and_treatment = models.ForeignKey(
         'ServiceAndTreatment', on_delete=models.SET_NULL, related_name='final_submissions', null=True, blank=True
+    )
+
+    referral = models.ForeignKey(
+        'Referral', on_delete=models.SET_NULL, null=True, blank=True, related_name='final_submissions'
     )
 
     def __str__(self):

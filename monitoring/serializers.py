@@ -17,8 +17,6 @@ class FinalUserSubmissionSerializer(serializers.ModelSerializer):
             'ace_score',
             'ace_interpretation',
             'assist_data',
-            'assist_score',
-            'assist_interpretation',
             'rescreened',
             'rescreening_count',
             'submission_date',
