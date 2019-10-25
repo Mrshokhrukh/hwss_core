@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ServiceAndTreatment, ServiceAndTreatmentHistory, Referral, Substance, Rescreening, SubstanceRiskMeasurement, FinalUserSubmission
+from .models import ActiveSubstanceUser, LifeTimeSubstanceUser, ServiceAndTreatment, ServiceAndTreatmentHistory, Referral, Substance, Rescreening, SubstanceRiskMeasurement, FinalUserSubmission
 
 @admin.register(ServiceAndTreatment)
 class ServiceAndTreatmentAdmin(admin.ModelAdmin):
@@ -49,3 +49,23 @@ class FinalUserSubmissionAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'initial_submission__user__username')
     date_hierarchy = 'submission_date'
     readonly_fields = ('submission_date',)
+
+@admin.register(LifeTimeSubstanceUser)
+class LifeTimeSubstanceUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'screening_data', 'assessment', 'substances_display')
+    search_fields = ('user__username',)
+    list_filter = ('screening_data_type', 'assessment_type')
+    
+    def substances_display(self, obj):
+        return ', '.join(obj.substances.keys()) if obj.substances else "No substances"
+    substances_display.short_description = 'Substances Used'
+
+@admin.register(ActiveSubstanceUser)
+class ActiveSubstanceUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'screening_data', 'assessment', 'substances_display')
+    search_fields = ('user__username',)
+    list_filter = ('screening_data_type', 'assessment_type')
+    
+    def substances_display(self, obj):
+        return ', '.join(obj.substances.keys()) if obj.substances else "No substances"
+    substances_display.short_description = 'Substances Used'

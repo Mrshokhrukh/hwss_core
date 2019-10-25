@@ -6,6 +6,7 @@ from measurement.models import Submission, Measurement, MeasurementAssist, UserS
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import JSONField
 
 User = CustomUser
 
@@ -211,3 +212,31 @@ class FinalUserSubmission(models.Model):
 
     def __str__(self):
         return f"Final submission for {self.user.username} on {self.submission_date.strftime('%Y-%m-%d')}"
+
+
+class LifeTimeSubstanceUser(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    screening_data_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="lifetime_screening_data_type")
+    object_id = models.PositiveIntegerField()
+    screening_data = GenericForeignKey('screening_data_type', 'object_id')
+    assessment_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="lifetime_assessment_type")
+    assessment_id = models.PositiveIntegerField()
+    assessment = GenericForeignKey('assessment_type', 'assessment_id')
+    substances = JSONField()
+
+    def __str__(self):
+        return f"Lifetime Substance Use for {self.user}"
+
+
+class ActiveSubstanceUser(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    screening_data_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="active_screening_data_type")
+    object_id = models.PositiveIntegerField()
+    screening_data = GenericForeignKey('screening_data_type', 'object_id')
+    assessment_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="active_assessment_type")
+    assessment_id = models.PositiveIntegerField()
+    assessment = GenericForeignKey('assessment_type', 'assessment_id')
+    substances = JSONField()
+
+    def __str__(self):
+        return f"Active Substance Use for {self.user}"
