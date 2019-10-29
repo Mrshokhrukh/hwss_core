@@ -272,6 +272,7 @@ def generateServiceAndTreatment(request):
                     assessment_status='Not Conducted',
                     case_status='On Going',
                     counseling='Waiting List',
+                    rescreened=True,
                     follow_up='',
                     comments=''
                 ))

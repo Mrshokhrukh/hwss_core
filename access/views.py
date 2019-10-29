@@ -10,6 +10,8 @@ import base64
 import logging
 import requests
 import traceback
+import string
+import random
 from datetime import date, datetime
 
 from django.http import JsonResponse
@@ -42,6 +44,7 @@ from .constants import GLOBAL_FILE_PATH
 from django.db import transaction
 from .models import CustomUser
 from rest_framework.exceptions import AuthenticationFailed
+from django.core.mail import EmailMessage
 
 from rest_framework import status
 
@@ -1062,26 +1065,49 @@ class GetUserDetailsView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
-
+    
+    def generate_random_password(self, length=8):
+        characters = string.ascii_letters + string.digits
+        return ''.join(random.choice(characters) for _ in range(length))
+    
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         User = get_user_model()
         user = User.objects.filter(email=email).first()
-
+        
         if user:
-            token = default_token_generator.make_token(user)
-            password_reset_url = f"{settings.FRONTEND_URL}/password-reset/{token}/"
-            send_mail(
-                'Password Reset Request',
-                f'Please click on the link to reset your password: {password_reset_url}',
-                'from@example.com',
-                [email],
-                fail_silently=False,
+            new_password = self.generate_random_password()
+            user.set_password(new_password)
+            user.save()
+            
+            # Create EmailMessage instance instead of using send_mail
+            email_message = EmailMessage(
+                subject='[PEMA System] Your New One-Time Password',
+                body=(
+                    f"Dear User,\n\n"
+                    f"A request to reset your password has been completed. Please use the following one-time password to access your account:\n"
+                    f"Password: {new_password}\n\n"
+                    f"For security reasons, we highly recommend you to login with this new password and change your password from settings/profile page immediately.\n\n"
+                    f"Warm regards,\n\n"
+                    f"The PEMA System\n"
+                    f"PEMA Secretariat, Thimphu\n"
+                    f"Email: support@thepemasystem.gov.bt\n"
+                    f"Phone: +975-2-332862\n"
+                ),
+                from_email='PEMA System <noreply@thepemasystem.gov.bt>',
+                to=[email],
             )
-            return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
-
+            
+            # Set additional headers if needed
+            email_message.extra_headers = {
+                'From': 'PEMA System <noreply@thepemasystem.gov.bt>',
+                'Reply-To': 'support@thepemasystem.gov.bt'
+            }
+            
+            email_message.send(fail_silently=False)
+            
+            return Response({"message": "A new temporary password has been sent to your provided email address. Please check your inbox or junk mail to login to your account with the new teamporary password."}, status=status.HTTP_200_OK)
         return Response({"error": "Email not found."}, status=status.HTTP_404_NOT_FOUND)
-
 
 class PasswordResetView(APIView):
     permission_classes = [AllowAny]

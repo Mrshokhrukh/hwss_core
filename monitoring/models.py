@@ -49,6 +49,12 @@ class ServiceAndTreatment(models.Model):
         ('Detention-based SUD Treatment and Care',
          'Detention-based SUD Treatment and Care'),
     )
+    REFERRED_CHOICES = (
+        ('Awaiting', 'Awaiting'),
+        ('Rejected', 'Rejected'),
+        ('Referred', 'Referred'),
+        ('Referred Back', 'Referred Back'),
+    )
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
@@ -68,13 +74,9 @@ class ServiceAndTreatment(models.Model):
     updated_by = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='updated_by')
     updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
-    REFERRED_CHOICES = (
-        ('Not Referred', 'Not Referred'),
-        ('Referred', 'Referred'),
-        ('Referred Back', 'Referred Back'),
-    )
+    
     referred = models.CharField(
-        max_length=20, choices=REFERRED_CHOICES, default='Not Referred', null=True, blank=True)
+        max_length=20, choices=REFERRED_CHOICES, default='Awaiting', null=True, blank=True)
     referral_instance = models.ForeignKey(
         'Referral', on_delete=models.CASCADE, related_name='service_and_treatments', null=True, blank=True)
 
@@ -193,7 +195,7 @@ class FinalUserSubmission(models.Model):
 
     assist_data = models.JSONField(null=True, blank=True)
 
-    rescreened = models.BooleanField(default=False)
+    rescreened = models.BooleanField(default=True)
     rescreening_count = models.IntegerField(default=0, null=True, blank=True)
     submission_date = models.DateTimeField(auto_now_add=True)
 

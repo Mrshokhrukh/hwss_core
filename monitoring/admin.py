@@ -1,5 +1,17 @@
 from django.contrib import admin
-from .models import ActiveSubstanceUser, LifeTimeSubstanceUser, ServiceAndTreatment, ServiceAndTreatmentHistory, Referral, Substance, Rescreening, SubstanceRiskMeasurement, FinalUserSubmission
+from .models import (
+    ActiveSubstanceUser, LifeTimeSubstanceUser, ServiceAndTreatment, 
+    ServiceAndTreatmentHistory, Referral, Substance, Rescreening, 
+    SubstanceRiskMeasurement, FinalUserSubmission
+)
+
+@admin.action(description="Duplicate selected records")
+def duplicate_records(modeladmin, request, queryset):
+    for obj in queryset:
+        # Duplicate the record by copying all fields except `id` and `updated_at`
+        obj.id = None  # Set id to None so it creates a new record
+        obj.updated_at = None  # Reset updated_at if you want to
+        obj.save()  # Save the new duplicated record
 
 @admin.register(ServiceAndTreatment)
 class ServiceAndTreatmentAdmin(admin.ModelAdmin):
@@ -8,6 +20,7 @@ class ServiceAndTreatmentAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'updated_by__username', 'comments')
     date_hierarchy = 'date'
     readonly_fields = ('updated_at',)
+    actions = [duplicate_records]  # Add the duplicate action here
 
 @admin.register(ServiceAndTreatmentHistory)
 class ServiceAndTreatmentHistoryAdmin(admin.ModelAdmin):

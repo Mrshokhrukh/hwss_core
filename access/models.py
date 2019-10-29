@@ -100,7 +100,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_old_case_user = models.BooleanField(default=False)
+    is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
 
     ROLE_STUDENT = 'student'
     ROLE_PUBLIC = 'general_public'
@@ -113,6 +113,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLE_SUD_ADMIN = 'sud_admin'
     ROLE_AAA_ADMIN = 'aaa_admin'
     ROLE_CECD_ADMIN = 'cecd_admin'
+    ROLE_PSYCHIATRIST = 'psychiatrist'
+    ROLE_MEDICAL_OFFICER = 'medical_officer'
 
     ROLE_CHOICES = [
         (ROLE_STUDENT, 'Student'),
@@ -126,6 +128,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         (ROLE_SUD_ADMIN, 'SUD Admin'),
         (ROLE_AAA_ADMIN, 'AAA Admin'),
         (ROLE_CECD_ADMIN, 'CECD Admin'),
+        (ROLE_PSYCHIATRIST, 'Psychiatrist'),
+        (ROLE_MEDICAL_OFFICER, 'Medical Officer'),
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)

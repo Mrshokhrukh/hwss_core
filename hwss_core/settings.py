@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from decouple import config
 import re
+import smtplib
+from email.mime.text import MIMEText
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -253,9 +255,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ujwal.pradhan666@gmail.com'
-EMAIL_HOST_PASSWORD = 'Caelen@0312'
-DEFAULT_FROM_EMAIL = 'noreply@thepemasystem.com'
+EMAIL_HOST_USER = config('EMAIL')
+EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
+EMAIL_DEBUG = True
+DEFAULT_FROM_EMAIL = 'PEMA System <noreply@thepemasystem.gov.bt>' 
+DEFAULT_FROM_NAME = 'PEMA System'
+CONTACT_EMAIL = 'noreply@thepemasystem.gov.bt'
+FRONTEND_URL = 'https://thepemasystem.gov.bt'
 
 # Use database for session storage
 # SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in the database
