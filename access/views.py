@@ -745,7 +745,7 @@ def registerCounselorEventUser(request):
                 existing_user.ps_add_gewog = user_data.get('currentAddress')
                 existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
                 existing_user.role = 'general_public'
-                existing_user.active_agency=agency,
+                existing_user.active_agency=agency
 
                 # Save the updated user
                 existing_user.save()

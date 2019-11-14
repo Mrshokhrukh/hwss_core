@@ -908,3 +908,22 @@ def fetch_school_env_entries(request):
         return JsonResponse(data)
     else:
         return JsonResponse({"error": "Method not allowed"}, status=405)
+
+def get_user_diagnosis(request, user_id):
+    # Get the user or return a 404 if not found
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    # Query the submissions for the user's diagnosis
+    diagnosis = Submission.objects.filter(
+        user_submission__user=user
+    ).values_list('diagnosis', flat=True)
+
+    # Filter out empty or null diagnosis and remove duplicates
+    diagnosis = list(filter(None, set(diagnosis)))
+
+    # Return diagnosis in a JSON response
+    return JsonResponse({
+        'user_id': user_id,
+        'username': user.username,
+        'diagnosis': diagnosis or ["No Diagnosis"]
+    })

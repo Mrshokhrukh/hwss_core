@@ -472,54 +472,74 @@ def getReferralList(request):
 @csrf_exempt
 def update_referral_status(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        refer_data = data.get('referData')
+        try:
+            data = json.loads(request.body)
+            refer_data = data.get('referData')
 
-        if refer_data:
+            if not refer_data:
+                return JsonResponse({'error': 'No referral data provided'}, status=400)
+
             referred_by_id = refer_data.get('referred_by')
-            referred_to_id = refer_data.get('referred_to_name')
+            referred_to_name = refer_data.get('referred_to_name')
             user_id = refer_data.get('user')
 
-            if not all([referred_by_id, referred_to_id, user_id]):
-                return JsonResponse({'error': 'Incomplete data provided'}, status=400)
+            if not all([referred_by_id, referred_to_name, user_id]):
+                return JsonResponse({
+                    'error': f'Incomplete data provided. Got: referred_by={referred_by_id}, '
+                            f'referred_to_name={referred_to_name}, user_id={user_id}'
+                }, status=400)
 
             try:
                 referred_by = CustomUser.objects.get(id=referred_by_id)
             except CustomUser.DoesNotExist:
-                return JsonResponse({'error': 'Referred by user does not exist'}, status=400)
+                return JsonResponse({'error': f'Referring user with ID {referred_by_id} does not exist'}, status=400)
 
-            try:
-                referred_to = CustomUser.objects.get(id=referred_to_id)
-            except CustomUser.DoesNotExist:
-                return JsonResponse({'error': 'Referred to user does not exist'}, status=400)
-
-            referral_status = 'Awaiting'
-            referral, created = Referral.objects.update_or_create(
-                user_id=user_id,
-                defaults={
-                    'referred_by': referred_by,
-                    'referred_to': referred_to,
-                    'referred_to_name': referred_to.first_name + ' ' + referred_to.last_name,
-                    'referral_status': referral_status,
-                    'date': timezone.now(),
-                }
-            )
-
-            # Update the referred field in ServiceAndTreatment model based on referral status
             with transaction.atomic():
-                service_and_treatment = ServiceAndTreatment.objects.filter(
-                    user=user_id).first()
-                if service_and_treatment:
-                    if referral.referral_status:
-                        service_and_treatment.referred = 'Referred'
-                        pass
-                    service_and_treatment.save()
+                service_and_treatment = ServiceAndTreatment.objects.filter(user_id=user_id).first()
+                
+                if not service_and_treatment:
+                    return JsonResponse({
+                        'error': f'No service and treatment record found for user ID {user_id}. '
+                        'Please make sure the user ID is correct.'
+                    }, status=404)
 
-            return JsonResponse({'message': 'Referral saved successfully!'}, status=200)
-        else:
-            return JsonResponse({'error': 'Data not provided'}, status=400)
-    else:
-        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
+                # Set content_type for the generic foreign key
+                content_type = ContentType.objects.get_for_model(ServiceAndTreatment)
+
+                referral, created = Referral.objects.update_or_create(
+                    user_id=user_id,
+                    defaults={
+                        'referred_by': referred_by,
+                        'referred_to': None,
+                        'referred_to_name': referred_to_name,
+                        'referral_status': 'Awaiting',
+                        'date': timezone.now(),
+                        'service_and_treatment': service_and_treatment,
+                        'content_type': content_type,  # Set content type
+                        'object_id': service_and_treatment.id  # Set object ID to the service record ID
+                    }
+                )
+
+                # Update the service and treatment record
+                service_and_treatment.referred = 'Referred'
+                service_and_treatment.referral_instance = referral
+                service_and_treatment.save()
+
+                return JsonResponse({
+                    'message': 'Referral saved successfully!',
+                    'referral_id': referral.id
+                }, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            import traceback
+            return JsonResponse({
+                'error': f'An error occurred: {str(e)}',
+                'traceback': traceback.format_exc()
+            }, status=500)
+
+    return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 # function for getting users details:

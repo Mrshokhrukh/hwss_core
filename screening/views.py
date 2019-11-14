@@ -114,44 +114,34 @@ def get_counselor_info(request, counselor_name):
 def submit_case_screening(request):
     try:
         with transaction.atomic():
-            # Extract data from form data
             user_id = request.POST.get('userId')
             gad_data = json.loads(request.POST.get('gadData', '{}'))
             phq_data = json.loads(request.POST.get('phqData', '{}'))
             ace_data = json.loads(request.POST.get('aceData', '{}'))
-            assist_risk_severity = json.loads(
-                request.POST.get('assistRiskSeverity', '{}'))
-            school_env_data = json.loads(
-                request.POST.get('schoolEnvData', '{}'))
+            assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
+            school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
 
-            # Retrieve the CustomUser instance based on the user ID
             user = CustomUser.objects.get(pk=user_id)
 
-            # Retrieve the latest CaseScreening for the user
-            latest_case_screening = user.case_screenings.order_by(
-                '-date').first()
+            latest_case_screening = user.case_screenings.order_by('-date').first()
+            if not latest_case_screening:
+                # Optionally create a new case screening if none exists
+                latest_case_screening = CaseScreening.objects.create(user=user, date=timezone.now())
 
-            # Create or update CaseBasedSubmission instance
             submission_instance = latest_case_screening.case_based_submissions.first()
-
             if submission_instance:
-                # Update existing instance
                 submission_instance.gad_data = gad_data.get('responses', [])
                 submission_instance.gad_score = gad_data.get('totalScore')
-                submission_instance.gad_interpretation = gad_data.get(
-                    'interpretation')
+                submission_instance.gad_interpretation = gad_data.get('interpretation')
                 submission_instance.phq_data = phq_data.get('responses', [])
                 submission_instance.phq_score = phq_data.get('totalScore')
-                submission_instance.phq_interpretation = phq_data.get(
-                    'interpretation')
+                submission_instance.phq_interpretation = phq_data.get('interpretation')
                 submission_instance.ace_data = ace_data.get('responses', [])
                 submission_instance.ace_score = ace_data.get('totalScore')
-                submission_instance.ace_interpretation = ace_data.get(
-                    'interpretation')
+                submission_instance.ace_interpretation = ace_data.get('interpretation')
                 submission_instance.school_env_data = school_env_data
                 submission_instance.save()
             else:
-                # Create new instance
                 submission_instance = CaseBasedSubmission.objects.create(
                     user=user,
                     case=latest_case_screening,
@@ -167,31 +157,23 @@ def submit_case_screening(request):
                     school_env_data=school_env_data
                 )
 
-            # Create CaseSubstanceRiskMeasurement instances
             for substance_name, severity in assist_risk_severity.items():
-                # Check if the substance exists in the database
-                substance, created = CaseSubstance.objects.get_or_create(
-                    name=substance_name)
-                # Extract score from severity
+                substance, _ = CaseSubstance.objects.get_or_create(name=substance_name)
                 score = int(severity.split('(')[1].split(')')[0])
-                # Create new instance
                 CaseSubstanceRiskMeasurement.objects.create(
                     substance=substance,
                     case_submission=submission_instance,
-                    measurement=0.0,  # Default value
+                    measurement=0.0,
                     risk_flag=severity,
                     total_score=score
                 )
 
-        # Return success response
         return JsonResponse({'message': 'Submission saved successfully'})
 
     except Exception as e:
-        # Log the exception
-        logger.exception("Error occurred while processing submission")
+        logger.exception(f"Error occurred while processing submission: {str(e)}")
+        return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
 
-        # Return error response
-        return JsonResponse({'error': 'Internal Server Error'}, status=500)
 
 
 @csrf_exempt

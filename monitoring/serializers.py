@@ -46,6 +46,7 @@ class UserAgencySerializer(serializers.ModelSerializer):
 class CustomUserSerializer(serializers.ModelSerializer):
     agency_details = UserAgencySerializer()
     active_agency = AgencySerializer()
+    user_role_agency = serializers.CharField(source='agency_details.user_role_agency', read_only=True)
 
     class Meta:
         model = CustomUser
@@ -55,7 +56,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'mob_number', 'father_name', 'mother_name', 'perm_add_village', 
             'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog', 
             'ps_add_dzongkhag', 'is_gyalsung', 'academy_code', 'date_joined', 
-            'role', 'access_level', 'agency_details', 'active_agency'
+            'role', 'access_level', 'agency_details', 'active_agency', 'user_role_agency'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -65,15 +66,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'is_active': {'write_only': True},
         }
 
+
 class ReferredBySerializer(serializers.ModelSerializer):
     active_agency = AgencySerializer()
+    user_role_agency = serializers.CharField(source='agency_details.user_role_agency', read_only=True)
 
     class Meta:
         model = CustomUser
         fields = [
             'id', 'username', 'first_name', 
             'middle_name', 'last_name', 'email', 
-            'mob_number', 'active_agency'
+            'mob_number', 'active_agency', 'user_role_agency'
         ]
         extra_kwargs = {
             'password': {'write_only': True},

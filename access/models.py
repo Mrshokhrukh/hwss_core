@@ -39,6 +39,7 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(username, email, password=password, **extra_fields)
 
+
 class Agency(models.Model):
     id = models.AutoField(primary_key=True)
     agency_code = models.CharField(max_length=255, unique=True)
@@ -50,6 +51,7 @@ class Agency(models.Model):
 
     def __str__(self):
         return self.agency_name
+
 
 class UserAgency(models.Model):
     user = models.OneToOneField(
@@ -71,9 +73,11 @@ class UserAgency(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.agency.agency_name}"
 
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    username = models.CharField(
+        max_length=255, unique=True, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     identity_number = models.CharField(max_length=255, null=True, blank=True)
@@ -89,18 +93,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     mother_name = models.CharField(max_length=255, blank=True, null=True)
     perm_add_village = models.CharField(max_length=255, null=True, blank=True)
     perm_add_gewog = models.CharField(max_length=255, null=True, blank=True)
-    perm_add_dzongkhag = models.CharField(max_length=255, null=True, blank=True)
+    perm_add_dzongkhag = models.CharField(
+        max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(
         upload_to='profile_pictures/', null=True, blank=True)
     active_agency = models.ForeignKey(
-        'Agency', on_delete=models.SET_NULL, null=True, blank=True)
+        Agency, null=True, blank=True, on_delete=models.SET_NULL)
     ps_add_village = models.CharField(max_length=255, blank=True, null=True)
     ps_add_gewog = models.CharField(max_length=255, blank=True, null=True)
     ps_add_dzongkhag = models.CharField(max_length=255, blank=True, null=True)
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
+    is_old_case_user = models.BooleanField(
+        default=False, null=True, blank=True)
 
     ROLE_STUDENT = 'student'
     ROLE_PUBLIC = 'general_public'

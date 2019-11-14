@@ -5,49 +5,61 @@ from .models import (
 )
 
 
-class TestTypeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+class SubmissionInline(admin.TabularInline):
+    model = Submission
+    extra = 0
+    readonly_fields = ('question', 'answer', 'score',
+                       'diagnosis', 'created_at')
+    fields = ('question', 'answer', 'diagnosis',
+              'score', 'substance', 'created_at')
+    show_change_link = True
 
 
-class QuestionSetInline(admin.TabularInline):
-    model = QuestionSet
-    extra = 1
+class SubmissionAdmin(admin.ModelAdmin):
+    list_display = (
+        'user_submission', 'question_set', 'question', 'diagnosis',
+        'substance', 'score', 'created_at'
+    )
+    list_filter = ('diagnosis', 'score', 'created_at', 'substance')
+    search_fields = (
+        'user_submission__user__username',
+        'question', 'diagnosis', 'substance'
+    )
+    readonly_fields = ('created_at',)
+    actions = ['mark_as_high_risk']
+
+    def mark_as_high_risk(self, request, queryset):
+        updated = queryset.update(diagnosis='High Risk')
+        self.message_user(
+            request, f"{updated} submissions were marked as 'High Risk'."
+        )
+    mark_as_high_risk.short_description = "Mark selected diagnosis as 'High Risk'"
 
 
-# Removed SubmissionInline from this part
 class UserSubmissionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test_type', 'created_at',
-                    'rescreened', 'mark_as_safe', 'is_old_case')
+    list_display = (
+        'user', 'test_type', 'created_at', 'rescreened',
+        'mark_as_safe', 'is_old_case', 'get_diagnosis_summary'
+    )
     list_filter = ('test_type', 'created_at', 'rescreened',
                    'mark_as_safe', 'is_old_case')
     search_fields = ('user__username', 'test_type__name')
-    inlines = [QuestionSetInline]  # Removed SubmissionInline from here
     readonly_fields = ('created_at',)
+    inlines = [SubmissionInline]
+
+    def get_diagnosis_summary(self, obj):
+        # Filter out empty diagnosis and remove duplicates
+        diagnosis = obj.submission.values_list('diagnosis', flat=True)
+        diagnosis = list(filter(None, diagnosis))  # Remove empty values
+        return ", ".join(set(diagnosis)) if diagnosis else "No diagnosis"
+    get_diagnosis_summary.short_description = "diagnosis Summary"
 
 
-class LifetimeUserAdmin(admin.ModelAdmin):
-    list_display = ('user', 'user_submission')
-    search_fields = ('user__username',)
-    filter_horizontal = ('substances_used',)
-
-
-class ActiveUserAdmin(admin.ModelAdmin):
-    list_display = ('user', 'user_submission')
-    search_fields = ('user__username',)
-    filter_horizontal = ('substances_used',)
-
-
-class MeasurementAdmin(admin.ModelAdmin):
-    list_display = ('user', 'overall_flag', 'created_at')
-    search_fields = ('user__username',)
-    readonly_fields = ('created_at',)
-
-
-admin.site.register(TestType, TestTypeAdmin)
+admin.site.register(TestType)
 admin.site.register(UserSubmission, UserSubmissionAdmin)
-admin.site.register(LifetimeUser, LifetimeUserAdmin)
-admin.site.register(ActiveUser, ActiveUserAdmin)
-admin.site.register(Measurement, MeasurementAdmin)
+admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(MeasurementSubstance)
 admin.site.register(MeasurementAssist)
+admin.site.register(Measurement)
+admin.site.register(LifetimeUser)
+admin.site.register(ActiveUser)
