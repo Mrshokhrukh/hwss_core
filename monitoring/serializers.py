@@ -2,9 +2,10 @@ from rest_framework import serializers
 
 from access.models import Agency, CustomUser, UserAgency
 from gyalsung_users.models import GyalsungUserProfile
-from screening.models import CaseBasedSubmission, EventBasedSubmission
+from screening.models import CaseBasedSubmission, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventSubstanceRiskMeasurement
 from .models import FinalUserSubmission, Referral, ServiceAndTreatment
 from django.contrib.contenttypes.models import ContentType
+
 
 class FinalUserSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,6 +37,7 @@ class AgencySerializer(serializers.ModelSerializer):
         model = Agency
         fields = '__all__'
 
+
 class UserAgencySerializer(serializers.ModelSerializer):
     agency = AgencySerializer()
 
@@ -43,19 +45,21 @@ class UserAgencySerializer(serializers.ModelSerializer):
         model = UserAgency
         fields = '__all__'
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
     agency_details = UserAgencySerializer()
     active_agency = AgencySerializer()
-    user_role_agency = serializers.CharField(source='agency_details.user_role_agency', read_only=True)
+    user_role_agency = serializers.CharField(
+        source='agency_details.user_role_agency', read_only=True)
 
     class Meta:
         model = CustomUser
         fields = [
-            'id', 'username', 'identity_number', 'nationality', 'first_name', 
-            'middle_name', 'last_name', 'date_of_birth', 'gender', 'email', 
-            'mob_number', 'father_name', 'mother_name', 'perm_add_village', 
-            'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog', 
-            'ps_add_dzongkhag', 'is_gyalsung', 'academy_code', 'date_joined', 
+            'id', 'username', 'identity_number', 'nationality', 'first_name',
+            'middle_name', 'last_name', 'date_of_birth', 'gender', 'email',
+            'mob_number', 'father_name', 'mother_name', 'perm_add_village',
+            'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog',
+            'ps_add_dzongkhag', 'is_gyalsung', 'academy_code', 'date_joined',
             'role', 'access_level', 'agency_details', 'active_agency', 'user_role_agency'
         ]
         extra_kwargs = {
@@ -69,13 +73,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 class ReferredBySerializer(serializers.ModelSerializer):
     active_agency = AgencySerializer()
-    user_role_agency = serializers.CharField(source='agency_details.user_role_agency', read_only=True)
+    user_role_agency = serializers.CharField(
+        source='agency_details.user_role_agency', read_only=True)
 
     class Meta:
         model = CustomUser
         fields = [
-            'id', 'username', 'first_name', 
-            'middle_name', 'last_name', 'email', 
+            'id', 'username', 'first_name',
+            'middle_name', 'last_name', 'email',
             'mob_number', 'active_agency', 'user_role_agency'
         ]
         extra_kwargs = {
@@ -86,26 +91,44 @@ class ReferredBySerializer(serializers.ModelSerializer):
             'is_active': {'write_only': True},
         }
 
-# Serializers for related models (e.g., FinalUserSubmission, EventBasedSubmission, etc.)
+class CaseSubstanceRiskMeasurementSerializer(serializers.ModelSerializer):
+    substance_name = serializers.CharField(source='substance.name')
+
+    class Meta:
+        model = CaseSubstanceRiskMeasurement
+        fields = ['substance_name', 'measurement', 'risk_flag', 'total_score']
+
+
+class EventSubstanceRiskMeasurementSerializer(serializers.ModelSerializer):
+    substance_name = serializers.CharField(source='substance.name')
+
+    class Meta:
+        model = EventSubstanceRiskMeasurement
+        fields = ['substance_name', 'measurement', 'risk_flag', 'total_score']
+
 class FinalUserSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinalUserSubmission
         fields = '__all__'
+
 
 class EventBasedSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventBasedSubmission
         fields = '__all__'
 
+
 class CaseBasedSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseBasedSubmission
         fields = '__all__'
 
+
 class GyalsungUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = GyalsungUserProfile
         fields = '__all__'
+
 
 class ReferralSerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,22 +136,23 @@ class ReferralSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 # Main ServiceAndTreatment Serializer
+
+
 class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    referral_instance = ReferralSerializer() 
+    referral_instance = ReferralSerializer()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        
+
         content_type = ContentType.objects.get_for_id(instance.content_type_id)
         model_class = content_type.model_class()
-        
+
         try:
             assessment_object = model_class.objects.get(id=instance.object_id)
         except model_class.DoesNotExist:
             assessment_object = None
-        
-        # Determine which serializer to use based on the model class
+
         if isinstance(assessment_object, FinalUserSubmission):
             assessment_serializer = FinalUserSubmissionSerializer(assessment_object)
         elif isinstance(assessment_object, EventBasedSubmission):
@@ -145,8 +169,16 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
         else:
             representation['screening_data'] = "Data not available"
 
-        representation.pop('content_type')
-        representation.pop('object_id')
+        # Include substance risk measurements
+        if isinstance(assessment_object, CaseBasedSubmission):
+            case_substances = CaseSubstanceRiskMeasurement.objects.filter(case_submission=assessment_object)
+            representation['case_substance_risks'] = CaseSubstanceRiskMeasurementSerializer(case_substances, many=True).data
+        elif isinstance(assessment_object, EventBasedSubmission):
+            event_substances = EventSubstanceRiskMeasurement.objects.filter(event_submission=assessment_object)
+            representation['event_substance_risks'] = EventSubstanceRiskMeasurementSerializer(event_substances, many=True).data
+
+        representation.pop('content_type', None)
+        representation.pop('object_id', None)
 
         return representation
 
