@@ -130,11 +130,20 @@ class EventScreening(models.Model):
     remarks = models.TextField(null=True, blank=True)
     rejection_reason = models.TextField(null=True, blank=True)
     registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
-    selected_tool = models.CharField(max_length=100, null=True, blank=True)  # Add selected_tool field
+    selected_tool = models.CharField(max_length=100, null=True, blank=True)
     users = models.ManyToManyField(CustomUser, related_name='events', blank=True)
 
+    # Add the created_by field
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='event_screenings',
+        null=True,  # Set to True if you have existing data
+        blank=True
+    )
+
     def save(self, *args, **kwargs):
-        if not self.id: 
+        if not self.id:
             self.registration_lockout_end_time = timezone.now() + timezone.timedelta(days=self.duration)
 
         current_date = timezone.now().date()

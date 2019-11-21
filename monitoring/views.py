@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from access.models import Agency, CustomUser, UserAgency
 from monitoring.serializers import FinalUserSubmissionSerializer
 from screening.models import CaseBasedSubmission, CaseScreening, EventBasedSubmission, EventScreening
-from .models import FinalUserSubmission, Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
+from .models import FinalUserSubmission, Notification, Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import json
@@ -28,6 +28,8 @@ from django.contrib.contenttypes.models import ContentType
 from .serializers import ReferralSerializer, ServiceAndTreatmentSerializer
 from django.utils.decorators import method_decorator
 import logging
+from django.core.mail import send_mail
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -87,17 +89,17 @@ def submit_rescreening(request):
                 defaults={
                     'gad_data': gad_data_json,
                     'gad_score': gad_score,
-                    'gad_interpretation': gad_interpretation,  
+                    'gad_interpretation': gad_interpretation,
                     'phq_data': phq_data_json,
                     'phq_score': phq_score,
-                    'phq_interpretation': phq_interpretation,  
+                    'phq_interpretation': phq_interpretation,
                     'ace_data': ace_data_json,
                     'ace_score': ace_score,
-                    'ace_interpretation': ace_interpretation,  
+                    'ace_interpretation': ace_interpretation,
                     'school_env_data': request.POST.get('schoolEnvData', '{}'),
                     'rescreened': True,
-                    'screened_by': rescreened_by_user,  
-                    'rescreening_date': timezone.now() 
+                    'screened_by': rescreened_by_user,
+                    'rescreening_date': timezone.now()
                 }
             )
 
@@ -480,43 +482,44 @@ def update_referral_status(request):
                 return JsonResponse({'error': 'No referral data provided'}, status=400)
 
             referred_by_id = refer_data.get('referred_by')
-            referred_to_name = refer_data.get('referred_to_name')
+            referred_to_info = refer_data.get('referred_to_name')  # Changed to referred_to_info to reflect it is a dictionary
             user_id = refer_data.get('user')
 
-            if not all([referred_by_id, referred_to_name, user_id]):
+            if not all([referred_by_id, referred_to_info, user_id]):
                 return JsonResponse({
                     'error': f'Incomplete data provided. Got: referred_by={referred_by_id}, '
-                            f'referred_to_name={referred_to_name}, user_id={user_id}'
+                             f'referred_to_name={referred_to_info}, user_id={user_id}'
                 }, status=400)
 
-            try:
-                referred_by = CustomUser.objects.get(id=referred_by_id)
-            except CustomUser.DoesNotExist:
-                return JsonResponse({'error': f'Referring user with ID {referred_by_id} does not exist'}, status=400)
+            referred_by = CustomUser.objects.get(id=referred_by_id)
+
+            # Extract `id` or other relevant fields from the referred_to_info dictionary
+            referred_to_id = referred_to_info.get('id')
+            referred_to_full_name = referred_to_info.get('full_name')
+
+            if not referred_to_id:
+                return JsonResponse({'error': 'Referred to user ID is missing in referred_to_name.'}, status=400)
+
+            referred_to = CustomUser.objects.get(id=referred_to_id)
 
             with transaction.atomic():
                 service_and_treatment = ServiceAndTreatment.objects.filter(user_id=user_id).first()
-                
                 if not service_and_treatment:
-                    return JsonResponse({
-                        'error': f'No service and treatment record found for user ID {user_id}. '
-                        'Please make sure the user ID is correct.'
-                    }, status=404)
+                    return JsonResponse({'error': f'No service and treatment record found for user ID {user_id}.'}, status=404)
 
-                # Set content_type for the generic foreign key
                 content_type = ContentType.objects.get_for_model(ServiceAndTreatment)
 
                 referral, created = Referral.objects.update_or_create(
                     user_id=user_id,
                     defaults={
                         'referred_by': referred_by,
-                        'referred_to': None,
-                        'referred_to_name': referred_to_name,
+                        'referred_to': referred_to,
+                        'referred_to_name': referred_to_full_name,  # Save full_name for reference
                         'referral_status': 'Awaiting',
                         'date': timezone.now(),
                         'service_and_treatment': service_and_treatment,
-                        'content_type': content_type,  # Set content type
-                        'object_id': service_and_treatment.id  # Set object ID to the service record ID
+                        'content_type': content_type,
+                        'object_id': service_and_treatment.id
                     }
                 )
 
@@ -525,10 +528,24 @@ def update_referral_status(request):
                 service_and_treatment.referral_instance = referral
                 service_and_treatment.save()
 
-                return JsonResponse({
-                    'message': 'Referral saved successfully!',
-                    'referral_id': referral.id
-                }, status=200)
+                # Send email to the referred_to user
+                send_mail(
+                    subject="New Referral Notification",
+                    message=f"Dear {referred_to_full_name},\n\n"
+                            f"A new case has been referred by {referred_by.first_name} {referred_by.last_name} to you.\n\n"
+                            f"Please log in to the system to review the referral.",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[referred_to.email],
+                    fail_silently=False,
+                )
+
+                # Create notification for referred_to user
+                Notification.objects.create(
+                    notification_for=referred_to,
+                    notification=f"A new referral has been assigned to you by {referred_by.first_name} {referred_by.last_name}."
+                )
+
+                return JsonResponse({'message': 'Referral saved successfully!', 'referral_id': referral.id}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
@@ -646,48 +663,41 @@ def get_user_monitoring_details(request):
 
 @csrf_exempt
 def accept_referral(request):
-    logger.info("Accept referral endpoint called.")
-
     if request.method == 'POST':
-        logger.debug("Request method is POST.")
-
         data = json.loads(request.body)
         referred_to_user_id = data.get('referredToUserId')
         patient_id = data.get('patientId')
 
-        logger.debug(
-            f"referredToUserId: {referred_to_user_id}, patientId: {patient_id}")
-
-        # Get the referred counselor and patient
         referred_counselor = get_object_or_404(
             CustomUser, id=referred_to_user_id)
         referred_patient = get_object_or_404(CustomUser, id=patient_id)
 
-        logger.debug(
-            f"Referred counselor: {referred_counselor}, Referred patient: {referred_patient}")
-
         try:
-            # Check if a referral exists
             referral = Referral.objects.filter(
                 referred_to=referred_counselor, user=referred_patient).first()
-
-            logger.debug(f"Referral query result: {referral}")
-
             if referral:
-                # Update referral status to 'Accepted'
                 referral.referral_status = 'Accepted'
                 referral.save()
-                logger.info("Referral status updated to 'Accepted'.")
-                return JsonResponse({'message': 'Referral accepted successfully.'})
+
+                # Send email to referred_by user
+                subject = 'Referral Accepted'
+                message = f'Your referral for {referred_patient.first_name} {referred_patient.last_name} has been accepted.'
+                recipient_list = [referral.referred_by.email]
+                send_mail(subject, message,
+                          settings.DEFAULT_FROM_EMAIL, recipient_list)
+
+                # Create notification for referred_by user
+                Notification.objects.create(
+                    notification_for=referral.referred_by,
+                    notification=f"Your referral for {referred_patient.first_name} {referred_patient.last_name} has been accepted."
+                )
+
+                return JsonResponse({'message': 'Referral accepted and notification created.'})
             else:
-                logger.error("No referral found matching the criteria.")
                 return JsonResponse({'error': 'No referral found matching the criteria.'}, status=404)
         except Exception as e:
-            logger.exception("An error occurred while accepting the referral.")
             return JsonResponse({'error': str(e)}, status=500)
-    else:
-        logger.error("Invalid request method.")
-        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+    return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 @csrf_exempt
@@ -698,7 +708,6 @@ def reject_referral(request):
         patient_id = data.get('patientId')
         rejection_reason = data.get('reason')
 
-        # Get the referred counselor and patient
         referred_counselor = get_object_or_404(
             CustomUser, id=referred_to_user_id)
         referred_patient = get_object_or_404(CustomUser, id=patient_id)
@@ -706,18 +715,30 @@ def reject_referral(request):
         try:
             referral = Referral.objects.get(
                 referred_to=referred_counselor, user=referred_patient)
-
             if referral:
                 referral.referral_status = 'Rejected'
                 referral.referral_remarks = rejection_reason
                 referral.save()
-                return JsonResponse({'message': 'Referral rejected successfully.'})
+
+                # Send email to referred_by user
+                subject = 'Referral Rejected'
+                message = f'Your referral for {referred_patient.first_name} {referred_patient.last_name} has been rejected.\nReason: {rejection_reason}'
+                recipient_list = [referral.referred_by.email]
+                send_mail(subject, message,
+                          settings.DEFAULT_FROM_EMAIL, recipient_list)
+
+                # Create notification for referred_by user
+                Notification.objects.create(
+                    notification_for=referral.referred_by,
+                    notification=f"Your referral for {referred_patient.first_name} {referred_patient.last_name} has been rejected. Reason: {rejection_reason}."
+                )
+
+                return JsonResponse({'message': 'Referral rejected and notification created.'})
             else:
                 return JsonResponse({'error': 'No referral found matching the criteria.'}, status=404)
         except Referral.DoesNotExist:
             return JsonResponse({'error': 'Referral does not exist.'}, status=404)
-    else:
-        return JsonResponse({'error': 'Invalid request method.'}, status=400)
+    return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 def check_and_create_final_submission(user):
@@ -873,7 +894,8 @@ def create_service_and_treatments(request):
     try:
         with transaction.atomic():
             case_based_submissions = CaseBasedSubmission.objects.all()
-            case_content_type = ContentType.objects.get_for_model(CaseBasedSubmission)
+            case_content_type = ContentType.objects.get_for_model(
+                CaseBasedSubmission)
 
             for case_submission in case_based_submissions:
                 if not ServiceAndTreatment.objects.filter(content_type=case_content_type, object_id=case_submission.id).exists():
@@ -889,7 +911,8 @@ def create_service_and_treatments(request):
                     )
 
             event_based_submissions = EventBasedSubmission.objects.all()
-            event_content_type = ContentType.objects.get_for_model(EventBasedSubmission)
+            event_content_type = ContentType.objects.get_for_model(
+                EventBasedSubmission)
 
             for event_submission in event_based_submissions:
                 if not ServiceAndTreatment.objects.filter(content_type=event_content_type, object_id=event_submission.id).exists():
@@ -905,7 +928,8 @@ def create_service_and_treatments(request):
                     )
 
             final_user_submissions = FinalUserSubmission.objects.all()
-            final_content_type = ContentType.objects.get_for_model(FinalUserSubmission)
+            final_content_type = ContentType.objects.get_for_model(
+                FinalUserSubmission)
 
             for final_submission in final_user_submissions:
                 if not ServiceAndTreatment.objects.filter(content_type=final_content_type, object_id=final_submission.id).exists():
@@ -921,7 +945,8 @@ def create_service_and_treatments(request):
                     )
 
             gyalsung_profiles = GyalsungUserProfile.objects.all()
-            gyalsung_content_type = ContentType.objects.get_for_model(GyalsungUserProfile)
+            gyalsung_content_type = ContentType.objects.get_for_model(
+                GyalsungUserProfile)
 
             for gyalsung_profile in gyalsung_profiles:
                 if not ServiceAndTreatment.objects.filter(content_type=gyalsung_content_type, object_id=gyalsung_profile.id).exists():
@@ -940,3 +965,40 @@ def create_service_and_treatments(request):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+@csrf_exempt
+def get_notifications(request, user_id):
+    if request.method == 'GET':
+        try:
+            notifications = Notification.objects.filter(notification_for__id=user_id).values(
+                'id', 'notification', 'notification_status', 'created_at'
+            )
+
+            return JsonResponse({'notifications': list(notifications)}, status=200)
+
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+
+@csrf_exempt
+def mark_notification_as_read(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            notification_id = data.get('notification_id')
+
+            if not notification_id:
+                return JsonResponse({'error': 'Notification ID is required'}, status=400)
+
+            notification = get_object_or_404(Notification, id=notification_id)
+            notification.mark_as_read()
+
+            return JsonResponse({'message': 'Notification marked as read'}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)

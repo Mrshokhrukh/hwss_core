@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import JSONField
+from django.utils.timezone import now
 
 User = CustomUser
 
@@ -242,3 +243,37 @@ class ActiveSubstanceUser(models.Model):
 
     def __str__(self):
         return f"Active Substance Use for {self.user}"
+    
+
+class Notification(models.Model):
+    NOTIFICATION_STATUS_CHOICES = [
+        ('unread', 'Unread'),
+        ('read', 'Read'),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    notification_for = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        help_text="The user for whom this notification is intended."
+    )
+    notification = models.TextField(help_text="The notification message.")
+    notification_status = models.CharField(
+        max_length=10,
+        choices=NOTIFICATION_STATUS_CHOICES,
+        default='unread',
+        help_text="The status of the notification (unread/read)."
+    )
+    created_at = models.DateTimeField(default=now, help_text="The time when the notification was created.")
+    updated_at = models.DateTimeField(auto_now=True, help_text="The last time the notification was updated.")
+
+    def mark_as_read(self):
+        self.notification_status = 'read'
+        self.save()
+
+    def __str__(self):
+        return f"Notification for {self.notification_for.email}: {self.notification[:50]}"
+
+    class Meta:
+        ordering = ['-created_at']

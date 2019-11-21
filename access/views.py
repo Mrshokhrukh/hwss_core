@@ -151,7 +151,8 @@ def fetch_citizen_details(request, cid):
             f'{api_url}{cid}', headers=headers)
 
         if response.status_code == 200:
-            citizen_detail = response.json().get('citizenDetailsResponse', {}).get('citizenDetail', [None])[0]
+            citizen_detail = response.json().get('citizenDetailsResponse', {}
+                                                 ).get('citizenDetail', [None])[0]
 
             mapped_user_data = map_user_data(citizen_detail)
 
@@ -462,7 +463,8 @@ class CustomTokenAuthentication(APIView):
 
         # Check if token exists
         if not auth_token:
-            raise AuthenticationFailed('Invalid token header. No credentials provided.')
+            raise AuthenticationFailed(
+                'Invalid token header. No credentials provided.')
 
         # Split the token type and key
         try:
@@ -472,7 +474,8 @@ class CustomTokenAuthentication(APIView):
 
         # Check if token type is valid
         if token_type.lower() != 'token':
-            raise AuthenticationFailed('Invalid token type. Only "Token" authentication is supported.')
+            raise AuthenticationFailed(
+                'Invalid token type. Only "Token" authentication is supported.')
 
         # Retrieve token from the database
         try:
@@ -508,7 +511,7 @@ def register_user(request):
             email = user_data.get('email')
             if not email:
                 return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             # Create the user
             user = CustomUser.objects.create_user(
                 username=user_data.get('username'),
@@ -566,42 +569,47 @@ def registerCounselorCaseUser(request):
 
         # Begin a transaction to ensure atomicity
         with transaction.atomic():
-
-            # Get clientFullName from user_data, default to empty string if not present
             agency_code = agency_data.get('agency_code')
             agency, created = Agency.objects.get_or_create(
                 agency_code=agency_code, defaults=agency_data)
 
-            full_name = user_data.get('clientFullName', '')
+            full_name = user_data.get('clientFullName', '').strip()
 
             # Split the full name into first, middle, and last names
             if full_name:
-                name_parts = full_name.split()
+                name_parts = full_name.strip().split()
+                # Remove any empty strings
+                name_parts = [part for part in name_parts if part]
                 if len(name_parts) == 1:
-                    first_name, middle_names, last_name = name_parts[0], '', ''
+                    first_name = name_parts[0]
+                    middle_names = ''
+                    # Initial of first name
+                    last_name = name_parts[0][0] if name_parts[0] else ''
                 elif len(name_parts) == 2:
                     first_name, last_name = name_parts
                     middle_names = ''
                 else:
-                    first_name, *middle_names, last_name = name_parts
+                    first_name = name_parts[0]
+                    last_name = name_parts[-1]
+                    middle_names = ' '.join(name_parts[1:-1])
             else:
                 first_name, middle_names, last_name = '', '', ''
 
             existing_user = CustomUser.objects.filter(
                 identity_number=user_data.get('CID')).first()
 
-
             if existing_user:
                 # User exists, proceed with existing data or update it if necessary
                 existing_user.username = user_data.get('username')
                 existing_user.email = user_data.get('email')
                 existing_user.first_name = first_name
-                existing_user.middle_name = ' '.join(middle_names)
+                existing_user.middle_name = middle_names
                 existing_user.last_name = last_name
                 existing_user.date_of_birth = user_data.get('DOB')
                 existing_user.gender = user_data.get('gender')
                 existing_user.mob_number = user_data.get('phoneNumber')
-                existing_user.perm_add_village = user_data.get('currentAddress')
+                existing_user.perm_add_village = user_data.get(
+                    'currentAddress')
                 existing_user.perm_add_gewog = user_data.get('currentAddress')
                 existing_user.perm_add_dzongkhag = user_data.get('dzongkhag')
                 existing_user.nationality = 'Bhutanese'
@@ -615,10 +623,10 @@ def registerCounselorCaseUser(request):
                 existing_user.save()
 
                 # Update other associated data if needed
-                # For example, update CaseScreening object
-                case_screening = CaseScreening.objects.filter(user=existing_user).first()
+                case_screening = CaseScreening.objects.filter(
+                    user=existing_user).first()
                 if case_screening:
-                    case_screening.case_name = 'Case Daily Screening'
+                    case_screening.case_name = user_data.get('caseName')
                     case_screening.purpose = user_data.get('purpose')
                     case_screening.dzongkhag = user_data.get('dzongkhag')
                     case_screening.counselor = user_data.get('counselorName')
@@ -630,12 +638,13 @@ def registerCounselorCaseUser(request):
                 agency_code = agency_data.get('agency_code')
                 agency, _ = Agency.objects.get_or_create(
                     agency_code=agency_code, defaults=agency_data)
+
                 user_agency_data['agency'] = agency
                 user_agency, _ = UserAgency.objects.get_or_create(
                     user=existing_user, defaults=user_agency_data)
 
                 response_data = {'userId': existing_user.id,
-                                'message': 'Counselor user updated successfully.'}
+                                 'message': 'Counselor user updated successfully.'}
                 return Response(response_data, status=status.HTTP_200_OK)
             else:
                 # User does not exist, proceed with creating a new user
@@ -644,7 +653,7 @@ def registerCounselorCaseUser(request):
                     email=user_data.get('email'),
                     identity_number=user_data.get('CID'),
                     first_name=first_name,
-                    middle_name=' '.join(middle_names),
+                    middle_name=middle_names,
                     last_name=last_name,
                     date_of_birth=user_data.get('DOB'),
                     gender=user_data.get('gender'),
@@ -676,7 +685,7 @@ def registerCounselorCaseUser(request):
                 UserAgency.objects.create(**user_agency_data)
 
                 response_data = {'userId': user.id,
-                                'message': 'Counselor user registered successfully.'}
+                                 'message': 'Counselor user registered successfully.'}
                 return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -687,7 +696,6 @@ def registerCounselorCaseUser(request):
         print(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
 
 
 @api_view(['POST'])
@@ -713,14 +721,21 @@ def registerCounselorEventUser(request):
 
             # Split the full name into first, middle, and last names
             if full_name:
-                name_parts = full_name.split()
+                name_parts = full_name.strip().split()
+                # Remove any empty strings
+                name_parts = [part for part in name_parts if part]
                 if len(name_parts) == 1:
-                    first_name, middle_names, last_name = name_parts[0], '', ''
+                    first_name = name_parts[0]
+                    middle_names = ''
+                    # Initial of first name
+                    last_name = name_parts[0][0] if name_parts[0] else ''
                 elif len(name_parts) == 2:
                     first_name, last_name = name_parts
                     middle_names = ''
                 else:
-                    first_name, *middle_names, last_name = name_parts
+                    first_name = name_parts[0]
+                    last_name = name_parts[-1]
+                    middle_names = ' '.join(name_parts[1:-1])
             else:
                 first_name, middle_names, last_name = '', '', ''
 
@@ -737,7 +752,8 @@ def registerCounselorEventUser(request):
                 existing_user.date_of_birth = user_data.get('DOB')
                 existing_user.gender = user_data.get('gender')
                 existing_user.mob_number = user_data.get('phoneNumber')
-                existing_user.perm_add_village = user_data.get('currentAddress')
+                existing_user.perm_add_village = user_data.get(
+                    'currentAddress')
                 existing_user.perm_add_gewog = user_data.get('currentAddress')
                 existing_user.perm_add_dzongkhag = user_data.get('dzongkhag')
                 existing_user.nationality = 'Bhutanese'
@@ -745,7 +761,7 @@ def registerCounselorEventUser(request):
                 existing_user.ps_add_gewog = user_data.get('currentAddress')
                 existing_user.ps_add_dzongkhag = user_data.get('dzongkhag')
                 existing_user.role = 'general_public'
-                existing_user.active_agency=agency
+                existing_user.active_agency = agency
 
                 # Save the updated user
                 existing_user.save()
@@ -753,7 +769,8 @@ def registerCounselorEventUser(request):
                 # Update other associated data if needed
                 # For example, update EventScreening object
                 counselor_name = user_data.get('counselorName')
-                event_screening = EventScreening.objects.filter(counselor=counselor_name, approval_status='approved').first()
+                event_screening = EventScreening.objects.filter(
+                    counselor=counselor_name, approval_status='approved').first()
                 if event_screening:
                     # Add the existing user to the event's users
                     event_screening.users.add(existing_user)
@@ -767,7 +784,7 @@ def registerCounselorEventUser(request):
                     user=existing_user, defaults=user_agency_data)
 
                 response_data = {'userId': existing_user.id,
-                                'message': 'Counselor user updated successfully.'}
+                                 'message': 'Counselor user updated successfully.'}
                 return Response(response_data, status=status.HTTP_200_OK)
             else:
                 # User does not exist, proceed with creating a new user
@@ -800,15 +817,16 @@ def registerCounselorEventUser(request):
 
                 # Retrieve the event based on counselor's name and approval status
                 counselor_name = user_data.get('counselorName')
-                event_screening = EventScreening.objects.filter(counselor=counselor_name, approval_status='approved').first()
-                
+                event_screening = EventScreening.objects.filter(
+                    counselor=counselor_name, approval_status='approved').first()
+
                 # Create the EventScreening object if event exists
                 if event_screening:
                     # Add the newly created user to the event's users
                     event_screening.users.add(user)
 
                 response_data = {'userId': user.id,
-                                'message': 'Counselor user registered successfully.'}
+                                 'message': 'Counselor user registered successfully.'}
                 return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -819,6 +837,7 @@ def registerCounselorEventUser(request):
         print(f"Response data: {response_data}")
 
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class UserCreate(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -1065,21 +1084,21 @@ class GetUserDetailsView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
-    
+
     def generate_random_password(self, length=8):
         characters = string.ascii_letters + string.digits
         return ''.join(random.choice(characters) for _ in range(length))
-    
+
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         User = get_user_model()
         user = User.objects.filter(email=email).first()
-        
+
         if user:
             new_password = self.generate_random_password()
             user.set_password(new_password)
             user.save()
-            
+
             # Create EmailMessage instance instead of using send_mail
             email_message = EmailMessage(
                 subject='[PEMA System] Your New One-Time Password',
@@ -1097,17 +1116,18 @@ class PasswordResetRequestView(APIView):
                 from_email='PEMA System <noreply@thepemasystem.gov.bt>',
                 to=[email],
             )
-            
+
             # Set additional headers if needed
             email_message.extra_headers = {
                 'From': 'PEMA System <noreply@thepemasystem.gov.bt>',
                 'Reply-To': 'support@thepemasystem.gov.bt'
             }
-            
+
             email_message.send(fail_silently=False)
-            
+
             return Response({"message": "A new temporary password has been sent to your provided email address. Please check your inbox or junk mail to login to your account with the new teamporary password."}, status=status.HTTP_200_OK)
         return Response({"error": "Email not found."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class PasswordResetView(APIView):
     permission_classes = [AllowAny]
@@ -1290,18 +1310,18 @@ def update_user_info(request):
         # Fetch nested data for user, agency, and userAgency
         user_data = request.data.get('user', {})
         user_agency_data = request.data.get('userAgency', {})
-        
+
         # Log the extracted data
         logger.debug(f"User data to update: {user_data}")
         logger.debug(f"User agency data to update: {user_agency_data}")
 
         # Update the user details
         user_fields = [
-            'first_name', 'last_name', 'email', 'mob_number', 
-            'father_name', 'mother_name', 
+            'first_name', 'last_name', 'email', 'mob_number',
+            'father_name', 'mother_name',
             'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'
         ]
-        
+
         for field in user_fields:
             new_value = user_data.get(field)
             if new_value is not None:  # Update only if a new value is provided
@@ -1316,7 +1336,7 @@ def update_user_info(request):
         user_agency = getattr(user, 'agency_details', None)
         if user_agency:
             user_agency_fields = [
-                'parent_occupation', 'parent_status', 'guardian_name', 
+                'parent_occupation', 'parent_status', 'guardian_name',
                 'guardian_occupation', 'current_living_with'
             ]
             for field in user_agency_fields:
@@ -1337,7 +1357,6 @@ def update_user_info(request):
 
         # Return error response
         return Response({'message': 'Failed to update user details. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 @api_view(['POST'])
@@ -1386,11 +1405,13 @@ def get_referral_counselors(request):
         for user in users:
             # Check if the middle name is None and replace it with an empty string
             middle_name = user.middle_name if user.middle_name else ''
-            
+
             if user.active_agency:
-                users_list.append({'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}", 'active_agency': user.active_agency.agency_name})
+                users_list.append({'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}",
+                                  'active_agency': user.active_agency.agency_name})
             else:
-                users_list.append({'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}", 'active_agency': ''})
+                users_list.append(
+                    {'id': user.id, 'full_name': f"{user.first_name} {middle_name} {user.last_name}", 'active_agency': ''})
 
         # Return the list of users as JSON response
         return JsonResponse({'data': users_list})
@@ -1398,7 +1419,6 @@ def get_referral_counselors(request):
     else:
         return JsonResponse({'error': 'Only GET requests are allowed'})
 
-    
 
 class LoginGyalsung(APIView):
     permission_classes = [permissions.AllowAny]
@@ -1410,20 +1430,24 @@ class LoginGyalsung(APIView):
 
             # Decoding base64 encoded app_key and app_secret
             app_key_decoded = base64.b64decode(app_key_encoded).decode('utf-8')
-            app_secret_decoded = base64.b64decode(app_secret_encoded).decode('utf-8')
+            app_secret_decoded = base64.b64decode(
+                app_secret_encoded).decode('utf-8')
 
-            logger.info('Login request received - Username: %s', app_key_decoded)
+            logger.info('Login request received - Username: %s',
+                        app_key_decoded)
 
             # Check if the decoded app_key and app_secret match the predefined values
             if app_key_decoded == 'TheGyalsung' and app_secret_decoded == 'Gyalsung4Hwss@2024':
                 # Assuming CustomUser is your custom user model
-                user = authenticate(username=app_key_decoded, password=app_secret_decoded)
+                user = authenticate(username=app_key_decoded,
+                                    password=app_secret_decoded)
 
                 if user is not None:
                     token, created = Token.objects.get_or_create(user=user)
                     return Response({"token": token.key}, status=status.HTTP_200_OK)
                 else:
-                    logger.warning('Authentication failed for username: %s', app_key_decoded)
+                    logger.warning(
+                        'Authentication failed for username: %s', app_key_decoded)
                     return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 logger.warning('Invalid app_key or app_secret provided')
@@ -1432,7 +1456,7 @@ class LoginGyalsung(APIView):
         except Exception as e:
             logger.error('Exception during login: %s', str(e))
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 
 @api_view(['POST'])
 @csrf_exempt
@@ -1446,7 +1470,8 @@ def check_email_cid(request):
         return JsonResponse({'error': 'Email and CID are required.'}, status=400)
 
     # Check if email or CID exists
-    user_exists = CustomUser.objects.filter(Q(email=email) | Q(identity_number=cid)).exists()
+    user_exists = CustomUser.objects.filter(
+        Q(email=email) | Q(identity_number=cid)).exists()
 
     if user_exists:
         return JsonResponse({'exists': True, 'message': 'Email or CID already exists.'}, status=200)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    ActiveSubstanceUser, LifeTimeSubstanceUser, ServiceAndTreatment, 
+    ActiveSubstanceUser, LifeTimeSubstanceUser, Notification, ServiceAndTreatment, 
     ServiceAndTreatmentHistory, Referral, Substance, Rescreening, 
     SubstanceRiskMeasurement, FinalUserSubmission
 )
@@ -82,3 +82,26 @@ class ActiveSubstanceUserAdmin(admin.ModelAdmin):
     def substances_display(self, obj):
         return ', '.join(obj.substances.keys()) if obj.substances else "No substances"
     substances_display.short_description = 'Substances Used'
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'notification_for', 'notification', 'notification_status', 'created_at', 'updated_at')
+    list_filter = ('notification_status', 'created_at')
+    search_fields = ('notification_for__email', 'notification', 'notification_for__first_name', 'notification_for__last_name')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20
+
+    fieldsets = (
+        (None, {
+            'fields': ('notification_for', 'notification', 'notification_status')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def get_queryset(self, request):
+        # Customize queryset to include related user fields for efficient search
+        return super().get_queryset(request).select_related('notification_for')

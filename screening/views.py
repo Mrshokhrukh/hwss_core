@@ -1,6 +1,7 @@
 from datetime import date, datetime
 import json
 import logging
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +10,7 @@ from django.db import transaction
 from access.models import CustomUser
 from django.utils.decorators import method_decorator
 from measurement.models import UserSubmission
+from monitoring.models import Notification
 from .models import CaseBasedSubmission, CaseScreening, CaseSubstance, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstance, EventSubstanceRiskMeasurement
 from django.utils import timezone
 from django.db.models import Prefetch
@@ -16,9 +18,10 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .serializers import EventBasedSubmissionSerializer, CaseBasedSubmissionSerializer
-
+from django.core.mail import send_mail
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from django.core.mail import EmailMessage
 
 logger = logging.getLogger(__name__)
 
@@ -27,20 +30,19 @@ logger = logging.getLogger(__name__)
 @require_POST
 def create_event_screening(request):
     try:
-        # Log the incoming request
-        logger.info(f"Received request: {request.method} {request.path}")
-        logger.debug(f"Request body: {request.body}")
-
         # Assuming the JSON data is passed in the request body
         data = json.loads(request.body)
 
         # Validate required fields
         required_fields = ['event_name', 'location', 'start_date',
-                           'end_date', 'duration', 'counselor', 'selected_tool']
+                           'end_date', 'duration', 'created_by', 'selected_tool']
         for field in required_fields:
             if field not in data:
                 logger.error(f"Missing required field: {field}")
                 return JsonResponse({'error': f'Missing required field: {field}'}, status=400)
+
+        # Fetch the counselor (creator) user
+        created_by_user = CustomUser.objects.get(id=data['created_by'])
 
         # Create EventScreening object
         event_screening = EventScreening(
@@ -51,7 +53,8 @@ def create_event_screening(request):
             end_date=data['end_date'],
             duration=data['duration'],
             counselor=data['counselor'],
-            selected_tool=data['selected_tool']  # Include selected_tool
+            selected_tool=data['selected_tool'],
+            created_by=created_by_user  # Assign the created_by user
         )
 
         # Convert end_date to datetime.date object
@@ -62,7 +65,44 @@ def create_event_screening(request):
         event_screening.save()
         logger.info("Event screening created successfully")
 
-        return JsonResponse({'success': 'Event screening created successfully'}, status=201)
+        # Fetch all users with the role `mh_admin`
+        mh_admins = CustomUser.objects.filter(role='mh_admin', is_active=True)
+
+        # Notify each `mh_admin` via email and create notifications
+        subject = f"New Event Screening Created: {event_screening.event_name}"
+        message = (
+            f"Dear Admin,\n\n"
+            f"A new event screening has been created by {created_by_user.first_name} {created_by_user.last_name}.\n\n"
+            f"Event Details:\n"
+            f"Name: {event_screening.event_name}\n"
+            f"Location: {event_screening.location}\n"
+            f"Start Date: {event_screening.start_date}\n"
+            f"End Date: {event_screening.end_date}\n"
+            f"Duration: {event_screening.duration} days\n"
+            f"\nPlease log in to the system to view more details."
+        )
+        from_email = settings.DEFAULT_FROM_EMAIL
+
+        for admin in mh_admins:
+            # Send email
+            send_mail(
+                subject,
+                message,
+                from_email,
+                [admin.email],
+                fail_silently=False,
+            )
+
+            # Create notification
+            Notification.objects.create(
+                notification_for=admin,
+                notification=(
+                    f"A new event screening '{event_screening.event_name}' has been created by {created_by_user.first_name} {created_by_user.last_name}. "
+                    "Please review the details in the system."
+                )
+            )
+
+        return JsonResponse({'success': 'Event screening created and notifications sent successfully'}, status=201)
 
     except json.JSONDecodeError:
         logger.error("Invalid JSON data")
@@ -74,11 +114,14 @@ def create_event_screening(request):
 
 @csrf_exempt
 @permission_classes([AllowAny])
-def get_counselor_info(request, counselor_name):
+def get_counselor_info(request, counselor_id):
     try:
+        # Get the counselor (user)
+        counselor_user = CustomUser.objects.get(id=counselor_id)
+
         # Get the last event for the counselor
         latest_event = EventScreening.objects.filter(
-            counselor=counselor_name).last()
+            created_by=counselor_user).last()
 
         if not latest_event:
             return JsonResponse({'message': 'Counselor information not available'}, status=200)
@@ -118,27 +161,34 @@ def submit_case_screening(request):
             gad_data = json.loads(request.POST.get('gadData', '{}'))
             phq_data = json.loads(request.POST.get('phqData', '{}'))
             ace_data = json.loads(request.POST.get('aceData', '{}'))
-            assist_risk_severity = json.loads(request.POST.get('assistRiskSeverity', '{}'))
-            school_env_data = json.loads(request.POST.get('schoolEnvData', '{}'))
+            assist_risk_severity = json.loads(
+                request.POST.get('assistRiskSeverity', '{}'))
+            school_env_data = json.loads(
+                request.POST.get('schoolEnvData', '{}'))
 
             user = CustomUser.objects.get(pk=user_id)
 
-            latest_case_screening = user.case_screenings.order_by('-date').first()
+            latest_case_screening = user.case_screenings.order_by(
+                '-date').first()
             if not latest_case_screening:
                 # Optionally create a new case screening if none exists
-                latest_case_screening = CaseScreening.objects.create(user=user, date=timezone.now())
+                latest_case_screening = CaseScreening.objects.create(
+                    user=user, date=timezone.now())
 
             submission_instance = latest_case_screening.case_based_submissions.first()
             if submission_instance:
                 submission_instance.gad_data = gad_data.get('responses', [])
                 submission_instance.gad_score = gad_data.get('totalScore')
-                submission_instance.gad_interpretation = gad_data.get('interpretation')
+                submission_instance.gad_interpretation = gad_data.get(
+                    'interpretation')
                 submission_instance.phq_data = phq_data.get('responses', [])
                 submission_instance.phq_score = phq_data.get('totalScore')
-                submission_instance.phq_interpretation = phq_data.get('interpretation')
+                submission_instance.phq_interpretation = phq_data.get(
+                    'interpretation')
                 submission_instance.ace_data = ace_data.get('responses', [])
                 submission_instance.ace_score = ace_data.get('totalScore')
-                submission_instance.ace_interpretation = ace_data.get('interpretation')
+                submission_instance.ace_interpretation = ace_data.get(
+                    'interpretation')
                 submission_instance.school_env_data = school_env_data
                 submission_instance.save()
             else:
@@ -158,7 +208,8 @@ def submit_case_screening(request):
                 )
 
             for substance_name, severity in assist_risk_severity.items():
-                substance, _ = CaseSubstance.objects.get_or_create(name=substance_name)
+                substance, _ = CaseSubstance.objects.get_or_create(
+                    name=substance_name)
                 score = int(severity.split('(')[1].split(')')[0])
                 CaseSubstanceRiskMeasurement.objects.create(
                     substance=substance,
@@ -171,9 +222,9 @@ def submit_case_screening(request):
         return JsonResponse({'message': 'Submission saved successfully'})
 
     except Exception as e:
-        logger.exception(f"Error occurred while processing submission: {str(e)}")
+        logger.exception(
+            f"Error occurred while processing submission: {str(e)}")
         return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
-
 
 
 @csrf_exempt
@@ -275,8 +326,15 @@ def get_event_screenings(request):
                 'rejection_reason': event.rejection_reason,
                 'registration_lockout_end_time': event.registration_lockout_end_time,
                 'selected_tool': event.selected_tool,
-                # Adjust the fields as needed
-                'users': list(event.users.values('id', 'username', 'email'))
+                'users': list(event.users.values('id', 'username', 'email')),
+                # Add created_by information
+                'created_by': {
+                    'id': event.created_by.id,
+                    'username': event.created_by.username,
+                    'email': event.created_by.email,
+                    'first_name': event.created_by.first_name,
+                    'last_name': event.created_by.last_name,
+                } if event.created_by else None 
             }
             events_list.append(event_data)
 
@@ -304,7 +362,73 @@ def update_event_screening(request):
                 event.rejection_reason = None
 
             event.save()
-            return JsonResponse({'message': 'Event updated successfully'}, status=200)
+
+            # Fetch the event creator
+            event_creator = event.created_by
+
+            # Fetch users with the role `sud_admin` for CC
+            sud_admins = CustomUser.objects.filter(
+                role='sud_admin', is_active=True)
+
+            # Prepare email details
+            subject = f"Event Screening Update: {event.event_name}"
+            if approval_status == 'approved':
+                message = (
+                    f"Dear {event_creator.first_name},\n\n"
+                    f"Your event '{event.event_name}' has been approved.\n\n"
+                    f"Event Details:\n"
+                    f"Name: {event.event_name}\n"
+                    f"Location: {event.location}\n"
+                    f"Start Date: {event.start_date}\n"
+                    f"End Date: {event.end_date}\n\n"
+                    f"Best regards,\n"
+                    f"The Event Management Team"
+                )
+
+            elif approval_status == 'rejected':
+                message = (
+                    f"Dear {event_creator.first_name},\n\n"
+                    f"Your event '{event.event_name}' has been rejected.\n"
+                    f"Reason for rejection: {rejection_reason}\n\n"
+                    f"Event Details:\n"
+                    f"Name: {event.event_name}\n"
+                    f"Location: {event.location}\n"
+                    f"Start Date: {event.start_date}\n"
+                    f"End Date: {event.end_date}\n\n"
+                    f"Best regards,\n"
+                    f"The Event Management Team"
+                )
+            else:
+                return JsonResponse({'error': 'Invalid approval status'}, status=400)
+
+            # Collect email recipients
+            recipient_list = [event_creator.email]
+            cc_list = [admin.email for admin in sud_admins]
+            
+            # Send email using EmailMessage
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=recipient_list,
+                cc=cc_list,
+            )
+            email.send(fail_silently=False)
+
+            # Create notification for the event creator
+            Notification.objects.create(
+                notification_for=event_creator,
+                notification=f"Your event '{event.event_name}' has been {approval_status}."
+            )
+
+            # Create notifications for all SUD Admins
+            for admin in sud_admins:
+                Notification.objects.create(
+                    notification_for=admin,
+                    notification=f"The event '{event.event_name}' has been {approval_status}."
+                )
+
+            return JsonResponse({'message': 'Event updated and notifications sent successfully'}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
@@ -314,12 +438,13 @@ def update_event_screening(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-# EventBasedRecordViewSet
+
 @method_decorator(csrf_exempt, name='dispatch')
 class EventBasedRecordViewSet(viewsets.ModelViewSet):
     queryset = EventBasedSubmission.objects.all().prefetch_related(
         'user', 'event', 'service_and_treatment', 'referral',
-        Prefetch('event_substance_risk_measurements', queryset=EventSubstanceRiskMeasurement.objects.all())
+        Prefetch('event_substance_risk_measurements',
+                 queryset=EventSubstanceRiskMeasurement.objects.all())
     )
     serializer_class = EventBasedSubmissionSerializer
     permission_classes = [AllowAny]  # Allow any user to access this view
@@ -368,11 +493,14 @@ class EventBasedRecordViewSet(viewsets.ModelViewSet):
         return Response(response_data)
 
 # CaseBasedRecordViewSet
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CaseBasedRecordViewSet(viewsets.ModelViewSet):
     queryset = CaseBasedSubmission.objects.all().prefetch_related(
         'user', 'case', 'service_and_treatment', 'referral',
-        Prefetch('case_substance_risk_measurements', queryset=CaseSubstanceRiskMeasurement.objects.all())
+        Prefetch('case_substance_risk_measurements',
+                 queryset=CaseSubstanceRiskMeasurement.objects.all())
     )
     serializer_class = CaseBasedSubmissionSerializer
     permission_classes = [AllowAny]  # Allow any user to access this view
