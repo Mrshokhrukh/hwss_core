@@ -1,3 +1,4 @@
+from measurement.models import Submission
 from rest_framework import serializers
 
 from access.models import Agency, CustomUser, UserAgency
@@ -135,7 +136,7 @@ class EventBasedSubmissionSerializer(serializers.ModelSerializer):
             'id', 'user', 'event', 'gad_data', 'gad_score',
             'gad_interpretation', 'phq_data', 'phq_score',
             'phq_interpretation', 'ace_data', 'ace_score',
-            'ace_interpretation', 'school_env_data', 'submission_date',
+            'ace_interpretation', 'submission_date',
             'service_and_treatment', 'referral'
         ]
 
@@ -152,10 +153,22 @@ class GyalsungUserProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SchoolEnvSubmissionSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    answer = serializers.CharField()
+    score = serializers.IntegerField()
+    substance = serializers.CharField()
+    specify = serializers.CharField(allow_null=True)
+    diagnosis = serializers.CharField(allow_null=True)
+    created_at = serializers.DateTimeField()
+
+
+
+# Referral Serializer to handle referral_instance
 class ReferralSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    referred_to = CustomUserSerializer()
-    referred_by = CustomUserSerializer()
+    referred_to = ReferredBySerializer()
+    referred_by = ReferredBySerializer()
     assessment = serializers.SerializerMethodField()
 
     class Meta:
@@ -181,11 +194,19 @@ class ReferralSerializer(serializers.ModelSerializer):
             return GyalsungUserProfileSerializer(assessment_object).data
         return None
 
-
-# Main ServiceAndTreatment Serializer
 class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
     referral_instance = ReferralSerializer()
+    school_env_data = serializers.SerializerMethodField() 
+
+    def get_school_env_data(self, obj):
+        user = obj.user 
+        submissions = Submission.objects.filter(
+            question_set__name="SCHOOL ENV", user_submission__user=user
+        )
+        if submissions.exists():
+          return SchoolEnvSubmissionSerializer(submissions, many=True).data
+        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -233,39 +254,12 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
         representation.pop('content_type', None)
         representation.pop('object_id', None)
 
+        # Add school environment data
+        representation['school_env_data'] = self.get_school_env_data(instance)
+
         return representation
 
     class Meta:
         model = ServiceAndTreatment
         fields = '__all__'
 
-
-# Referral Serializer to handle referral_instance
-class ReferralSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer()
-    referred_to = ReferredBySerializer()
-    referred_by = ReferredBySerializer()
-    assessment = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Referral
-        fields = '__all__'
-
-    def get_assessment(self, obj):
-        content_type = ContentType.objects.get_for_id(obj.content_type_id)
-        model_class = content_type.model_class()
-        try:
-            assessment_object = model_class.objects.get(id=obj.object_id)
-        except model_class.DoesNotExist:
-            assessment_object = None
-
-        # Use the appropriate serializer based on the model
-        if isinstance(assessment_object, FinalUserSubmission):
-            return FinalUserSubmissionSerializer(assessment_object).data
-        elif isinstance(assessment_object, EventBasedSubmission):
-            return EventBasedSubmissionSerializer(assessment_object).data
-        elif isinstance(assessment_object, CaseBasedSubmission):
-            return CaseBasedSubmissionSerializer(assessment_object).data
-        elif isinstance(assessment_object, GyalsungUserProfile):
-            return GyalsungUserProfileSerializer(assessment_object).data
-        return None

@@ -71,7 +71,7 @@ def submit_rescreening(request):
         gad_data_json = request.POST.get('gadData', '{}')
         gad_data = json.loads(gad_data_json) if gad_data_json else {}
         gad_score = gad_data.get('totalScore', 0)
-        gad_interpretation = gad_data.get('interpretation', '')
+        gad_interpretation = gad_data.get('interpretation', '') 
 
         phq_data_json = request.POST.get('phqData', '{}')
         phq_data = json.loads(phq_data_json) if phq_data_json else {}
@@ -105,13 +105,19 @@ def submit_rescreening(request):
 
             # Save substance risk measurements
             for substance, risk_level in assist_data.items():
-                total_score_str = risk_level.split()[1]
-                total_score = float(total_score_str.strip('()'))
+                # Extract risk flag (first word of risk_level)
                 risk_flag = risk_level.split()[0]
 
+                # Safely extract total_score
+                try:
+                    total_score = risk_level.split('(')[1].split(')')[0]
+                    total_score = float(total_score)  # Convert to float
+                except (IndexError, ValueError):  # Handle cases where parsing fails
+                    total_score = 0.0  # Default to 0.0 if score is not available or malformed
+
                 # Create or update substance risk measurement
-                substance_instance, _ = Substance.objects.get_or_create(
-                    name=substance)
+                substance_instance, _ = Substance.objects.get_or_create(name=substance)
+
                 SubstanceRiskMeasurement.objects.create(
                     substance=substance_instance,
                     rescreening=rescreening,
