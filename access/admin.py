@@ -40,7 +40,7 @@ class CustomUserAdmin(UserAdmin):
         ('Personal Information', {
             'fields': (
                 'first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender',
-                'mob_number', 'father_name', 'mother_name',
+                'mob_number', 'father_name', 'mother_name', 'registration_method',
             )
         }),
         ('Address', {

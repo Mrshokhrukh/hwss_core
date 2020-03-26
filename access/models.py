@@ -140,6 +140,24 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
+    REGISTRATION_METHOD_CHOICES = [
+        ('self', 'Self Registered'),
+        ('counselor_case', 'Counselor Case Registered'),
+        ('counselor_event', 'Counselor Event Registered'),
+        ('unknown', 'Unknown/Legacy'), # For existing users before this change
+    ]
+    registration_method = models.CharField(
+        max_length=20,
+        choices=REGISTRATION_METHOD_CHOICES,
+        default='unknown',
+        blank=False,
+        null=False,
+        help_text="How the user was initially registered."
+    )
+
+    @property
+    def was_self_registered(self):
+        return self.registration_method == 'self'
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
