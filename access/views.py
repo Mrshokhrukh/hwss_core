@@ -469,52 +469,41 @@ class CustomTokenAuthentication(APIView):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
-    logger.info("Received request to self-register user.")
     user_data = request.data.get('userData', {})
     agency_data = request.data.get('agencyData', {})
-    user_agency_data = request.data.get('userAgencyData', {}) # Contains user_code, user_role_agency etc.
+    user_agency_data = request.data.get('userAgencyData', {})
 
-    # --- Essential Data Validation ---
     email = user_data.get('email')
     username = user_data.get('username')
     password = user_data.get('password')
-    identity_number = user_data.get('identity_number') # CID
+    identity_number = user_data.get('identity_number')
 
     if not email:
         return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
-    if not username: # Assuming username is required for self-reg despite model allowing null
+    if not username:
         return Response({'error': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
     if not password:
         return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
-    # Add check for required UserAgency fields if necessary
     if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
-         logger.warning("Missing required UserAgency data (user_code or user_role_agency).")
-         # Decide: return error or proceed with potentially incomplete UserAgency? Returning error is safer.
-         return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # --- Check for Duplicates BEFORE Transaction ---
-        # Check based on unique fields that might cause IntegrityError or logical conflicts
         if CustomUser.objects.filter(username=username).exists():
             return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
         if CustomUser.objects.filter(email=email).exists():
             return Response({'error': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
         if identity_number and CustomUser.objects.filter(identity_number=identity_number, is_old_case_user=False).exists():
-             # Check specifically against non-legacy users with the same CID
             return Response({'error': 'User with this Identity Number already exists. Please login or use forgot password.'}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
-            # Get or Create Agency
             agency_code = agency_data.get('agency_code')
-            agency, created = Agency.objects.get_or_create(
+            agency, _ = Agency.objects.get_or_create(
                 agency_code=agency_code, defaults=agency_data)
-            logger.info(f"Agency '{agency.agency_name}' {'created' if created else 'retrieved'}.")
 
-            # Create the User (Now less likely to hit IntegrityError for checked fields)
             user = CustomUser.objects.create_user(
                 username=username,
                 email=email,
-                password=password, # create_user handles hashing
+                password=password,
                 identity_number=identity_number,
                 first_name=user_data.get('first_name'),
                 middle_name=user_data.get('middle_name'),
@@ -531,16 +520,11 @@ def register_user(request):
                 ps_add_village=user_data.get('ps_add_village'),
                 ps_add_gewog=user_data.get('ps_add_gewog'),
                 ps_add_dzongkhag=user_data.get('ps_add_dzongkhag'),
-                role=user_data.get('role'), # Ensure this role is valid
+                role=user_data.get('role'),
                 active_agency=agency,
-                # *** SET REGISTRATION METHOD ***
                 registration_method='self',
-                # is_old_case_user defaults to False, is_gyalsung defaults False
             )
-            logger.info(f"Successfully created new user (ID: {user.id}) via self-registration.")
 
-            # Create the associated UserAgency record (using create because user is new)
-            # Ensure user_agency_data has all required fields for UserAgency
             user_agency = UserAgency.objects.create(
                 user=user,
                 agency=agency,
@@ -555,278 +539,57 @@ def register_user(request):
                 user_stream=user_agency_data.get('user_stream'),
                 user_sub_class=user_agency_data.get('user_sub_class')
             )
-            logger.info(f"Successfully created UserAgency record for user {user.id}.")
 
             response_data = {'userId': user.id, 'message': 'User registered successfully.'}
             return Response(response_data, status=status.HTTP_201_CREATED)
 
     except IntegrityError as ie:
-        # Catch any unexpected integrity errors not caught by pre-checks
-        logger.error(f"Database integrity error during self-registration: {str(ie)}", exc_info=True)
-        # Attempt to give a more specific error if possible
         if 'username' in str(ie):
-             return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
         if 'email' in str(ie):
-             return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
         if 'identity_number' in str(ie):
-             return Response({'error': 'Identity number conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Identity number conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': f'Database error during registration: {str(ie)}'}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        logger.error(f"Unexpected error during self-registration: {str(e)}", exc_info=True)
-        traceback.print_exc() # Keep this for debugging if logger isn't sufficient
         return Response({'error': 'An unexpected error occurred during registration.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def registerCounselorCaseUser(request):
-    logger.info("Received request to register/update counselor case user.")
-    user_data = request.data.get('userData', {})
-    agency_data = request.data.get('agencyData', {})
-    user_agency_data = request.data.get('userAgencyData', {}) # Contains user_code, user_role_agency etc.
-
-    cid = user_data.get('CID') # Identity Number
-    if not cid:
-         return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Check required UserAgency fields if updating/creating
-    if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
-         logger.warning("Missing required UserAgency data (user_code or user_role_agency) for counselor case user.")
-         return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        with transaction.atomic():
-            # --- Agency ---
-            agency_code = agency_data.get('agency_code')
-            agency, _ = Agency.objects.get_or_create(
-                agency_code=agency_code, defaults=agency_data)
-            logger.info(f"Agency '{agency.agency_name}' processed.")
-
-            # --- Name Parsing ---
-            full_name = user_data.get('clientFullName', '').strip()
-            # (Keep your existing robust name parsing logic here)
-            if full_name:
-                name_parts = full_name.strip().split()
-                name_parts = [part for part in name_parts if part]
-                if len(name_parts) == 1: first_name, middle_names, last_name = name_parts[0], '', name_parts[0][0] if name_parts[0] else ''
-                elif len(name_parts) == 2: first_name, last_name, middle_names = name_parts[0], name_parts[1], ''
-                else: first_name, last_name, middle_names = name_parts[0], name_parts[-1], ' '.join(name_parts[1:-1])
-            else: first_name, middle_names, last_name = '', '', ''
-
-            # --- Find Existing User ---
-            # Query based on CID. Constraint handles uniqueness logic with is_old_case_user.
-            existing_user = CustomUser.objects.filter(identity_number=cid).first()
-
-            user_to_process = None
-            is_new_user = False
-
-            if existing_user:
-                user_to_process = existing_user
-                logger.info(f"Found existing user (ID: {existing_user.id}) with CID {cid}. Reg method: {existing_user.registration_method}")
-
-                # *** THE CORE LOGIC: Check if self-registered ***
-                if existing_user.was_self_registered:
-                    logger.warning(f"User {existing_user.id} was self-registered. Skipping profile update.")
-                    # Optionally update active_agency if it changed?
-                    if existing_user.active_agency != agency:
-                        existing_user.active_agency = agency
-                        existing_user.save(update_fields=['active_agency'])
-                        logger.info(f"Updated active_agency for self-registered user {existing_user.id}.")
-                else:
-                    # OK to update profile for counselor-created or 'unknown' users
-                    logger.info(f"Updating profile for existing user {existing_user.id}.")
-                    # Update fields, using existing value as fallback if not provided
-                    existing_user.username = user_data.get('username', existing_user.username) # Careful: Check uniqueness?
-                    existing_user.email = user_data.get('email', existing_user.email)       # Careful: Check uniqueness?
-                    existing_user.first_name = first_name
-                    existing_user.middle_name = middle_names
-                    existing_user.last_name = last_name
-                    existing_user.date_of_birth = user_data.get('DOB', existing_user.date_of_birth)
-                    existing_user.gender = user_data.get('gender', existing_user.gender)
-                    existing_user.mob_number = user_data.get('phoneNumber', existing_user.mob_number)
-                    # Consider carefully which address fields to update
-                    existing_user.perm_add_village = user_data.get('currentAddress', existing_user.perm_add_village)
-                    existing_user.perm_add_gewog = user_data.get('currentAddress', existing_user.perm_add_gewog)
-                    existing_user.perm_add_dzongkhag = user_data.get('dzongkhag', existing_user.perm_add_dzongkhag)
-                    existing_user.nationality = 'Bhutanese' # Avoid hardcoding? Only set if provided?
-                    existing_user.ps_add_village = user_data.get('currentAddress', existing_user.ps_add_village)
-                    existing_user.ps_add_gewog = user_data.get('currentAddress', existing_user.ps_add_gewog)
-                    existing_user.ps_add_dzongkhag = user_data.get('dzongkhag', existing_user.ps_add_dzongkhag)
-                    existing_user.role = 'general_public' # Avoid changing role unless intended
-                    existing_user.active_agency = agency # Set current agency
-
-                    # Prepare list of fields to update to avoid overwriting unrelated fields
-                    update_fields = [
-                        'username', 'email', 'first_name', 'middle_name', 'last_name',
-                        'date_of_birth', 'gender', 'mob_number', 'perm_add_village',
-                        'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village',
-                        'ps_add_gewog', 'ps_add_dzongkhag', 'active_agency' # Add others if needed
-                    ]
-                    existing_user.save(update_fields=update_fields)
-
-            else:
-                # --- Create New User ---
-                is_new_user = True
-                logger.info(f"No existing user found with CID {cid}. Creating new user.")
-
-                # Check for potential username/email conflicts before creating
-                new_username = user_data.get('username')
-                new_email = user_data.get('email')
-                if new_username and CustomUser.objects.filter(username=new_username).exists():
-                    raise IntegrityError(f"Username '{new_username}' already exists.") # Raise to be caught below
-                if new_email and CustomUser.objects.filter(email=new_email).exists():
-                    raise IntegrityError(f"Email '{new_email}' already exists.") # Raise to be caught below
-
-                user = CustomUser.objects.create_user(
-                    # Use create_user if it handles null password, otherwise use create
-                    username=new_username, # May be null based on model
-                    email=new_email,       # May be null based on model
-                    identity_number=cid,
-                    first_name=first_name,
-                    middle_name=middle_names,
-                    last_name=last_name,
-                    date_of_birth=user_data.get('DOB'),
-                    gender=user_data.get('gender'),
-                    mob_number=user_data.get('phoneNumber'),
-                    perm_add_village=user_data.get('currentAddress'),
-                    perm_add_gewog=user_data.get('currentAddress'),
-                    perm_add_dzongkhag=user_data.get('dzongkhag'),
-                    nationality='Bhutanese', # Default?
-                    ps_add_village=user_data.get('currentAddress'),
-                    ps_add_gewog=user_data.get('currentAddress'),
-                    ps_add_dzongkhag=user_data.get('dzongkhag'),
-                    role='general_public', # Default role for counselor-created users?
-                    active_agency=agency,
-                    # *** SET REGISTRATION METHOD ***
-                    registration_method='counselor_case',
-                    # No password passed - ensure CustomUserManager handles this or use create()
-                )
-                user_to_process = user
-                logger.info(f"Created new user {user.id} via counselor case registration.")
-
-            # --- UserAgency Logic (Handles OneToOne) ---
-            # Prepare defaults for update_or_create
-            ua_defaults = {
-                'agency': agency,
-                'user_code': user_agency_data.get('user_code'),
-                'parent_occupation': user_agency_data.get('parent_occupation'),
-                'guardian_name': user_agency_data.get('guardian_name'),
-                'guardian_occupation': user_agency_data.get('guardian_occupation'),
-                'parent_status': user_agency_data.get('parent_status'),
-                'current_living_with': user_agency_data.get('current_living_with'),
-                'user_role_agency': user_agency_data.get('user_role_agency'),
-                'user_class': user_agency_data.get('user_class'),
-                'user_stream': user_agency_data.get('user_stream'),
-                'user_sub_class': user_agency_data.get('user_sub_class')
-            }
-            # Remove None values from defaults if DB fields don't allow nulls for these
-            ua_defaults = {k: v for k, v in ua_defaults.items() if v is not None}
-
-            user_agency, ua_created = UserAgency.objects.update_or_create(
-                user=user_to_process, # The user (existing or new)
-                defaults=ua_defaults
-            )
-            logger.info(f"UserAgency record {'created' if ua_created else 'updated'} for user {user_to_process.id}.")
-
-            # --- CaseScreening Logic ---
-            # Assuming CaseScreening model exists and is imported
-            # Use update_or_create for idempotency if needed, or just create for new cases
-            # from .models import CaseScreening # Import CaseScreening model
-            case_screening, cs_created = CaseScreening.objects.update_or_create(
-                user=user_to_process,
-                # Add other unique identifiers for the case if user alone isn't enough
-                defaults={
-                    'case_name': user_data.get('caseName'),
-                    'purpose': user_data.get('purpose'),
-                    'dzongkhag': user_data.get('dzongkhag'),
-                    'counselor': user_data.get('counselorName'),
-                    'date': date.today() # Make sure date is imported
-                    # Link to agency?
-                }
-            )
-            logger.info(f"CaseScreening {'created' if cs_created else 'updated'} for user {user_to_process.id}")
-            # If only creating new screenings associated with this action:
-            # CaseScreening.objects.create(user=user_to_process, ...)
-
-            # Determine response status code and message
-            status_code = status.HTTP_201_CREATED if is_new_user else status.HTTP_200_OK
-            message = 'Counselor user registered successfully.' if is_new_user else 'Counselor user processed successfully.'
-            response_data = {'userId': user_to_process.id, 'message': message}
-            return Response(response_data, status=status_code)
-
-    except IntegrityError as ie:
-        logger.error(f"Database integrity error during counselor case processing: {str(ie)}", exc_info=True)
-        # Provide specific feedback based on the error
-        if 'username' in str(ie):
-             return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
-        if 'email' in str(ie):
-             return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
-        # Check if it's the UserAgency unique constraint (user_id) - should be handled by update_or_create
-        # Check if it's the identity_number constraint - should be handled by finding existing user first
-        return Response({'error': f'Database error: {str(ie)}'}, status=status.HTTP_400_BAD_REQUEST)
-
-    except Exception as e:
-        logger.error(f"Unexpected error during counselor case processing: {str(e)}", exc_info=True)
-        traceback.print_exc()
-        return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def registerCounselorEventUser(request):
-    logger.info("Received request to register/update counselor event user.")
     user_data = request.data.get('userData', {})
     agency_data = request.data.get('agencyData', {})
     user_agency_data = request.data.get('userAgencyData', {})
 
     cid = user_data.get('CID')
     if not cid:
-         return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
-         logger.warning("Missing required UserAgency data (user_code or user_role_agency) for counselor event user.")
-         return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    counselor_name = user_data.get('counselorName') # Needed for event lookup
+        return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # --- Find Event FIRST ---
-        # Assuming EventScreening model exists and is imported
-        # from .models import EventScreening
-        event_screening = EventScreening.objects.filter(
-            counselor=counselor_name, # Make sure this uniquely identifies the event
-            approval_status='approved'
-        ).first()
-        if not event_screening:
-             logger.warning(f"No approved event found for counselor '{counselor_name}'.")
-             return Response({'error': f"Approved event for counselor '{counselor_name}' not found."}, status=status.HTTP_404_NOT_FOUND)
-        # Placeholder if EventScreening isn't defined yet:
-        # event_screening = None # Replace with actual lookup
-        # if counselor_name != "TestCounselorEvent": # Replace with actual lookup logic
-        #     return Response({'error': f"Event not found."}, status=status.HTTP_404_NOT_FOUND)
-        # logger.info(f"Target event found (using placeholder logic).") # Update log message
-
-
         with transaction.atomic():
-            # --- Agency ---
             agency_code = agency_data.get('agency_code')
             agency, _ = Agency.objects.get_or_create(
-                agency_code=agency_code, defaults=agency_data)
-            logger.info(f"Agency '{agency.agency_name}' processed.")
+                agency_code=agency_code, defaults=agency_data
+            )
 
-            # --- Name Parsing ---
-            # (Keep your existing robust name parsing logic here)
             full_name = user_data.get('clientFullName', '').strip()
             if full_name:
                 name_parts = full_name.strip().split()
                 name_parts = [part for part in name_parts if part]
-                if len(name_parts) == 1: first_name, middle_names, last_name = name_parts[0], '', name_parts[0][0] if name_parts[0] else ''
-                elif len(name_parts) == 2: first_name, last_name, middle_names = name_parts[0], name_parts[1], ''
-                else: first_name, last_name, middle_names = name_parts[0], name_parts[-1], ' '.join(name_parts[1:-1])
-            else: first_name, middle_names, last_name = '', '', ''
+                if len(name_parts) == 1:
+                    first_name, middle_names, last_name = name_parts[0], '', name_parts[0][0] if name_parts[0] else ''
+                elif len(name_parts) == 2:
+                    first_name, last_name, middle_names = name_parts[0], name_parts[1], ''
+                else:
+                    first_name, last_name, middle_names = name_parts[0], name_parts[-1], ' '.join(name_parts[1:-1])
+            else:
+                first_name, middle_names, last_name = '', '', ''
 
-            # --- Find Existing User ---
             existing_user = CustomUser.objects.filter(identity_number=cid).first()
 
             user_to_process = None
@@ -834,19 +597,12 @@ def registerCounselorEventUser(request):
 
             if existing_user:
                 user_to_process = existing_user
-                logger.info(f"Found existing user (ID: {existing_user.id}) with CID {cid}. Reg method: {existing_user.registration_method}")
 
-                # *** THE CORE LOGIC: Check if self-registered ***
                 if existing_user.was_self_registered:
-                    logger.warning(f"User {existing_user.id} was self-registered. Skipping profile update.")
-                    # Optionally update active_agency if it changed
                     if existing_user.active_agency != agency:
                         existing_user.active_agency = agency
                         existing_user.save(update_fields=['active_agency'])
                 else:
-                    # Update fields for counselor-case users or legacy ('unknown') users
-                    logger.info(f"Updating profile for existing user {existing_user.id}.")
-                    
                     existing_user.username = user_data.get('username', existing_user.username)
                     existing_user.email = user_data.get('email', existing_user.email)
                     existing_user.first_name = first_name
@@ -862,24 +618,21 @@ def registerCounselorEventUser(request):
                     existing_user.ps_add_village = user_data.get('currentAddress', existing_user.ps_add_village)
                     existing_user.ps_add_gewog = user_data.get('currentAddress', existing_user.ps_add_gewog)
                     existing_user.ps_add_dzongkhag = user_data.get('dzongkhag', existing_user.ps_add_dzongkhag)
+                    existing_user.role = 'general_public'
                     existing_user.active_agency = agency
-                    existing_user.registration_method = 'counselor_case'  # <-- ADD THIS LINE
+                    existing_user.registration_method = 'counselor_case'  # Ensure this is set
 
                     update_fields = [
                         'username', 'email', 'first_name', 'middle_name', 'last_name',
                         'date_of_birth', 'gender', 'mob_number', 'perm_add_village',
                         'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village',
-                        'ps_add_gewog', 'ps_add_dzongkhag', 'active_agency', 
-                        'registration_method'  # <-- ADD THIS FIELD
+                        'ps_add_gewog', 'ps_add_dzongkhag', 'active_agency', 'registration_method'
                     ]
                     existing_user.save(update_fields=update_fields)
 
             else:
-                # --- Create New User ---
                 is_new_user = True
-                logger.info(f"No existing user found with CID {cid}. Creating new user.")
 
-                 # Check for potential username/email conflicts before creating
                 new_username = user_data.get('username')
                 new_email = user_data.get('email')
                 if new_username and CustomUser.objects.filter(username=new_username).exists():
@@ -906,20 +659,22 @@ def registerCounselorEventUser(request):
                     ps_add_dzongkhag=user_data.get('dzongkhag'),
                     role='general_public',
                     active_agency=agency,
-                    # *** SET REGISTRATION METHOD ***
-                    registration_method='counselor_event',
-                    # No password
+                    registration_method='counselor_case',
                 )
                 user_to_process = user
-                logger.info(f"Created new user {user.id} via counselor event registration.")
 
-            # --- UserAgency Logic (Handles OneToOne) ---
             ua_defaults = {
                 'agency': agency,
                 'user_code': user_agency_data.get('user_code'),
-                 # Add other fields from user_agency_data as needed
+                'parent_occupation': user_agency_data.get('parent_occupation'),
+                'guardian_name': user_agency_data.get('guardian_name'),
+                'guardian_occupation': user_agency_data.get('guardian_occupation'),
+                'parent_status': user_agency_data.get('parent_status'),
+                'current_living_with': user_agency_data.get('current_living_with'),
                 'user_role_agency': user_agency_data.get('user_role_agency'),
-                 # ... copy relevant fields from registerCounselorCaseUser ...
+                'user_class': user_agency_data.get('user_class'),
+                'user_stream': user_agency_data.get('user_stream'),
+                'user_sub_class': user_agency_data.get('user_sub_class')
             }
             ua_defaults = {k: v for k, v in ua_defaults.items() if v is not None}
 
@@ -927,35 +682,153 @@ def registerCounselorEventUser(request):
                 user=user_to_process,
                 defaults=ua_defaults
             )
-            logger.info(f"UserAgency record {'created' if ua_created else 'updated'} for user {user_to_process.id}.")
 
-            # --- Link to Event Screening ---
-            if event_screening:
-                event_screening.users.add(user_to_process) # .add() is idempotent
-                logger.info(f"User {user_to_process.id} linked to event (placeholder ID).") # Update log
-            else:
-                logger.error("Event screening object was unexpectedly None, cannot link user.")
-            #     # This case should ideally be caught by the check at the start
-            pass # Placeholder: Add user to event_screening.users ManyToManyField
+            case_screening, cs_created = CaseScreening.objects.update_or_create(
+                user=user_to_process,
+                defaults={
+                    'case_name': user_data.get('caseName'),
+                    'purpose': user_data.get('purpose'),
+                    'dzongkhag': user_data.get('dzongkhag'),
+                    'counselor': user_data.get('counselorName'),
+                    'date': date.today()
+                }
+            )
 
-
-            # Determine response status code and message
             status_code = status.HTTP_201_CREATED if is_new_user else status.HTTP_200_OK
             message = 'Counselor user registered successfully.' if is_new_user else 'Counselor user processed successfully.'
             response_data = {'userId': user_to_process.id, 'message': message}
             return Response(response_data, status=status_code)
 
     except IntegrityError as ie:
-        logger.error(f"Database integrity error during counselor event processing: {str(ie)}", exc_info=True)
         if 'username' in str(ie):
-             return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
         if 'email' in str(ie):
-             return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': f'Database error: {str(ie)}'}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        logger.error(f"Unexpected error during counselor event processing: {str(e)}", exc_info=True)
-        traceback.print_exc()
+        return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def registerCounselorEventUser(request):
+    user_data = request.data.get('userData', {})
+    agency_data = request.data.get('agencyData', {})
+    user_agency_data = request.data.get('userAgencyData', {})
+    cid = user_data.get('CID')
+    if not cid:
+        return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
+        return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    counselor_name = user_data.get('counselorName')
+    try:
+        event_screening = EventScreening.objects.filter(
+            counselor=counselor_name,
+            approval_status='approved'
+        ).first()
+        if not event_screening:
+            return Response({'error': f"Approved event for counselor '{counselor_name}' not found."}, status=status.HTTP_404_NOT_FOUND)
+        with transaction.atomic():
+            agency_code = agency_data.get('agency_code')
+            agency, _ = Agency.objects.get_or_create(
+                agency_code=agency_code, defaults=agency_data)
+            full_name = user_data.get('clientFullName', '').strip()
+            if full_name:
+                name_parts = full_name.strip().split()
+                name_parts = [part for part in name_parts if part]
+                if len(name_parts) == 1: first_name, middle_names, last_name = name_parts[0], '', name_parts[0][0] if name_parts[0] else ''
+                elif len(name_parts) == 2: first_name, last_name, middle_names = name_parts[0], name_parts[1], ''
+                else: first_name, last_name, middle_names = name_parts[0], name_parts[-1], ' '.join(name_parts[1:-1])
+            else: first_name, middle_names, last_name = '', '', ''
+            existing_user = CustomUser.objects.filter(identity_number=cid).first()
+            user_to_process = None
+            is_new_user = False
+            if existing_user:
+                user_to_process = existing_user
+                if existing_user.was_self_registered:
+                    if existing_user.active_agency != agency:
+                        existing_user.active_agency = agency
+                        existing_user.save(update_fields=['active_agency'])
+                else:
+                    existing_user.username = user_data.get('username', existing_user.username)
+                    existing_user.email = user_data.get('email', existing_user.email)
+                    existing_user.first_name = first_name
+                    existing_user.middle_name = middle_names
+                    existing_user.last_name = last_name
+                    existing_user.date_of_birth = user_data.get('DOB', existing_user.date_of_birth)
+                    existing_user.gender = user_data.get('gender', existing_user.gender)
+                    existing_user.mob_number = user_data.get('phoneNumber', existing_user.mob_number)
+                    existing_user.perm_add_village = user_data.get('currentAddress', existing_user.perm_add_village)
+                    existing_user.perm_add_gewog = user_data.get('currentAddress', existing_user.perm_add_gewog)
+                    existing_user.perm_add_dzongkhag = user_data.get('dzongkhag', existing_user.perm_add_dzongkhag)
+                    existing_user.nationality = 'Bhutanese'
+                    existing_user.ps_add_village = user_data.get('currentAddress', existing_user.ps_add_village)
+                    existing_user.ps_add_gewog = user_data.get('currentAddress', existing_user.ps_add_gewog)
+                    existing_user.ps_add_dzongkhag = user_data.get('dzongkhag', existing_user.ps_add_dzongkhag)
+                    existing_user.active_agency = agency
+                    existing_user.registration_method = 'counselor_case'
+                    update_fields = [
+                        'username', 'email', 'first_name', 'middle_name', 'last_name',
+                        'date_of_birth', 'gender', 'mob_number', 'perm_add_village',
+                        'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village',
+                        'ps_add_gewog', 'ps_add_dzongkhag', 'active_agency', 
+                        'registration_method'
+                    ]
+                    existing_user.save(update_fields=update_fields)
+            else:
+                is_new_user = True
+                new_username = user_data.get('username')
+                new_email = user_data.get('email')
+                if new_username and CustomUser.objects.filter(username=new_username).exists():
+                    raise IntegrityError(f"Username '{new_username}' already exists.")
+                if new_email and CustomUser.objects.filter(email=new_email).exists():
+                    raise IntegrityError(f"Email '{new_email}' already exists.")
+                user = CustomUser.objects.create_user(
+                    username=new_username,
+                    email=new_email,
+                    identity_number=cid,
+                    first_name=first_name,
+                    middle_name=middle_names,
+                    last_name=last_name,
+                    date_of_birth=user_data.get('DOB'),
+                    gender=user_data.get('gender'),
+                    mob_number=user_data.get('phoneNumber'),
+                    perm_add_village=user_data.get('currentAddress'),
+                    perm_add_gewog=user_data.get('currentAddress'),
+                    perm_add_dzongkhag=user_data.get('dzongkhag'),
+                    nationality='Bhutanese',
+                    ps_add_village=user_data.get('currentAddress'),
+                    ps_add_gewog=user_data.get('currentAddress'),
+                    ps_add_dzongkhag=user_data.get('dzongkhag'),
+                    role='general_public',
+                    active_agency=agency,
+                    registration_method='counselor_event',
+                )
+                user_to_process = user
+            ua_defaults = {
+                'agency': agency,
+                'user_code': user_agency_data.get('user_code'),
+                'user_role_agency': user_agency_data.get('user_role_agency'),
+            }
+            ua_defaults = {k: v for k, v in ua_defaults.items() if v is not None}
+            user_agency, ua_created = UserAgency.objects.update_or_create(
+                user=user_to_process,
+                defaults=ua_defaults
+            )
+            if event_screening:
+                event_screening.users.add(user_to_process)
+            status_code = status.HTTP_201_CREATED if is_new_user else status.HTTP_200_OK
+            message = 'Counselor user registered successfully.' if is_new_user else 'Counselor user processed successfully.'
+            response_data = {'userId': user_to_process.id, 'message': message}
+            return Response(response_data, status=status_code)
+    except IntegrityError as ie:
+        if 'username' in str(ie):
+            return Response({'error': 'Username conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'email' in str(ie):
+            return Response({'error': 'Email conflict occurred.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': f'Database error: {str(ie)}'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
         return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -1410,25 +1283,16 @@ def user_logout(request):
     return response
 
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user_info(request):
     try:
-        # Get the authenticated user
         user = request.user
 
-        # Log the request data for debugging
-        logger.debug(f"Request data: {request.data}")
-
-        # Fetch nested data for user, agency, and userAgency
         user_data = request.data.get('user', {})
         user_agency_data = request.data.get('userAgency', {})
 
-        # Log the extracted data
-        logger.debug(f"User data to update: {user_data}")
-        logger.debug(f"User agency data to update: {user_agency_data}")
-
-        # Update the user details
         user_fields = [
             'first_name', 'last_name', 'email', 'mob_number',
             'father_name', 'mother_name',
@@ -1437,15 +1301,11 @@ def update_user_info(request):
 
         for field in user_fields:
             new_value = user_data.get(field)
-            if new_value is not None:  # Update only if a new value is provided
+            if new_value is not None:
                 setattr(user, field, new_value)
 
-        # Save the updated user details
-        logger.debug("Saving user details...")
         user.save()
-        logger.debug("User details saved successfully")
 
-        # Update the UserAgency details if it exists
         user_agency = getattr(user, 'agency_details', None)
         if user_agency:
             user_agency_fields = [
@@ -1454,21 +1314,14 @@ def update_user_info(request):
             ]
             for field in user_agency_fields:
                 new_value = user_agency_data.get(field)
-                if new_value is not None:  # Update only if a new value is provided
+                if new_value is not None:
                     setattr(user_agency, field, new_value)
 
-            logger.debug("Saving user agency details...")
             user_agency.save()
-            logger.debug("User agency details saved successfully")
 
-        # Return success response
         return Response({'message': 'User details updated successfully'}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        # Log the error
-        logger.exception("Error updating user details")
-
-        # Return error response
         return Response({'message': 'Failed to update user details. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
