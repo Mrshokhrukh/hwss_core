@@ -27496,3 +27496,45 @@ Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
 "GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
 Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
 "GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Bad Request: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 400 58
+Bad Request: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 400 58
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 174
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 174
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 168
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 168
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 168
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 168
+Conflict: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 409 168
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Bad Request: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 400 64
+Bad Request: /api/v1/access/register-counselor-case-user/
+"POST /api/v1/access/register-counselor-case-user/ HTTP/1.1" 400 64

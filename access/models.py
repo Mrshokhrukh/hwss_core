@@ -141,10 +141,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
     REGISTRATION_METHOD_CHOICES = [
-        ('self', 'Self Registered'),
-        ('counselor_case', 'Counselor Case Registered'),
-        ('counselor_event', 'Counselor Event Registered'),
-        ('unknown', 'Unknown/Legacy'), # For existing users before this change
+        ('cluster_registration', 'Clustered Registered'),
+        ('case_registration', 'Counselor Case Registered'),
+        ('event_registration', 'Counselor Event Registered'),
+        ('unknown_registration', 'Unknown/Legacy'),
     ]
     registration_method = models.CharField(
         max_length=20,
