@@ -1,125 +1,163 @@
+# your_app_name/admin.py
 from django.contrib import admin
-from django.utils.html import format_html
-from .models import CustomUser, PreRecordedUser, Agency, UserAgency
-from django.contrib.auth.admin import UserAdmin
+from import_export.admin import ImportExportModelAdmin
+from .models import PreRecordedUser, Agency, UserAgency, CustomUser
+from .resources import PreRecordedUserResource
+from django.contrib import messages
+from django.urls import path
+from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
+import csv
+import io
 
-
-class UserAgencyInline(admin.TabularInline):
-    model = UserAgency
-    fk_name = 'user'
-    extra = 1
-    fields = (
-        'agency',
-        'user_code',
-        'user_role_agency',
-        'parent_occupation',
-        'guardian_name',
-        'guardian_occupation',
-        'parent_status',
-        'current_living_with',
-        'user_class',
-        'user_stream',
-        'user_sub_class',
+@admin.register(PreRecordedUser)
+class PreRecordedUserAdmin(ImportExportModelAdmin):
+    resource_class = PreRecordedUserResource
+    list_display = (
+        'username', 'email', 'identity_number', 'first_name', 'last_name',
+        'is_registered', 'role', 'date_joined', 'is_active'
     )
-    verbose_name = 'User Agency Information'
-    verbose_name_plural = 'User Agency Details'
-
-
-class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ('username', 'id', 'email', 'role',
-                    'active_agency_name', 'is_active', 'is_staff')
-    list_filter = ('role', 'is_active', 'is_staff', 'is_gyalsung')
-    search_fields = ('username', 'email', 'identity_number', 'role')
-    ordering = ('username',)
-
-    # Define fieldsets for add/edit views
+    list_filter = ('is_registered', 'role', 'is_active', 'is_gyalsung')
+    search_fields = (
+        'username', 'email', 'identity_number', 'first_name', 'last_name'
+    )
+    list_per_page = 25
+    ordering = ('-date_joined',)
     fieldsets = (
-        (None, {'fields': ('username', 'email',
-         'password', 'identity_number', 'nationality')}),
         ('Personal Information', {
             'fields': (
-                'first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender',
-                'mob_number', 'father_name', 'mother_name', 'registration_method',
+                'username', 'email', 'identity_number', 'nationality',
+                'first_name', 'middle_name', 'last_name', 'date_of_birth',
+                'gender', 'mob_number', 'profile_picture'
             )
         }),
-        ('Address', {
+        ('Address Information', {
             'fields': (
-                'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
-                'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
+                'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'
             )
         }),
-        ('Agency and Role', {
-            'fields': ('role', 'active_agency', 'access_level', 'is_gyalsung', 'academy_code')
+        ('Family Information', {
+            'fields': (
+                'father_name', 'mother_name', 'parent_occupation',
+                'guardian_name', 'guardian_occupation', 'parent_status',
+                'current_living_with'
+            )
+        }),
+        ('Agency Information', {
+            'fields': (
+                'agency_name', 'agency_code', 'user_code', 'user_role_agency',
+                'user_class', 'user_sub_class'
+            )
+        }),
+        ('Account Information', {
+            'fields': (
+                'role', 'access_level', 'is_gyalsung', 'academy_code',
+                'is_active', 'is_staff', 'is_registered', 'date_joined'
+            )
+        }),
+    )
+    readonly_fields = ('date_joined',)
+    actions = ['mark_as_registered', 'export_as_csv_template']
+
+    def mark_as_registered(self, request, queryset):
+        updated = queryset.update(is_registered=True)
+        self.message_user(
+            request,
+            f"{updated} user(s) marked as registered.",
+            messages.SUCCESS
+        )
+    mark_as_registered.short_description = "Mark selected users as registered"
+
+    def export_as_csv_template(self, request, queryset):
+        # Generate a CSV template with only required fields
+        required_fields = [
+            'username', 'identity_number', 'nationality', 'first_name',
+            'last_name', 'date_of_birth', 'gender', 'email', 'mob_number',
+            'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag'
+        ]
+        optional_fields = [
+            'middle_name', 'father_name', 'mother_name', 'profile_picture',
+            'is_gyalsung', 'academy_code', 'role', 'access_level',
+            'agency_name', 'agency_code', 'user_code', 'parent_occupation',
+            'guardian_name', 'guardian_occupation', 'parent_status',
+            'current_living_with', 'user_role_agency', 'user_class',
+            'user_sub_class'
+        ]
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="pre_recorded_user_template.csv"'
+        writer = csv.writer(response)
+        writer.writerow(required_fields + optional_fields)
+        return response
+    export_as_csv_template.short_description = "Download CSV template for bulk upload"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'download-csv-template/',
+                self.admin_site.admin_view(self.download_csv_template),
+                name='pre_recorded_user_download_csv_template'
+            ),
+        ]
+        return custom_urls + urls
+
+    def download_csv_template(self, request):
+        # Redirect to the action to download the CSV template
+        return self.export_as_csv_template(request, self.model.objects.none())
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        # Add actions to the admin interface
+        return actions
+
+    def save_model(self, request, obj, form, change):
+        # Custom save logic if needed
+        super().save_model(request, obj, form, change)
+
+# Register other models if not already registered
+@admin.register(Agency)
+class AgencyAdmin(admin.ModelAdmin):
+    list_display = ('agency_name', 'agency_code', 'present_dzongkhag')
+    search_fields = ('agency_name', 'agency_code')
+    list_filter = ('present_dzongkhag',)
+
+@admin.register(UserAgency)
+class UserAgencyAdmin(admin.ModelAdmin):
+    list_display = ('user', 'agency', 'user_role_agency')
+    search_fields = ('user__username', 'agency__agency_name')
+    list_filter = ('user_role_agency',)
+
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'role', 'is_active', 'date_joined')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    list_filter = ('role', 'is_active', 'is_staff')
+    fieldsets = (
+        ('Personal Information', {
+            'fields': (
+                'username', 'email', 'first_name', 'middle_name', 'last_name',
+                'identity_number', 'nationality', 'date_of_birth', 'gender',
+                'mob_number', 'profile_picture'
+            )
         }),
         ('Permissions', {
-            'fields': ('is_staff', 'is_active', 'is_superuser')
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-
-    # Add fieldsets specifically for add_view, if needed
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'active_agency', 'role')
-        }),
-    )
-
-    # Inline class to add UserAgency information
-    inlines = [UserAgencyInline]
-
-    def get_form(self, request, obj=None, **kwargs):
-        # Ensure active_agency is available in the form
-        form = super().get_form(request, obj, **kwargs)
-        if 'active_agency' in form.base_fields:
-            form.base_fields['active_agency'].queryset = Agency.objects.all()
-        return form
-
-    def active_agency_name(self, obj):
-        return obj.active_agency.agency_name if obj.active_agency else "Not assigned"
-    active_agency_name.short_description = "Active Agency"
-
-
-admin.site.register(CustomUser, CustomUserAdmin)
-
-
-class PreRecordedUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'identity_number',
-                    'is_registered', 'agency_name')
-    list_filter = ('is_registered', 'role')
-    search_fields = ('username', 'email', 'identity_number')
-    ordering = ('username',)
-
-    fieldsets = (
-        (None, {'fields': ('username', 'email', 'identity_number', 'nationality')}),
-        ('Personal Information', {
             'fields': (
-                'first_name', 'middle_name', 'last_name', 'date_of_birth', 'gender',
-                'mob_number', 'father_name', 'mother_name',
+                'is_active', 'is_staff', 'is_superuser', 'groups',
+                'user_permissions'
             )
         }),
-        ('Address', {
+        ('Agency and Address', {
             'fields': (
-                'perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag',
-                'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag',
+                'active_agency', 'perm_add_village', 'perm_add_gewog',
+                'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog',
+                'ps_add_dzongkhag'
             )
         }),
-        ('Agency and Registration', {
+        ('Account Details', {
             'fields': (
-                'role', 'access_level', 'is_gyalsung', 'academy_code', 'is_registered',
-                'agency_name', 'agency_code',
+                'role', 'access_level', 'is_gyalsung', 'academy_code',
+                'registration_method', 'date_joined'
             )
         }),
     )
-
-
-admin.site.register(PreRecordedUser, PreRecordedUserAdmin)
-
-
-class AgencyAdmin(admin.ModelAdmin):
-    list_display = ('agency_code', 'agency_name', 'present_dzongkhag')
-    search_fields = ('agency_code', 'agency_name')
-
-
-admin.site.register(Agency, AgencyAdmin)
+    readonly_fields = ('date_joined',)
