@@ -1,8 +1,85 @@
-venv
-docker-compose.yml
-.env
-./logfile.log
-logfile.log
-.dockerignore
-bkk.dockerfile.backup
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Django stuff
+*.log
+*.pot
+*.pyc
 db.sqlite3
+media/
+staticfiles/
+
+# Ignore secret keys and sensitive environment files
+.env
+.env.*
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Docker
+*.pid
+*.pid.lock
+*.sock
+*.tar
+__docker_cache__/
+
+# Gunicorn
+gunicorn.pid
+gunicorn.log
+gunicorn.sock
+
+# Nginx, backup, temp
+nginx.conf
+*.dockerfile.backup
+
+# Build artifacts
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Migrations (optional — include if auto-gen but review before ignoring)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+# Uncomment if you really want to exclude migration files
+# **/migrations/*.py
+
+# Celery beat schedule file (if used)
+celerybeat-schedule
+
+# VSCode debugger settings
+*.code-workspace
+
+# Coverage and test results
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.mocha.json
+.cache/
+
+# System logs or custom logs
+*.logfile
+logfile.log
+*.log

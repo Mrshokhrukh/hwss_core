@@ -28055,3 +28055,59 @@ Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
 "GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3897
 Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
 "GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3949
+Bad Request: /api/v1/access/login/
+"POST /api/v1/access/login/ HTTP/1.1" 400 26
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939
+Not Found: /api/core/media/admin-interface/logo/Logo_XdYm831.png
+"GET /api/core/media/admin-interface/logo/Logo_XdYm831.png HTTP/1.1" 404 3887
+Not Found: /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png
+"GET /api/core/media/admin-interface/favicon/logoDashbopard_YtM6pGd.png HTTP/1.1" 404 3939

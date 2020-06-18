@@ -1290,7 +1290,6 @@ def verify_pre_recorded_user(request):
 @permission_classes([AllowAny])
 def register_pre_recorded_user(request):
     try:
-
         user_data = request.data.get('userData', {})
         agency_data = request.data.get('agencyData', {})
         user_agency_data = request.data.get('userAgencyData', {})
@@ -1299,7 +1298,8 @@ def register_pre_recorded_user(request):
             # Check if the agency exists, if not, create it
             agency_code = agency_data.get('agency_code')
             agency, created = Agency.objects.get_or_create(
-                agency_code=agency_code, defaults=agency_data)
+                agency_code=agency_code, defaults={'agency_name': agency_data.get('agency_name')}
+            )
 
             # Create the user
             user = CustomUser.objects.create_user(
@@ -1315,17 +1315,28 @@ def register_pre_recorded_user(request):
                 perm_add_gewog=user_data.get('perm_add_gewog'),
                 perm_add_dzongkhag=user_data.get('perm_add_dzongkhag'),
                 password=user_data.get('password'),
-                role=user_data.get('role')
+                role=user_data.get('role'),
+                active_agency=agency  # <-- This is the line you need to add
             )
 
             # Create or update UserAgency link
-            user_agency_data['user'] = user
-            user_agency_data['agency'] = agency
-            UserAgency.objects.create(**user_agency_data)
+            # You are already correctly setting the user and agency here
+            UserAgency.objects.create(
+                user=user,
+                agency=agency,
+                user_code=user_agency_data.get('user_code'),
+                parent_occupation=user_agency_data.get('parent_occupation'),
+                guardian_name=user_agency_data.get('guardian_name'),
+                guardian_occupation=user_agency_data.get('guardian_occupation'),
+                parent_status=user_agency_data.get('parent_status'),
+                current_living_with=user_agency_data.get('current_living_with'),
+                user_role_agency=user_agency_data.get('user_role_agency'),
+                user_class=user_agency_data.get('user_class'),
+                user_sub_class=user_agency_data.get('user_sub_class')
+            )
 
             # Update the PreRecordedUser model
-            pre_recorded_user_identity_number = user_data.get(
-                'identity_number')
+            pre_recorded_user_identity_number = user_data.get('identity_number')
             PreRecordedUser.objects.filter(
                 identity_number=pre_recorded_user_identity_number).update(is_registered=True)
 
