@@ -1,85 +1,102 @@
-# Python cache
+# ------------------------
+# Python
+# ------------------------
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
-# Django stuff
+# ------------------------
+# Django / Project Files
+# ------------------------
+db.sqlite3
 *.log
 *.pot
 *.pyc
-db.sqlite3
+*.logfile
+logfile.log
+
+# Local Django runtime artifacts
 media/
 staticfiles/
+static/
 
-# Ignore secret keys and sensitive environment files
+# Secret keys / Environment
 .env
 .env.*
-
-# Virtual environments
-venv/
-ENV/
-env/
-
-# IDE/editor configs
-.vscode/
-.idea/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-
-# OS-specific
-.DS_Store
-Thumbs.db
-ehthumbs.db
-
-# Docker
-*.pid
-*.pid.lock
-*.sock
-*.tar
-__docker_cache__/
 
 # Gunicorn
 gunicorn.pid
 gunicorn.log
 gunicorn.sock
+gunicorn.conf.py
 
-# Nginx, backup, temp
-nginx.conf
-*.dockerfile.backup
+# ------------------------
+# Migrations (Optional)
+# ------------------------
+**/migrations/__pycache__/
+**/migrations/*.pyc
+# Uncomment below if you don’t version control migrations
+# **/migrations/*.py
 
-# Build artifacts
+# ------------------------
+# Virtual Environments
+# ------------------------
+venv/
+ENV/
+env/
+
+# ------------------------
+# Build & Packaging
+# ------------------------
 *.egg
 *.egg-info/
 dist/
 build/
+*.tar
 
-# Migrations (optional — include if auto-gen but review before ignoring)
-**/migrations/__pycache__/
-**/migrations/*.pyc
-# Uncomment if you really want to exclude migration files
-# **/migrations/*.py
+# ------------------------
+# Docker
+# ------------------------
+*.pid
+*.pid.lock
+*.sock
+__docker_cache__/
+Dockerfile
+*.dockerfile.backup
+docker-compose.yml
 
-# Celery beat schedule file (if used)
-celerybeat-schedule
+# ------------------------
+# Nginx
+# ------------------------
+nginx.conf
 
-# VSCode debugger settings
-*.code-workspace
-
-# Coverage and test results
-htmlcov/
+# ------------------------
+# Coverage / Testing
+# ------------------------
 .coverage
+htmlcov/
 .tox/
 .pytest_cache/
 nosetests.xml
 coverage.xml
 *.cover
-*.mocha.json
 .cache/
+*.mocha.json
 
-# System logs or custom logs
-*.logfile
-logfile.log
-*.log
+# ------------------------
+# IDEs / Editors
+# ------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*.code-workspace
+*.sublime-*
+
+# ------------------------
+# OS-Specific
+# ------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
