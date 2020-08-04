@@ -140,6 +140,18 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'hwss_core_db',
+#         'USER': 'hwss-root',
+#         'PASSWORD': 'hwss@2024',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

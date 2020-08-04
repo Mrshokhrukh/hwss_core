@@ -16,7 +16,7 @@ def duplicate_records(modeladmin, request, queryset):
 @admin.register(ServiceAndTreatment)
 class ServiceAndTreatmentAdmin(admin.ModelAdmin):
     list_display = ('user', 'date', 'assessment_status', 'case_status', 'counseling', 'follow_up', 'updated_at', 'referred')
-    list_filter = ('assessment_status', 'case_status', 'counseling', 'follow_up', 'referred')
+    list_filter = ('assessment_status', 'case_status', 'counseling', 'follow_up', 'referred','user__perm_add_dzongkhag', 'user__ps_add_dzongkhag')
     search_fields = ('user__username', 'updated_by__username', 'comments')
     date_hierarchy = 'date'
     readonly_fields = ('updated_at',)
