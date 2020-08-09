@@ -16,126 +16,676 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='MeasurementSubstance',
+            name="MeasurementSubstance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='TestType',
+            name="TestType",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='QuestionSet',
+            name="QuestionSet",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('test_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='measurement.testtype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "test_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="measurement.testtype",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='UserSubmission',
+            name="UserSubmission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('rescreened', models.BooleanField(default=False)),
-                ('mark_as_safe', models.BooleanField(default=False)),
-                ('is_old_case', models.BooleanField(default=False)),
-                ('test_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='usersubmission', to='measurement.testtype')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                ("rescreened", models.BooleanField(default=False)),
+                ("mark_as_safe", models.BooleanField(default=False)),
+                ("is_old_case", models.BooleanField(default=False)),
+                (
+                    "test_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="usersubmission",
+                        to="measurement.testtype",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Submission',
+            name="Submission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('question', models.TextField()),
-                ('answer', models.TextField()),
-                ('score', models.IntegerField(blank=True, null=True)),
-                ('substance', models.CharField(max_length=100)),
-                ('specify', models.CharField(max_length=100)),
-                ('diagnosis', models.CharField(max_length=100)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('question_set', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submission', to='measurement.questionset')),
-                ('user_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submission', to='measurement.usersubmission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("question", models.TextField()),
+                ("answer", models.TextField()),
+                ("score", models.IntegerField(blank=True, null=True)),
+                ("substance", models.CharField(max_length=100)),
+                ("specify", models.CharField(max_length=100)),
+                ("diagnosis", models.CharField(max_length=100)),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "question_set",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="submission",
+                        to="measurement.questionset",
+                    ),
+                ),
+                (
+                    "user_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="submission",
+                        to="measurement.usersubmission",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='questionset',
-            name='user_submission',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questionset', to='measurement.usersubmission'),
+            model_name="questionset",
+            name="user_submission",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="questionset",
+                to="measurement.usersubmission",
+            ),
         ),
         migrations.CreateModel(
-            name='MeasurementAssist',
+            name="MeasurementAssist",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('alcoholic_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('alcoholic_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('tobacco_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('tobacco_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('cannabis_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('cannabis_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('cocaine_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('cocaine_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('amphetamine_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('amphetamine_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('inhalants_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('inhalants_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('sedatives_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('sedatives_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('hallucinogens_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('hallucinogens_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('opioids_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Ris,k')], max_length=50, null=True)),
-                ('opioids_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('injection_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk')], max_length=50, null=True)),
-                ('injection_flag', models.CharField(blank=True, choices=[('red', 'Red')], max_length=50, null=True)),
-                ('other_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('moderate risk', 'Moderate Risk'), ('no risk', 'No Risk')], max_length=50, null=True)),
-                ('other_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=50, null=True)),
-                ('other_name', models.CharField(blank=True, max_length=100, null=True)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='measurementassist', to=settings.AUTH_USER_MODEL)),
-                ('user_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='measurementassist', to='measurement.usersubmission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "alcoholic_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "alcoholic_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "tobacco_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "tobacco_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "cannabis_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "cannabis_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "cocaine_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "cocaine_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "amphetamine_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "amphetamine_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "inhalants_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "inhalants_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "sedatives_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "sedatives_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "hallucinogens_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "hallucinogens_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "opioids_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Ris,k"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "opioids_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "injection_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[("high risk", "High Risk")],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "injection_flag",
+                    models.CharField(
+                        blank=True, choices=[("red", "Red")], max_length=50, null=True
+                    ),
+                ),
+                (
+                    "other_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("moderate risk", "Moderate Risk"),
+                            ("no risk", "No Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "other_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                ("other_name", models.CharField(blank=True, max_length=100, null=True)),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="measurementassist",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="measurementassist",
+                        to="measurement.usersubmission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Measurement',
+            name="Measurement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gad_measurement', models.CharField(blank=True, choices=[('severe', 'Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')], max_length=50, null=True)),
-                ('gad_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('blue', 'Blue'), ('green', 'Green')], max_length=10, null=True)),
-                ('phq_measurement', models.CharField(blank=True, choices=[('severe', 'Severe'), ('moderately severe', 'Moderately Severe'), ('moderate', 'Moderate'), ('mild', 'Mild'), ('minimal', 'Minimal')], max_length=50, null=True)),
-                ('phq_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('orange', 'Orange'), ('yellow', 'Yellow'), ('blue', 'Blue'), ('green', 'Green')], max_length=10, null=True)),
-                ('suicidal_measurement', models.CharField(blank=True, choices=[('nearly everyday', 'Nearly every day'), ('more than half the days', 'More than half the days'), ('several days', 'Several days')], max_length=50, null=True)),
-                ('suicidal_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('orange', 'Orange'), ('yellow', 'Yellow')], max_length=10, null=True)),
-                ('ace_measurement', models.CharField(blank=True, choices=[('high risk', 'High Risk'), ('intermediate risk', 'Intermediate Risk'), ('low risk', 'Low Risk')], max_length=50, null=True)),
-                ('ace_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=10, null=True)),
-                ('overall_flag', models.CharField(blank=True, choices=[('red', 'Red'), ('yellow', 'Yellow'), ('green', 'Green')], max_length=10, null=True)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='measurement', to=settings.AUTH_USER_MODEL)),
-                ('assist', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='measurement.measurementassist')),
-                ('user_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='measurement', to='measurement.usersubmission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "gad_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("severe", "Severe"),
+                            ("moderate", "Moderate"),
+                            ("mild", "Mild"),
+                            ("minimal", "Minimal"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "gad_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("blue", "Blue"),
+                            ("green", "Green"),
+                        ],
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
+                (
+                    "phq_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("severe", "Severe"),
+                            ("moderately severe", "Moderately Severe"),
+                            ("moderate", "Moderate"),
+                            ("mild", "Mild"),
+                            ("minimal", "Minimal"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "phq_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("orange", "Orange"),
+                            ("yellow", "Yellow"),
+                            ("blue", "Blue"),
+                            ("green", "Green"),
+                        ],
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
+                (
+                    "suicidal_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("nearly everyday", "Nearly every day"),
+                            ("more than half the days", "More than half the days"),
+                            ("several days", "Several days"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "suicidal_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("orange", "Orange"),
+                            ("yellow", "Yellow"),
+                        ],
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
+                (
+                    "ace_measurement",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("high risk", "High Risk"),
+                            ("intermediate risk", "Intermediate Risk"),
+                            ("low risk", "Low Risk"),
+                        ],
+                        max_length=50,
+                        null=True,
+                    ),
+                ),
+                (
+                    "ace_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
+                (
+                    "overall_flag",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("red", "Red"),
+                            ("yellow", "Yellow"),
+                            ("green", "Green"),
+                        ],
+                        max_length=10,
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="measurement",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "assist",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="measurement.measurementassist",
+                    ),
+                ),
+                (
+                    "user_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="measurement",
+                        to="measurement.usersubmission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='LifetimeUser',
+            name="LifetimeUser",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='lifetime_user', to=settings.AUTH_USER_MODEL)),
-                ('substances_used', models.ManyToManyField(blank=True, to='measurement.measurementsubstance')),
-                ('user_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lifetime_users', to='measurement.usersubmission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="lifetime_user",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "substances_used",
+                    models.ManyToManyField(
+                        blank=True, to="measurement.measurementsubstance"
+                    ),
+                ),
+                (
+                    "user_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="lifetime_users",
+                        to="measurement.usersubmission",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ActiveUser',
+            name="ActiveUser",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='active_user', to=settings.AUTH_USER_MODEL)),
-                ('substances_used', models.ManyToManyField(blank=True, to='measurement.measurementsubstance')),
-                ('user_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='active_users', to='measurement.usersubmission')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="active_user",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "substances_used",
+                    models.ManyToManyField(
+                        blank=True, to="measurement.measurementsubstance"
+                    ),
+                ),
+                (
+                    "user_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="active_users",
+                        to="measurement.usersubmission",
+                    ),
+                ),
             ],
         ),
     ]

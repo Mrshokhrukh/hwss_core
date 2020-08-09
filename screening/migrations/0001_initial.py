@@ -11,130 +11,461 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('measurement', '0001_initial'),
-        ('monitoring', '0001_initial'),
+        ("measurement", "0001_initial"),
+        ("monitoring", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CaseSubstance',
+            name="CaseSubstance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='EventSubstance',
+            name="EventSubstance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='CaseScreening',
+            name="CaseScreening",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('case_name', models.CharField(max_length=255)),
-                ('purpose', models.CharField(choices=[('assessment', 'Assessment'), ('intervention', 'Intervention'), ('follow_up', 'Follow Up'), ('termination', 'Termination')], max_length=20)),
-                ('dzongkhag', models.CharField(choices=[('Bumthang', 'Bumthang'), ('Chukha', 'Chukha'), ('Dagana', 'Dagana'), ('Gasa', 'Gasa'), ('Haa', 'Haa'), ('Lhuentse', 'Lhuentse'), ('Mongar', 'Mongar'), ('Paro', 'Paro'), ('Pemagatshel', 'Pemagatshel'), ('Punakha', 'Punakha'), ('Samdrup Jongkhar', 'Samdrup Jongkhar'), ('Samtse', 'Samtse'), ('Sarpang', 'Sarpang'), ('Thimphu', 'Thimphu'), ('Trashigang', 'Trashigang'), ('Trashiyangtse', 'Trashiyangtse'), ('Trongsa', 'Trongsa'), ('Tsirang', 'Tsirang'), ('Wangdue Phodrang', 'Wangdue Phodrang'), ('Zhemgang', 'Zhemgang')], max_length=50)),
-                ('date', models.DateField(blank=True, null=True)),
-                ('counselor', models.CharField(max_length=255)),
-                ('registration_lockout_end_time', models.DateTimeField(blank=True, null=True)),
-                ('submission', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='measurement.usersubmission')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='case_screenings', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("case_name", models.CharField(max_length=255)),
+                (
+                    "purpose",
+                    models.CharField(
+                        choices=[
+                            ("assessment", "Assessment"),
+                            ("intervention", "Intervention"),
+                            ("follow_up", "Follow Up"),
+                            ("termination", "Termination"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "dzongkhag",
+                    models.CharField(
+                        choices=[
+                            ("Bumthang", "Bumthang"),
+                            ("Chukha", "Chukha"),
+                            ("Dagana", "Dagana"),
+                            ("Gasa", "Gasa"),
+                            ("Haa", "Haa"),
+                            ("Lhuentse", "Lhuentse"),
+                            ("Mongar", "Mongar"),
+                            ("Paro", "Paro"),
+                            ("Pemagatshel", "Pemagatshel"),
+                            ("Punakha", "Punakha"),
+                            ("Samdrup Jongkhar", "Samdrup Jongkhar"),
+                            ("Samtse", "Samtse"),
+                            ("Sarpang", "Sarpang"),
+                            ("Thimphu", "Thimphu"),
+                            ("Trashigang", "Trashigang"),
+                            ("Trashiyangtse", "Trashiyangtse"),
+                            ("Trongsa", "Trongsa"),
+                            ("Tsirang", "Tsirang"),
+                            ("Wangdue Phodrang", "Wangdue Phodrang"),
+                            ("Zhemgang", "Zhemgang"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("date", models.DateField(blank=True, null=True)),
+                ("counselor", models.CharField(max_length=255)),
+                (
+                    "registration_lockout_end_time",
+                    models.DateTimeField(blank=True, null=True),
+                ),
+                (
+                    "submission",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="measurement.usersubmission",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="case_screenings",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='CaseBasedSubmission',
+            name="CaseBasedSubmission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gad_data', models.JSONField(blank=True, null=True)),
-                ('gad_score', models.IntegerField(blank=True, null=True)),
-                ('gad_interpretation', models.CharField(blank=True, help_text='Interpretation of GAD score', max_length=255, null=True)),
-                ('phq_data', models.JSONField(blank=True, null=True)),
-                ('phq_score', models.IntegerField(blank=True, null=True)),
-                ('phq_interpretation', models.CharField(blank=True, help_text='Interpretation of PHQ score', max_length=255, null=True)),
-                ('ace_data', models.JSONField(blank=True, null=True)),
-                ('ace_score', models.IntegerField(blank=True, null=True)),
-                ('ace_interpretation', models.CharField(blank=True, help_text='Interpretation of ACE score', max_length=255, null=True)),
-                ('school_env_data', models.JSONField(blank=True, null=True)),
-                ('submission_date', models.DateTimeField(auto_now_add=True)),
-                ('referral', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='case_based_submissions', to='monitoring.referral')),
-                ('service_and_treatment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='case_based_submissions', to='monitoring.serviceandtreatment')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('case', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='case_based_submissions', to='screening.casescreening')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("gad_data", models.JSONField(blank=True, null=True)),
+                ("gad_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "gad_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of GAD score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("phq_data", models.JSONField(blank=True, null=True)),
+                ("phq_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "phq_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of PHQ score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("ace_data", models.JSONField(blank=True, null=True)),
+                ("ace_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "ace_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of ACE score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("school_env_data", models.JSONField(blank=True, null=True)),
+                ("submission_date", models.DateTimeField(auto_now_add=True)),
+                (
+                    "referral",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="case_based_submissions",
+                        to="monitoring.referral",
+                    ),
+                ),
+                (
+                    "service_and_treatment",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="case_based_submissions",
+                        to="monitoring.serviceandtreatment",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "case",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="case_based_submissions",
+                        to="screening.casescreening",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='CaseSubstanceRiskMeasurement',
+            name="CaseSubstanceRiskMeasurement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('measurement', models.FloatField(help_text='Measurement value for the substance')),
-                ('risk_flag', models.CharField(help_text='Risk flag based on measurement', max_length=250)),
-                ('total_score', models.FloatField(blank=True, help_text='Total score for the substance', null=True)),
-                ('case_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='case_substance_risk_measurements', to='screening.casebasedsubmission')),
-                ('substance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='case_risk_measurements', to='screening.casesubstance')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "measurement",
+                    models.FloatField(help_text="Measurement value for the substance"),
+                ),
+                (
+                    "risk_flag",
+                    models.CharField(
+                        help_text="Risk flag based on measurement", max_length=250
+                    ),
+                ),
+                (
+                    "total_score",
+                    models.FloatField(
+                        blank=True, help_text="Total score for the substance", null=True
+                    ),
+                ),
+                (
+                    "case_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="case_substance_risk_measurements",
+                        to="screening.casebasedsubmission",
+                    ),
+                ),
+                (
+                    "substance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="case_risk_measurements",
+                        to="screening.casesubstance",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='EventScreening',
+            name="EventScreening",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_name', models.CharField(max_length=255)),
-                ('event_purpose', models.TextField(blank=True, null=True)),
-                ('location', models.CharField(max_length=255)),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField()),
-                ('duration', models.IntegerField(help_text='Duration in hours')),
-                ('counselor', models.CharField(max_length=255)),
-                ('approval_status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('ended', 'Ended')], default='pending', max_length=20)),
-                ('remarks', models.TextField(blank=True, null=True)),
-                ('rejection_reason', models.TextField(blank=True, null=True)),
-                ('registration_lockout_end_time', models.DateTimeField(blank=True, null=True)),
-                ('selected_tool', models.CharField(blank=True, max_length=100, null=True)),
-                ('users', models.ManyToManyField(blank=True, related_name='events', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("event_name", models.CharField(max_length=255)),
+                ("event_purpose", models.TextField(blank=True, null=True)),
+                ("location", models.CharField(max_length=255)),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField()),
+                ("duration", models.IntegerField(help_text="Duration in hours")),
+                ("counselor", models.CharField(max_length=255)),
+                (
+                    "approval_status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("approved", "Approved"),
+                            ("rejected", "Rejected"),
+                            ("ended", "Ended"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("remarks", models.TextField(blank=True, null=True)),
+                ("rejection_reason", models.TextField(blank=True, null=True)),
+                (
+                    "registration_lockout_end_time",
+                    models.DateTimeField(blank=True, null=True),
+                ),
+                (
+                    "selected_tool",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
+                (
+                    "users",
+                    models.ManyToManyField(
+                        blank=True, related_name="events", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='EventBasedSubmission',
+            name="EventBasedSubmission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gad_data', models.JSONField(blank=True, null=True)),
-                ('gad_score', models.IntegerField(blank=True, null=True)),
-                ('gad_interpretation', models.CharField(blank=True, help_text='Interpretation of GAD score', max_length=255, null=True)),
-                ('phq_data', models.JSONField(blank=True, null=True)),
-                ('phq_score', models.IntegerField(blank=True, null=True)),
-                ('phq_interpretation', models.CharField(blank=True, help_text='Interpretation of PHQ score', max_length=255, null=True)),
-                ('ace_data', models.JSONField(blank=True, null=True)),
-                ('ace_score', models.IntegerField(blank=True, null=True)),
-                ('ace_interpretation', models.CharField(blank=True, help_text='Interpretation of ACE score', max_length=255, null=True)),
-                ('school_env_data', models.JSONField(blank=True, null=True)),
-                ('submission_date', models.DateTimeField(auto_now_add=True)),
-                ('referral', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='event_based_submissions', to='monitoring.referral')),
-                ('service_and_treatment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='event_based_submissions', to='monitoring.serviceandtreatment')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='event_based_submissions', to=settings.AUTH_USER_MODEL)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='event_based_submissions', to='screening.eventscreening')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("gad_data", models.JSONField(blank=True, null=True)),
+                ("gad_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "gad_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of GAD score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("phq_data", models.JSONField(blank=True, null=True)),
+                ("phq_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "phq_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of PHQ score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("ace_data", models.JSONField(blank=True, null=True)),
+                ("ace_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "ace_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of ACE score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("school_env_data", models.JSONField(blank=True, null=True)),
+                ("submission_date", models.DateTimeField(auto_now_add=True)),
+                (
+                    "referral",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="event_based_submissions",
+                        to="monitoring.referral",
+                    ),
+                ),
+                (
+                    "service_and_treatment",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="event_based_submissions",
+                        to="monitoring.serviceandtreatment",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="event_based_submissions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="event_based_submissions",
+                        to="screening.eventscreening",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='EventSubstanceRiskMeasurement',
+            name="EventSubstanceRiskMeasurement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('measurement', models.FloatField(help_text='Measurement value for the substance')),
-                ('risk_flag', models.CharField(help_text='Risk flag based on measurement', max_length=250)),
-                ('total_score', models.FloatField(blank=True, help_text='Total score for the substance', null=True)),
-                ('event_submission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='event_substance_risk_measurements', to='screening.eventbasedsubmission')),
-                ('substance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='event_risk_measurements', to='screening.eventsubstance')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "measurement",
+                    models.FloatField(help_text="Measurement value for the substance"),
+                ),
+                (
+                    "risk_flag",
+                    models.CharField(
+                        help_text="Risk flag based on measurement", max_length=250
+                    ),
+                ),
+                (
+                    "total_score",
+                    models.FloatField(
+                        blank=True, help_text="Total score for the substance", null=True
+                    ),
+                ),
+                (
+                    "event_submission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="event_substance_risk_measurements",
+                        to="screening.eventbasedsubmission",
+                    ),
+                ),
+                (
+                    "substance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="event_risk_measurements",
+                        to="screening.eventsubstance",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ScreenedUser',
+            name="ScreenedUser",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('screening_date', models.DateField(default=django.utils.timezone.now)),
-                ('event_screening', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='screened_users', to='screening.eventscreening')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("screening_date", models.DateField(default=django.utils.timezone.now)),
+                (
+                    "event_screening",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="screened_users",
+                        to="screening.eventscreening",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

@@ -16,88 +16,385 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Substance',
+            name="Substance",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='Referral',
+            name="Referral",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(auto_now_add=True)),
-                ('referred_to_name', models.CharField(blank=True, max_length=100, null=True)),
-                ('referral_status', models.CharField(choices=[('Awaiting', 'Awaiting'), ('Accepted', 'Accepted'), ('Rejected', 'Rejected')], default='Awaiting', max_length=20)),
-                ('referral_remarks', models.TextField(blank=True, null=True)),
-                ('referred_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='referrals_received', to=settings.AUTH_USER_MODEL)),
-                ('referred_to', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='referrals_made', to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(auto_now_add=True)),
+                (
+                    "referred_to_name",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
+                (
+                    "referral_status",
+                    models.CharField(
+                        choices=[
+                            ("Awaiting", "Awaiting"),
+                            ("Accepted", "Accepted"),
+                            ("Rejected", "Rejected"),
+                        ],
+                        default="Awaiting",
+                        max_length=20,
+                    ),
+                ),
+                ("referral_remarks", models.TextField(blank=True, null=True)),
+                (
+                    "referred_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="referrals_received",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "referred_to",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="referrals_made",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ServiceAndTreatment',
+            name="ServiceAndTreatment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(default=None)),
-                ('assessment_status', models.CharField(choices=[('Not Conducted', 'Not Conducted'), ('Conducted', 'Conducted')], default='Not Conducted', max_length=20)),
-                ('case_status', models.CharField(choices=[('On Going', 'On Going'), ('Case Closed', 'Case Closed'), ('Case Discontinued', 'Case Discontinued')], default='On Going', max_length=20)),
-                ('counseling', models.CharField(choices=[('Availed', 'Availed'), ('Not Required', 'Not Required'), ('Waiting List', 'Waiting List')], default='Waiting List', max_length=20)),
-                ('follow_up', models.CharField(blank=True, choices=[('Treatment Completed', 'Treatment Completed'), ('Undergoing Treatment', 'Undergoing Treatment'), ('Completed Counselling Sessions', 'Completed Counselling Sessions'), ('Unwilling to Undergo Treatment', 'Unwilling to Undergo Treatment'), ('Undergone Rehabilitation', 'Undergone Rehabilitation'), ('Undergoing Rehabilitation', 'Undergoing Rehabilitation'), ('Hospital-based Outpatient SUD Treatment and Care (Primary Phase)', 'Hospital-based Outpatient SUD Treatment and Care (Primary Phase)'), ('Hospital-based Outpatient SUD Treatment and Care (Continuing Care)', 'Hospital-based Outpatient SUD Treatment and Care (Continuing Care)'), ('School-based SUD Treatment and Care', 'School-based SUD Treatment and Care'), ('Institution-based SUD Treatment and Care', 'Institution-based SUD Treatment and Care'), ('Follow-up Drug Test Conducted', 'Follow-up Drug Test Conducted'), ('Detention-based SUD Treatment and Care', 'Detention-based SUD Treatment and Care')], max_length=255)),
-                ('comments', models.TextField(blank=True, null=True)),
-                ('updated_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('referred', models.CharField(choices=[('Not Referred', 'Not Referred'), ('Referred', 'Referred'), ('Referred Back', 'Referred Back')], default='Not Referred', max_length=20)),
-                ('referral_instance', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='service_and_treatments', to='monitoring.referral')),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='updated_by', to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(default=None)),
+                (
+                    "assessment_status",
+                    models.CharField(
+                        choices=[
+                            ("Not Conducted", "Not Conducted"),
+                            ("Conducted", "Conducted"),
+                        ],
+                        default="Not Conducted",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "case_status",
+                    models.CharField(
+                        choices=[
+                            ("On Going", "On Going"),
+                            ("Case Closed", "Case Closed"),
+                            ("Case Discontinued", "Case Discontinued"),
+                        ],
+                        default="On Going",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "counseling",
+                    models.CharField(
+                        choices=[
+                            ("Availed", "Availed"),
+                            ("Not Required", "Not Required"),
+                            ("Waiting List", "Waiting List"),
+                        ],
+                        default="Waiting List",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "follow_up",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("Treatment Completed", "Treatment Completed"),
+                            ("Undergoing Treatment", "Undergoing Treatment"),
+                            (
+                                "Completed Counselling Sessions",
+                                "Completed Counselling Sessions",
+                            ),
+                            (
+                                "Unwilling to Undergo Treatment",
+                                "Unwilling to Undergo Treatment",
+                            ),
+                            ("Undergone Rehabilitation", "Undergone Rehabilitation"),
+                            ("Undergoing Rehabilitation", "Undergoing Rehabilitation"),
+                            (
+                                "Hospital-based Outpatient SUD Treatment and Care (Primary Phase)",
+                                "Hospital-based Outpatient SUD Treatment and Care (Primary Phase)",
+                            ),
+                            (
+                                "Hospital-based Outpatient SUD Treatment and Care (Continuing Care)",
+                                "Hospital-based Outpatient SUD Treatment and Care (Continuing Care)",
+                            ),
+                            (
+                                "School-based SUD Treatment and Care",
+                                "School-based SUD Treatment and Care",
+                            ),
+                            (
+                                "Institution-based SUD Treatment and Care",
+                                "Institution-based SUD Treatment and Care",
+                            ),
+                            (
+                                "Follow-up Drug Test Conducted",
+                                "Follow-up Drug Test Conducted",
+                            ),
+                            (
+                                "Detention-based SUD Treatment and Care",
+                                "Detention-based SUD Treatment and Care",
+                            ),
+                        ],
+                        max_length=255,
+                    ),
+                ),
+                ("comments", models.TextField(blank=True, null=True)),
+                ("updated_at", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "referred",
+                    models.CharField(
+                        choices=[
+                            ("Not Referred", "Not Referred"),
+                            ("Referred", "Referred"),
+                            ("Referred Back", "Referred Back"),
+                        ],
+                        default="Not Referred",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "referral_instance",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="service_and_treatments",
+                        to="monitoring.referral",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="updated_by",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Rescreening',
+            name="Rescreening",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('gad_data', models.JSONField(blank=True, null=True)),
-                ('gad_score', models.IntegerField(blank=True, null=True)),
-                ('gad_interpretation', models.CharField(blank=True, help_text='Interpretation of GAD score', max_length=255, null=True)),
-                ('phq_data', models.JSONField(blank=True, null=True)),
-                ('phq_score', models.IntegerField(blank=True, null=True)),
-                ('phq_interpretation', models.CharField(blank=True, help_text='Interpretation of PHQ score', max_length=255, null=True)),
-                ('ace_data', models.JSONField(blank=True, null=True)),
-                ('ace_score', models.IntegerField(blank=True, null=True)),
-                ('ace_interpretation', models.CharField(blank=True, help_text='Interpretation of ACE score', max_length=255, null=True)),
-                ('school_env_data', models.JSONField(blank=True, null=True)),
-                ('rescreened', models.BooleanField(default=False)),
-                ('rescreening_count', models.IntegerField(blank=True, default=0, null=True)),
-                ('submission_date', models.DateTimeField(auto_now_add=True)),
-                ('referral', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='rescreenings', to='monitoring.referral')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rescreenings', to=settings.AUTH_USER_MODEL)),
-                ('service_and_treatment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='rescreenings', to='monitoring.serviceandtreatment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("gad_data", models.JSONField(blank=True, null=True)),
+                ("gad_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "gad_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of GAD score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("phq_data", models.JSONField(blank=True, null=True)),
+                ("phq_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "phq_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of PHQ score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("ace_data", models.JSONField(blank=True, null=True)),
+                ("ace_score", models.IntegerField(blank=True, null=True)),
+                (
+                    "ace_interpretation",
+                    models.CharField(
+                        blank=True,
+                        help_text="Interpretation of ACE score",
+                        max_length=255,
+                        null=True,
+                    ),
+                ),
+                ("school_env_data", models.JSONField(blank=True, null=True)),
+                ("rescreened", models.BooleanField(default=False)),
+                (
+                    "rescreening_count",
+                    models.IntegerField(blank=True, default=0, null=True),
+                ),
+                ("submission_date", models.DateTimeField(auto_now_add=True)),
+                (
+                    "referral",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="rescreenings",
+                        to="monitoring.referral",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rescreenings",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "service_and_treatment",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="rescreenings",
+                        to="monitoring.serviceandtreatment",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='referral',
-            name='service_and_treatment',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='referral', to='monitoring.serviceandtreatment'),
+            model_name="referral",
+            name="service_and_treatment",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="referral",
+                to="monitoring.serviceandtreatment",
+            ),
         ),
         migrations.CreateModel(
-            name='ServiceAndTreatmentHistory',
+            name="ServiceAndTreatmentHistory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('updated_at', models.DateTimeField(default=django.utils.timezone.now)),
-                ('changes', models.TextField()),
-                ('service_and_treatment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='monitoring.serviceandtreatment')),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='service_and_treatment_histories', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("updated_at", models.DateTimeField(default=django.utils.timezone.now)),
+                ("changes", models.TextField()),
+                (
+                    "service_and_treatment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="monitoring.serviceandtreatment",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="service_and_treatment_histories",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SubstanceRiskMeasurement',
+            name="SubstanceRiskMeasurement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('measurement', models.FloatField(help_text='Measurement value for the substance')),
-                ('risk_flag', models.CharField(help_text='Risk flag based on measurement', max_length=250)),
-                ('total_score', models.FloatField(blank=True, help_text='Total score for the substance', null=True)),
-                ('rescreening', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='substance_risk_measurements', to='monitoring.rescreening')),
-                ('substance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='risk_measurements', to='monitoring.substance')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "measurement",
+                    models.FloatField(help_text="Measurement value for the substance"),
+                ),
+                (
+                    "risk_flag",
+                    models.CharField(
+                        help_text="Risk flag based on measurement", max_length=250
+                    ),
+                ),
+                (
+                    "total_score",
+                    models.FloatField(
+                        blank=True, help_text="Total score for the substance", null=True
+                    ),
+                ),
+                (
+                    "rescreening",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="substance_risk_measurements",
+                        to="monitoring.rescreening",
+                    ),
+                ),
+                (
+                    "substance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="risk_measurements",
+                        to="monitoring.substance",
+                    ),
+                ),
             ],
         ),
     ]

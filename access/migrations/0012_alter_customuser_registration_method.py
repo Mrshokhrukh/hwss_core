@@ -6,13 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('access', '0011_customuser_registration_method'),
+        ("access", "0011_customuser_registration_method"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customuser',
-            name='registration_method',
-            field=models.CharField(choices=[('cluster_registration', 'Clustered Registered'), ('case_registration', 'Counselor Case Registered'), ('event_registration', 'Counselor Event Registered'), ('unknown_registration', 'Unknown/Legacy')], default='unknown', help_text='How the user was initially registered.', max_length=20),
+            model_name="customuser",
+            name="registration_method",
+            field=models.CharField(
+                choices=[
+                    ("cluster_registration", "Clustered Registered"),
+                    ("case_registration", "Counselor Case Registered"),
+                    ("event_registration", "Counselor Event Registered"),
+                    ("unknown_registration", "Unknown/Legacy"),
+                ],
+                default="unknown",
+                help_text="How the user was initially registered.",
+                max_length=20,
+            ),
         ),
     ]

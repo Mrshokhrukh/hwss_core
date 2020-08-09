@@ -1,15 +1,26 @@
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
-import random
-import string
-import uuid
+
+from access.constants import REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, password=None, role=None, agency_data=None, **extra_fields):
+    def create_user(
+        self,
+        username,
+        email,
+        password=None,
+        role=None,
+        agency_data=None,
+        **extra_fields,
+    ):
         if not username:
-            raise ValueError('The Username field must be set')
+            raise ValueError("The Username field must be set")
 
         email = self.normalize_email(email)
         user = self.model(
@@ -28,14 +39,14 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('identity_number', '654345')
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("identity_number", "654345")
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(username, email, password=password, **extra_fields)
 
@@ -55,16 +66,15 @@ class Agency(models.Model):
 
 class UserAgency(models.Model):
     user = models.OneToOneField(
-        'CustomUser', on_delete=models.CASCADE, related_name='agency_details')
-    agency = models.ForeignKey('Agency', on_delete=models.CASCADE)
+        "CustomUser", on_delete=models.CASCADE, related_name="agency_details"
+    )
+    agency = models.ForeignKey("Agency", on_delete=models.CASCADE)
     user_code = models.CharField(max_length=255)
     parent_occupation = models.CharField(max_length=255, blank=True, null=True)
     guardian_name = models.CharField(max_length=255, blank=True, null=True)
-    guardian_occupation = models.CharField(
-        max_length=255, blank=True, null=True)
+    guardian_occupation = models.CharField(max_length=255, blank=True, null=True)
     parent_status = models.CharField(max_length=255, blank=True, null=True)
-    current_living_with = models.CharField(
-        max_length=255, blank=True, null=True)
+    current_living_with = models.CharField(max_length=255, blank=True, null=True)
     user_role_agency = models.CharField(max_length=255)
     user_class = models.CharField(max_length=255, blank=True, null=True)
     user_stream = models.CharField(max_length=255, blank=True, null=True)
@@ -76,8 +86,7 @@ class UserAgency(models.Model):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(
-        max_length=255, unique=True, null=True, blank=True)
+    username = models.CharField(max_length=255, unique=True, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     identity_number = models.CharField(max_length=255, null=True, blank=True)
@@ -93,74 +102,38 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     mother_name = models.CharField(max_length=255, blank=True, null=True)
     perm_add_village = models.CharField(max_length=255, null=True, blank=True)
     perm_add_gewog = models.CharField(max_length=255, null=True, blank=True)
-    perm_add_dzongkhag = models.CharField(
-        max_length=255, null=True, blank=True)
+    perm_add_dzongkhag = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(
-        upload_to='profile_pictures/', null=True, blank=True)
+        upload_to="profile_pictures/", null=True, blank=True
+    )
     active_agency = models.ForeignKey(
-        Agency, null=True, blank=True, on_delete=models.SET_NULL)
+        Agency, null=True, blank=True, on_delete=models.SET_NULL
+    )
     ps_add_village = models.CharField(max_length=255, blank=True, null=True)
     ps_add_gewog = models.CharField(max_length=255, blank=True, null=True)
     ps_add_dzongkhag = models.CharField(max_length=255, blank=True, null=True)
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    is_old_case_user = models.BooleanField(
-        default=False, null=True, blank=True)
-
-    ROLE_STUDENT = 'student'
-    ROLE_PUBLIC = 'general_public'
-    ROLE_CLINICAL_COUNSELOR = 'clinical_counselor'
-    ROLE_GYALSUNG_COUNSELOR = 'gyalsung_counselor'
-    ROLE_SCHOOL_COUNSELOR = 'school_counselor'
-    ROLE_TRAINED_PROFESSIONAL = 'trained_professional'
-    ROLE_ADMIN = 'mh_admin'
-    ROLE_RD_ADMIN = 'rd_admin'
-    ROLE_SUD_ADMIN = 'sud_admin'
-    ROLE_AAA_ADMIN = 'aaa_admin'
-    ROLE_CECD_ADMIN = 'cecd_admin'
-    ROLE_PSYCHIATRIST = 'psychiatrist'
-    ROLE_MEDICAL_OFFICER = 'medical_officer'
-
-    ROLE_CHOICES = [
-        (ROLE_STUDENT, 'Student'),
-        (ROLE_PUBLIC, 'General Public'),
-        (ROLE_CLINICAL_COUNSELOR, 'Clinical Counselor'),
-        (ROLE_GYALSUNG_COUNSELOR, 'Gyalsung Counselor'),
-        (ROLE_SCHOOL_COUNSELOR, 'School Counselor'),
-        (ROLE_TRAINED_PROFESSIONAL, 'Trained Professional'),
-        (ROLE_ADMIN, 'Mental Health Care Admin'),
-        (ROLE_RD_ADMIN, 'R&D Admin'),
-        (ROLE_SUD_ADMIN, 'SUD Admin'),
-        (ROLE_AAA_ADMIN, 'AAA Admin'),
-        (ROLE_CECD_ADMIN, 'CECD Admin'),
-        (ROLE_PSYCHIATRIST, 'Psychiatrist'),
-        (ROLE_MEDICAL_OFFICER, 'Medical Officer'),
-    ]
+    is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
-    REGISTRATION_METHOD_CHOICES = [
-        ('cluster_registration', 'Clustered Registered'),
-        ('case_registration', 'Counselor Case Registered'),
-        ('event_registration', 'Counselor Event Registered'),
-        ('unknown_registration', 'Unknown/Legacy'),
-    ]
     registration_method = models.CharField(
         max_length=20,
         choices=REGISTRATION_METHOD_CHOICES,
-        default='unknown',
+        default="unknown",
         blank=False,
         null=False,
-        help_text="How the user was initially registered."
+        help_text="How the user was initially registered.",
     )
 
     @property
     def was_self_registered(self):
-        return self.registration_method == 'self'
+        return self.registration_method == "self"
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email"]
 
     objects = CustomUserManager()
 
@@ -168,13 +141,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.username or f"CustomUser #{self.pk}"
 
     class Meta:
-        verbose_name = 'user'
-        verbose_name_plural = 'users'
+        verbose_name = "user"
+        verbose_name_plural = "users"
         constraints = [
             models.UniqueConstraint(
-                fields=['identity_number'],
-                name='unique_identity_number_when_not_old_user',
-                condition=models.Q(is_old_case_user=False)
+                fields=["identity_number"],
+                name="unique_identity_number_when_not_old_user",
+                condition=models.Q(is_old_case_user=False),
             )
         ]
 
@@ -199,7 +172,8 @@ class PreRecordedUser(models.Model):
     perm_add_gewog = models.CharField(max_length=255)
     perm_add_dzongkhag = models.CharField(max_length=255)
     profile_picture = models.ImageField(
-        upload_to='profile_pictures/', null=True, blank=True)
+        upload_to="profile_pictures/", null=True, blank=True
+    )
     is_gyalsung = models.BooleanField(default=False)
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -216,15 +190,13 @@ class PreRecordedUser(models.Model):
     user_code = models.CharField(max_length=255, blank=True, null=True)
     parent_occupation = models.CharField(max_length=255, blank=True, null=True)
     guardian_name = models.CharField(max_length=255, blank=True, null=True)
-    guardian_occupation = models.CharField(
-        max_length=255, blank=True, null=True)
+    guardian_occupation = models.CharField(max_length=255, blank=True, null=True)
     parent_status = models.CharField(max_length=255, blank=True, null=True)
-    current_living_with = models.CharField(
-        max_length=255, blank=True, null=True)
+    current_living_with = models.CharField(max_length=255, blank=True, null=True)
     user_role_agency = models.CharField(max_length=255, blank=True, null=True)
     user_class = models.CharField(max_length=255, blank=True, null=True)
     user_sub_class = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        verbose_name = 'Pre-recorded user'
-        verbose_name_plural = 'Pre-recorded users'
+        verbose_name = "Pre-recorded user"
+        verbose_name_plural = "Pre-recorded users"
