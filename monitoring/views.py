@@ -61,6 +61,16 @@ class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
     serializer_class = ServiceAndTreatmentSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        return ServiceAndTreatment.objects.all().select_related(
+            "content_type",
+            "user",
+            "user__active_agency",
+            "user__agency_details",
+            "updated_by",
+            "updated_by__active_agency",
+        )
+
     @action(detail=False, methods=["get"], url_path="get-service-and-treatment")
     def get_service_and_treatment(self, request):
         response = create_service_and_treatments(request)
@@ -69,6 +79,8 @@ class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
         queryset = self.get_queryset()
+        # optimized for the generic foreign key
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -1028,79 +1040,89 @@ class ReferralViewSet(viewsets.ModelViewSet):
 def create_service_and_treatments(request):
     try:
         with transaction.atomic():
-            case_based_submissions = CaseBasedSubmission.objects.all()
+            service_and_treatment_object_list = []
+            case_based_submissions = CaseBasedSubmission.objects.only("id", "user")
+            event_based_submissions = EventBasedSubmission.objects.only("id", "user")
+            final_user_submissions = FinalUserSubmission.objects.only("id", "user")
+            gyalsung_profiles = GyalsungUserProfile.objects.only("id")
+
             case_content_type = ContentType.objects.get_for_model(CaseBasedSubmission)
+            event_content_type = ContentType.objects.get_for_model(EventBasedSubmission)
+            final_content_type = ContentType.objects.get_for_model(FinalUserSubmission)
+            gyalsung_content_type = ContentType.objects.get_for_model(GyalsungUserProfile)
 
             for case_submission in case_based_submissions:
                 if not ServiceAndTreatment.objects.filter(
                     content_type=case_content_type, object_id=case_submission.id
                 ).exists():
-                    ServiceAndTreatment.objects.create(
-                        content_type=case_content_type,
-                        object_id=case_submission.id,
-                        user=case_submission.user,
-                        date=timezone.now(),
-                        assessment_status="Not Conducted",
-                        case_status="On Going",
-                        counseling="Waiting List",
-                        updated_by=None,
+                    service_and_treatment_object_list.append(
+                        ServiceAndTreatment(
+                            content_type=case_content_type,
+                            object_id=case_submission.id,
+                            user=case_submission.user,
+                            date=timezone.now(),
+                            assessment_status="Not Conducted",
+                            case_status="On Going",
+                            counseling="Waiting List",
+                            updated_by=None,
+                        )
                     )
-
-            event_based_submissions = EventBasedSubmission.objects.all()
-            event_content_type = ContentType.objects.get_for_model(EventBasedSubmission)
 
             for event_submission in event_based_submissions:
                 if not ServiceAndTreatment.objects.filter(
                     content_type=event_content_type, object_id=event_submission.id
                 ).exists():
-                    ServiceAndTreatment.objects.create(
-                        content_type=event_content_type,
-                        object_id=event_submission.id,
-                        user=event_submission.user,
-                        date=timezone.now(),
-                        assessment_status="Not Conducted",
-                        case_status="On Going",
-                        counseling="Waiting List",
-                        updated_by=None,
+                    service_and_treatment_object_list.append(
+                        ServiceAndTreatment(
+                            content_type=event_content_type,
+                            object_id=event_submission.id,
+                            user=event_submission.user,
+                            date=timezone.now(),
+                            assessment_status="Not Conducted",
+                            case_status="On Going",
+                            counseling="Waiting List",
+                            updated_by=None,
+                        )
                     )
-
-            final_user_submissions = FinalUserSubmission.objects.all()
-            final_content_type = ContentType.objects.get_for_model(FinalUserSubmission)
 
             for final_submission in final_user_submissions:
                 if not ServiceAndTreatment.objects.filter(
                     content_type=final_content_type, object_id=final_submission.id
                 ).exists():
-                    ServiceAndTreatment.objects.create(
-                        content_type=final_content_type,
-                        object_id=final_submission.id,
-                        user=final_submission.user,
-                        date=timezone.now(),
-                        assessment_status="Not Conducted",
-                        case_status="On Going",
-                        counseling="Waiting List",
-                        updated_by=None,
+                    service_and_treatment_object_list.append(
+                        ServiceAndTreatment(
+                            content_type=final_content_type,
+                            object_id=final_submission.id,
+                            user=final_submission.user,
+                            date=timezone.now(),
+                            assessment_status="Not Conducted",
+                            case_status="On Going",
+                            counseling="Waiting List",
+                            updated_by=None,
+                        )
                     )
-
-            gyalsung_profiles = GyalsungUserProfile.objects.all()
-            gyalsung_content_type = ContentType.objects.get_for_model(
-                GyalsungUserProfile
-            )
 
             for gyalsung_profile in gyalsung_profiles:
                 if not ServiceAndTreatment.objects.filter(
                     content_type=gyalsung_content_type, object_id=gyalsung_profile.id
                 ).exists():
-                    ServiceAndTreatment.objects.create(
-                        content_type=gyalsung_content_type,
-                        object_id=gyalsung_profile.id,
-                        user=None,  # No user field for GyalsungUserProfile
-                        date=timezone.now(),
-                        assessment_status="Not Conducted",
-                        case_status="On Going",
-                        counseling="Waiting List",
-                        updated_by=None,
+                    service_and_treatment_object_list.append(
+
+                        ServiceAndTreatment(
+                            content_type=gyalsung_content_type,
+                            object_id=gyalsung_profile.id,
+                            user=None,  # No user field for GyalsungUserProfile
+                            date=timezone.now(),
+                            assessment_status="Not Conducted",
+                            case_status="On Going",
+                            counseling="Waiting List",
+                            updated_by=None,
+                        )
                     )
+
+            # creating all the service and treatment records in a single db query
+            print('>>>> len service_and_treatment_object_list:', len(service_and_treatment_object_list))
+            ServiceAndTreatment.objects.bulk_create(service_and_treatment_object_list)
 
         return JsonResponse(
             {

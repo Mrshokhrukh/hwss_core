@@ -65,12 +65,15 @@ INSTALLED_APPS = [
     "corsheaders",
     "import_export",
     "django_quill",
+    "django_extensions",
+    "debug_toolbar",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -278,3 +281,9 @@ FRONTEND_URL = "https://thepemasystem.gov.bt"
 # SESSION_COOKIE_HTTPONLY = True
 # SESSION_COOKIE_SAMESITE = 'Lax'
 # SESSION_COOKIE_DOMAIN = '.thepemasystem.gov.bt'
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+    '0.0.0.0',
+    'localhost',
+]

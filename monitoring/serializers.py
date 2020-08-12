@@ -1,9 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import F
 from rest_framework import serializers
 
 from access.models import Agency, CustomUser, UserAgency
 from gyalsung_users.models import GyalsungUserProfile
-from measurement.models import Submission
+from measurement.models import Submission, UserSubmission
 from monitoring.models import FinalUserSubmission, Referral, ServiceAndTreatment
 from screening.models import (
     CaseBasedSubmission,
@@ -253,13 +254,18 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     school_env_data = serializers.SerializerMethodField()
 
     def get_school_env_data(self, obj):
-        user = obj.user
-        submissions = Submission.objects.filter(
-            question_set__name="SCHOOL ENV", user_submission__user=user
+        return Submission.objects.filter(
+            question_set__name="SCHOOL ENV", 
+            user_submission__user=obj.user,
+        ).values(
+            "question",
+            "answer",
+            "score",
+            "substance",
+            "specify",
+            "diagnosis",
+            "created_at",
         )
-        if submissions.exists():
-            return SchoolEnvSubmissionSerializer(submissions, many=True).data
-        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -290,20 +296,16 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
 
         # Include substance risk measurements
         if isinstance(assessment_object, CaseBasedSubmission):
-            case_substances = CaseSubstanceRiskMeasurement.objects.filter(
+            representation["case_substance_risks"] = CaseSubstanceRiskMeasurement.objects.filter(
                 case_submission=assessment_object
-            )
-            representation["case_substance_risks"] = (
-                CaseSubstanceRiskMeasurementSerializer(case_substances, many=True).data
+            ).select_related("substance").annotate(substance_name=F("substance__name")).values(
+                "substance_name", "measurement", "risk_flag", "total_score"
             )
         elif isinstance(assessment_object, EventBasedSubmission):
-            event_substances = EventSubstanceRiskMeasurement.objects.filter(
+            representation["event_substance_risks"] = EventSubstanceRiskMeasurement.objects.filter(
                 event_submission=assessment_object
-            )
-            representation["event_substance_risks"] = (
-                EventSubstanceRiskMeasurementSerializer(
-                    event_substances, many=True
-                ).data
+            ).select_related("substance").annotate(substance_name=F("substance__name")).values(
+                "substance_name", "measurement", "risk_flag", "total_score"
             )
 
         representation.pop("content_type", None)

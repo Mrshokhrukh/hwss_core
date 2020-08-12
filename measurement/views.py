@@ -675,6 +675,13 @@ class MeasurementListView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         return self.get_default_format()
 
+    # def get_queryset(self):
+    #     Measurement.objects.all().select_related(
+    #         "user",
+    #         # "user_submission",
+    #         # "assist",
+    #     )
+
     def get_default_format(self):
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -683,7 +690,8 @@ class MeasurementListView(generics.ListAPIView):
 
         # Include custom user details
         user_ids = queryset.values_list("user_id", flat=True).distinct()
-        users = CustomUser.objects.filter(id__in=user_ids)
+        users = CustomUser.objects.filter(id__in=user_ids).select_related("active_agency")
+        # users = queryset.only("user").select_related("user__active_agency") 
         user_details = CustomUserSerializer(users, many=True).data
 
         # Pair each measurement with its respective user
@@ -713,7 +721,7 @@ class MeasurementAssistListView(generics.ListAPIView):
 
         # Include custom user details
         user_ids = queryset.values_list("user_id", flat=True).distinct()
-        users = CustomUser.objects.filter(id__in=user_ids)
+        users = CustomUser.objects.filter(id__in=user_ids).select_related("active_agency")
         user_details = CustomUserSerializer(users, many=True).data
 
         # Pair each measurement assist with its respective user
