@@ -17,6 +17,7 @@ from screening.models import (
 
 User = CustomUser
 
+
 class Reporting(models.Model):
     # User details from the access module
     user = models.ForeignKey(User, on_delete=models.CASCADE)

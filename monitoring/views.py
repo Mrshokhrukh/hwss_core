@@ -432,7 +432,10 @@ def generateServiceAndTreatment(request):
 
     except Exception as e:
         logger.error(f"Error in generateServiceAndTreatment: {e}")
-        return JsonResponse({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "An unexpected error occurred"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @csrf_exempt
@@ -483,13 +486,18 @@ def update_service_and_treatment(request):
 
             # Return success response
             return JsonResponse(
-                {"message": "ServiceAndTreatment updated successfully"}, status=status.HTTP_200_OK
+                {"message": "ServiceAndTreatment updated successfully"},
+                status=status.HTTP_200_OK,
             )
         except Exception as e:
             error_msg = f"An error occurred: {str(e)}"
-            return JsonResponse({"error": error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse(
+                {"error": error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     else:
-        return JsonResponse({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(
+            {"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 
 @csrf_exempt
@@ -568,7 +576,10 @@ def update_referral_status(request):
             refer_data = data.get("referData")
 
             if not refer_data:
-                return JsonResponse({"error": "No referral data provided"}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse(
+                    {"error": "No referral data provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             referred_by_id = refer_data.get("referred_by")
             referred_to_info = refer_data.get(
@@ -608,7 +619,7 @@ def update_referral_status(request):
                         {
                             "error": f"No service and treatment record found for user ID {user_id}."
                         },
-                        status=status.HTTP_404_NOT_FOUND
+                        status=status.HTTP_404_NOT_FOUND,
                     )
 
                 content_type = ContentType.objects.get_for_model(ServiceAndTreatment)
@@ -658,7 +669,9 @@ def update_referral_status(request):
                 )
 
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(
+                {"error": "Invalid JSON data"}, status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             import traceback
 
@@ -670,7 +683,10 @@ def update_referral_status(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    return JsonResponse({"error": "Only POST requests are allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    return JsonResponse(
+        {"error": "Only POST requests are allowed"},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
 
 
 # function for getting users details:
@@ -678,7 +694,9 @@ def get_user_monitoring_details(request):
     user_id = request.GET.get("user_id")
 
     if user_id is None:
-        return JsonResponse({"error": "User ID is missing"}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(
+            {"error": "User ID is missing"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     user = get_object_or_404(CustomUser, pk=user_id)
 
@@ -819,11 +837,17 @@ def accept_referral(request):
                 )
             else:
                 return JsonResponse(
-                    {"error": "No referral found matching the criteria."}, status.HTTP_404_NOT_FOUND
+                    {"error": "No referral found matching the criteria."},
+                    status.HTTP_404_NOT_FOUND,
                 )
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    return JsonResponse({"error": "Only POST requests are allowed"},  status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return JsonResponse(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    return JsonResponse(
+        {"error": "Only POST requests are allowed"},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
 
 
 @csrf_exempt
@@ -863,11 +887,17 @@ def reject_referral(request):
                 )
             else:
                 return JsonResponse(
-                    {"error": "No referral found matching the criteria."}, status.HTTP_404_NOT_FOUND
+                    {"error": "No referral found matching the criteria."},
+                    status.HTTP_404_NOT_FOUND,
                 )
         except Referral.DoesNotExist:
-            return JsonResponse({"error": "Referral does not exist."}, status.HTTP_404_NOT_FOUND)
-    return JsonResponse({"error": "Only POST requests are allowed"},  status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return JsonResponse(
+                {"error": "Referral does not exist."}, status.HTTP_404_NOT_FOUND
+            )
+    return JsonResponse(
+        {"error": "Only POST requests are allowed"},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
 
 
 def check_and_create_final_submission(user):
@@ -1023,7 +1053,10 @@ class ReferralViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(referrals, many=True)
             return Response(serializer.data)
         else:
-            return Response({"detail": "Status parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Status parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(detail=True, methods=["get"], url_path="referred-to")
     def referred_to_details(self, request, pk=None):
@@ -1033,7 +1066,8 @@ class ReferralViewSet(viewsets.ModelViewSet):
             user_serializer = CustomUserSerializer(referred_to_user)
             return Response(user_serializer.data)
         return Response(
-            {"detail": "No referred_to user found for this referral."}, status.HTTP_404_NOT_FOUND
+            {"detail": "No referred_to user found for this referral."},
+            status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -1049,7 +1083,9 @@ def create_service_and_treatments(request):
             case_content_type = ContentType.objects.get_for_model(CaseBasedSubmission)
             event_content_type = ContentType.objects.get_for_model(EventBasedSubmission)
             final_content_type = ContentType.objects.get_for_model(FinalUserSubmission)
-            gyalsung_content_type = ContentType.objects.get_for_model(GyalsungUserProfile)
+            gyalsung_content_type = ContentType.objects.get_for_model(
+                GyalsungUserProfile
+            )
 
             for case_submission in case_based_submissions:
                 if not ServiceAndTreatment.objects.filter(
@@ -1107,7 +1143,6 @@ def create_service_and_treatments(request):
                     content_type=gyalsung_content_type, object_id=gyalsung_profile.id
                 ).exists():
                     service_and_treatment_object_list.append(
-
                         ServiceAndTreatment(
                             content_type=gyalsung_content_type,
                             object_id=gyalsung_profile.id,
@@ -1121,7 +1156,10 @@ def create_service_and_treatments(request):
                     )
 
             # creating all the service and treatment records in a single db query
-            print('>>>> len service_and_treatment_object_list:', len(service_and_treatment_object_list))
+            print(
+                ">>>> len service_and_treatment_object_list:",
+                len(service_and_treatment_object_list),
+            )
             ServiceAndTreatment.objects.bulk_create(service_and_treatment_object_list)
 
         return JsonResponse(
@@ -1143,12 +1181,17 @@ def get_notifications(request, user_id):
                 notification_for__id=user_id
             ).values("id", "notification", "notification_status", "created_at")
 
-            return JsonResponse({"notifications": list(notifications)}, status.HTTP_200_OK)
+            return JsonResponse(
+                {"notifications": list(notifications)}, status.HTTP_200_OK
+            )
 
         except CustomUser.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status.HTTP_404_NOT_FOUND)
     else:
-        return JsonResponse({"error": "Invalid request method"},  status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(
+            {"error": "Invalid request method"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 
 
 @csrf_exempt
@@ -1160,15 +1203,23 @@ def mark_notification_as_read(request):
 
             if not notification_id:
                 return JsonResponse(
-                    {"error": "Notification ID is required"}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "Notification ID is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             notification = get_object_or_404(Notification, id=notification_id)
             notification.mark_as_read()
 
-            return JsonResponse({"message": "Notification marked as read"}, status.HTTP_200_OK)
+            return JsonResponse(
+                {"message": "Notification marked as read"}, status.HTTP_200_OK
+            )
 
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(
+                {"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST
+            )
     else:
-        return JsonResponse({"error": "Invalid request method"},  status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return JsonResponse(
+            {"error": "Invalid request method"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )

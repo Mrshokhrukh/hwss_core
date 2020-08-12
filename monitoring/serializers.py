@@ -255,7 +255,7 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
 
     def get_school_env_data(self, obj):
         return Submission.objects.filter(
-            question_set__name="SCHOOL ENV", 
+            question_set__name="SCHOOL ENV",
             user_submission__user=obj.user,
         ).values(
             "question",
@@ -296,16 +296,22 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
 
         # Include substance risk measurements
         if isinstance(assessment_object, CaseBasedSubmission):
-            representation["case_substance_risks"] = CaseSubstanceRiskMeasurement.objects.filter(
-                case_submission=assessment_object
-            ).select_related("substance").annotate(substance_name=F("substance__name")).values(
-                "substance_name", "measurement", "risk_flag", "total_score"
+            representation["case_substance_risks"] = (
+                CaseSubstanceRiskMeasurement.objects.filter(
+                    case_submission=assessment_object
+                )
+                .select_related("substance")
+                .annotate(substance_name=F("substance__name"))
+                .values("substance_name", "measurement", "risk_flag", "total_score")
             )
         elif isinstance(assessment_object, EventBasedSubmission):
-            representation["event_substance_risks"] = EventSubstanceRiskMeasurement.objects.filter(
-                event_submission=assessment_object
-            ).select_related("substance").annotate(substance_name=F("substance__name")).values(
-                "substance_name", "measurement", "risk_flag", "total_score"
+            representation["event_substance_risks"] = (
+                EventSubstanceRiskMeasurement.objects.filter(
+                    event_submission=assessment_object
+                )
+                .select_related("substance")
+                .annotate(substance_name=F("substance__name"))
+                .values("substance_name", "measurement", "risk_flag", "total_score")
             )
 
         representation.pop("content_type", None)

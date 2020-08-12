@@ -7,14 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 
 from access.models import CustomUser, UserAgency
 from measurement.models import Measurement
+from monitoring.models import Rescreening, ServiceAndTreatment, SubstanceRiskMeasurement
 
-from monitoring.models import (
-    Rescreening,
-    ServiceAndTreatment,
-    SubstanceRiskMeasurement,
-)
-
-# i am not getting why the UserArchive is that some deprecated model 
+# i am not getting why the UserArchive is that some deprecated model
 from reporting.models import Reporting, UserArchive
 
 # Configure logging
