@@ -4,7 +4,7 @@ from .views import (
     ReferralViewSet, ServiceAndTreatmentViewSet, get_notifications, list_final_submissions, mark_notification_as_read, process_rescreening,
     getReferralList, retrieve_final_submission, submit_rescreening,
     generateServiceAndTreatment, get_user_monitoring_details,
-    update_service_and_treatment, update_referral_status, accept_referral, reject_referral
+    update_service_and_treatment, update_referral_status, accept_referral, reject_referral, mark_submission_safe
 )
 
 router = DefaultRouter()
@@ -19,6 +19,7 @@ urlpatterns = [
          retrieve_final_submission, name='retrieve_final_submission'),
     path('check-rescreening-flags/', process_rescreening,
          name='check_rescreening_flags'),
+     path('mark-submission-safe/', mark_submission_safe, name='mark_submission_safe'),
     path('generate-service-and-treatment/', generateServiceAndTreatment,
          name='generate_service_and_treatment'),
     path('get-referral-list/', getReferralList, name='get_referral_list'),

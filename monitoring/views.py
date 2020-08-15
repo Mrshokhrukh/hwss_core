@@ -140,36 +140,46 @@ def submit_rescreening(request):
 
 
 def get_non_green_flags(request):
-    rescreening_list = []
+    """
+    Retrieves submissions that have non-green flags, are not yet rescreened, 
+    and have not been marked as safe. Can be filtered by agency name.
+    """
+    agency_name = request.GET.get('agency_name')
 
-    # Iterate over all UserSubmission instances
-    for submission in UserSubmission.objects.filter(rescreened=False, mark_as_safe=False):
-        # Initialize a dictionary to store data for the current submission
+    base_queryset = UserSubmission.objects.filter(
+        rescreened=False, 
+        mark_as_safe=False
+    ).select_related(
+        'user', 
+        'user__active_agency'
+    ).prefetch_related(
+        'user__agency_details__agency'
+    )
+
+    if agency_name:
+        base_queryset = base_queryset.filter(user__agency_details__agency__agency_name__iexact=agency_name)
+
+    rescreening_list = []
+    for submission in base_queryset:
         submission_data = {
             'submission_id': submission.id,
-            'flags': {},  # Initialize flags dictionary
+            'flags': {},
             'user_details': {},
             'measurement_data': {},
             'measurement_assist_data': {},
             'user_agency_data': {},
-            'diagnosis': ''  # Initialize diagnosis field
+            'diagnosis': ''
         }
+        
+        measurement = Measurement.objects.filter(user_submission=submission).first()
+        measurement_assist = MeasurementAssist.objects.filter(user_submission=submission).first()
+        submission_details = Submission.objects.filter(user_submission=submission).first()
 
-        # Fetch Measurement and MeasurementAssist instances for the current submission
-        measurement = Measurement.objects.filter(
-            user_submission=submission).first()
-        measurement_assist = MeasurementAssist.objects.filter(
-            user_submission=submission).first()
-
-        # Fetch Submission details for the submission
-        submission_details = Submission.objects.filter(
-            user_submission=submission).first()
         if submission_details:
             submission_data['diagnosis'] = submission_details.diagnosis
             submission_data['created_at'] = submission_details.created_at
 
-        # Fetch user details for the submission
-        middle_name = submission.user.middle_name if submission.user.middle_name else ''
+        middle_name = submission.user.middle_name or ''
         full_name = f"{submission.user.first_name} {middle_name} {submission.user.last_name}".strip()
         user_details = {
             'full_name': full_name,
@@ -179,45 +189,36 @@ def get_non_green_flags(request):
         }
         submission_data['user_details'] = user_details
 
-        # Fetch user agency details for the submission
-        if submission.user.active_agency:
-            user_agency_data = {}
-            try:
-                user_agency = submission.user.agency_details
-                user_agency_data = {
-                    'agency_name': user_agency.agency.agency_name,
-                    'user_role_agency': user_agency.user_role_agency,
-                    'user_class': user_agency.user_class,
-                    'user_stream': user_agency.user_stream,
-                    'user_sub_class': user_agency.user_sub_class,
-                    'user_dzongkhag': submission.user.active_agency.present_dzongkhag,
-                }
-            except UserAgency.DoesNotExist:
-                user_agency_data = {}
-            submission_data['user_agency_data'] = user_agency_data
+        try:
+            user_agency = submission.user.agency_details
+            submission_data['user_agency_data'] = {
+                'agency_name': user_agency.agency.agency_name,
+                'user_role_agency': user_agency.user_role_agency,
+                'user_class': user_agency.user_class,
+                'user_stream': user_agency.user_stream,
+                'user_sub_class': user_agency.user_sub_class,
+                
+                # --- THIS IS THE CORRECTED LINE ---
+                'user_dzongkhag': submission.user.active_agency.present_dzongkhag if submission.user.active_agency else None,
+            }
+        except UserAgency.DoesNotExist:
+            submission_data['user_agency_data'] = {}
 
-        # Check MeasurementAssist flags
         if measurement_assist:
             for field in measurement_assist._meta.fields:
-                if field.name.endswith('_flag'):
-                    flag_value = getattr(measurement_assist, field.name)
-                    if flag_value != 'green':
-                        submission_data['flags'][field.name] = flag_value
-
+                if field.name.endswith('_flag') and getattr(measurement_assist, field.name) != 'green':
+                    submission_data['flags'][field.name] = getattr(measurement_assist, field.name)
+        
         if measurement:
             for field in measurement._meta.fields:
-                if field.name.endswith('_flag'):
-                    flag_value = getattr(measurement, field.name)
-                    if flag_value != 'green':
-                        submission_data['flags'][field.name] = flag_value
+                if field.name.endswith('_flag') and getattr(measurement, field.name) != 'green':
+                    submission_data['flags'][field.name] = getattr(measurement, field.name)
 
         if submission_data['flags']:
             if measurement:
-                submission_data['measurement_data'] = model_to_dict(
-                    measurement)
+                submission_data['measurement_data'] = model_to_dict(measurement)
             if measurement_assist:
-                submission_data['measurement_assist_data'] = model_to_dict(
-                    measurement_assist)
+                submission_data['measurement_assist_data'] = model_to_dict(measurement_assist)
             rescreening_list.append(submission_data)
 
     return {'Rescreening List': rescreening_list}
@@ -226,11 +227,6 @@ def get_non_green_flags(request):
 @csrf_exempt
 def process_rescreening(request):
     rescreening_records = get_non_green_flags(request)
-
-    # Log the data being returned
-    logger.debug("Response data:")
-    logger.debug(rescreening_records)
-
     return JsonResponse(rescreening_records)
 
 
@@ -1008,3 +1004,25 @@ def mark_notification_as_read(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+
+@csrf_exempt
+@require_POST
+def mark_submission_safe(request):
+    try:
+        data = json.loads(request.body)
+        submission_id = data.get('submission_id')
+
+        if not submission_id:
+            return JsonResponse({'error': 'Submission ID is required.'}, status=400)
+
+        submission = get_object_or_404(UserSubmission, id=submission_id)
+        submission.mark_as_safe = True
+        submission.save()
+
+        return JsonResponse({'message': f'Submission {submission_id} marked as safe successfully.'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
