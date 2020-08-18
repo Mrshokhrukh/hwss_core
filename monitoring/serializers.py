@@ -197,69 +197,48 @@ class ReferralSerializer(serializers.ModelSerializer):
 class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
     referral_instance = ReferralSerializer()
-    school_env_data = serializers.SerializerMethodField() 
-
-    def get_school_env_data(self, obj):
-        user = obj.user 
-        submissions = Submission.objects.filter(
-            question_set__name="SCHOOL ENV", user_submission__user=user
-        )
-        if submissions.exists():
-          return SchoolEnvSubmissionSerializer(submissions, many=True).data
-        return None
+    # The SerializerMethodField for school_env_data is now more efficient
+    school_env_data = SchoolEnvSubmissionSerializer(source='user.school_env_submissions', many=True, read_only=True)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        
+        prefetched_assessments = self.context.get('prefetched_assessments', {})
+        assessment_object = prefetched_assessments.get((instance.content_type_id, instance.object_id))
 
-        content_type = ContentType.objects.get_for_id(instance.content_type_id)
-        model_class = content_type.model_class()
+        if assessment_object:
+            # ... (your existing isinstance checks for serializers) ...
+            if isinstance(assessment_object, FinalUserSubmission):
+                assessment_serializer = FinalUserSubmissionSerializer(assessment_object)
+            elif isinstance(assessment_object, EventBasedSubmission):
+                assessment_serializer = EventBasedSubmissionSerializer(assessment_object)
+            elif isinstance(assessment_object, CaseBasedSubmission):
+                assessment_serializer = CaseBasedSubmissionSerializer(assessment_object)
+            elif isinstance(assessment_object, GyalsungUserProfile):
+                assessment_serializer = GyalsungUserProfileSerializer(assessment_object)
+            else:
+                assessment_serializer = None
 
-        try:
-            assessment_object = model_class.objects.get(id=instance.object_id)
-        except model_class.DoesNotExist:
-            assessment_object = None
-
-        if isinstance(assessment_object, FinalUserSubmission):
-            assessment_serializer = FinalUserSubmissionSerializer(
-                assessment_object)
-        elif isinstance(assessment_object, EventBasedSubmission):
-            assessment_serializer = EventBasedSubmissionSerializer(
-                assessment_object)
-        elif isinstance(assessment_object, CaseBasedSubmission):
-            assessment_serializer = CaseBasedSubmissionSerializer(
-                assessment_object)
-        elif isinstance(assessment_object, GyalsungUserProfile):
-            assessment_serializer = GyalsungUserProfileSerializer(
-                assessment_object)
-        else:
-            assessment_serializer = None
-
-        if assessment_serializer:
-            representation['screening_data'] = assessment_serializer.data
+            if assessment_serializer:
+                representation['screening_data'] = assessment_serializer.data
+            
+            if isinstance(assessment_object, CaseBasedSubmission):
+                # UPDATED with the correct name from your model
+                representation['case_substance_risks'] = CaseSubstanceRiskMeasurementSerializer(
+                    assessment_object.case_substance_risk_measurements.all(), many=True).data
+                    
+            elif isinstance(assessment_object, EventBasedSubmission):
+                # UPDATED with the correct name from your model
+                representation['event_substance_risks'] = EventSubstanceRiskMeasurementSerializer(
+                    assessment_object.event_substance_risk_measurements.all(), many=True).data
         else:
             representation['screening_data'] = "Data not available"
 
-        # Include substance risk measurements
-        if isinstance(assessment_object, CaseBasedSubmission):
-            case_substances = CaseSubstanceRiskMeasurement.objects.filter(
-                case_submission=assessment_object)
-            representation['case_substance_risks'] = CaseSubstanceRiskMeasurementSerializer(
-                case_substances, many=True).data
-        elif isinstance(assessment_object, EventBasedSubmission):
-            event_substances = EventSubstanceRiskMeasurement.objects.filter(
-                event_submission=assessment_object)
-            representation['event_substance_risks'] = EventSubstanceRiskMeasurementSerializer(
-                event_substances, many=True).data
-
         representation.pop('content_type', None)
         representation.pop('object_id', None)
-
-        # Add school environment data
-        representation['school_env_data'] = self.get_school_env_data(instance)
 
         return representation
 
     class Meta:
         model = ServiceAndTreatment
         fields = '__all__'
-

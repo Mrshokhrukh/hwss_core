@@ -8,7 +8,8 @@ from measurement.models import Measurement, MeasurementAssist, Submission, UserS
 from django.views.decorators.csrf import csrf_exempt
 from access.models import Agency, CustomUser, UserAgency
 from monitoring.serializers import FinalUserSubmissionSerializer
-from screening.models import CaseBasedSubmission, CaseScreening, EventBasedSubmission, EventScreening
+from django.db.models import Prefetch
+from screening.models import CaseBasedSubmission, EventBasedSubmission, CaseSubstanceRiskMeasurement, EventSubstanceRiskMeasurement
 from .models import FinalUserSubmission, Notification, Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -20,12 +21,11 @@ from django.forms.models import model_to_dict
 from django.db import transaction
 from datetime import date
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.contrib.contenttypes.models import ContentType
-from .serializers import ReferralSerializer, ServiceAndTreatmentSerializer
+from .serializers import CustomUserSerializer, ReferralSerializer, ServiceAndTreatmentSerializer
 from django.utils.decorators import method_decorator
 import logging
 from django.core.mail import send_mail
@@ -38,21 +38,79 @@ method_decorator(csrf_exempt, name='dispatch')
 
 
 class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
-    queryset = ServiceAndTreatment.objects.all()
+    queryset = ServiceAndTreatment.objects.all() 
+    
     serializer_class = ServiceAndTreatmentSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        """
+        This method is now highly optimized to prevent N+1 query issues
+        and includes the agency_name filter.
+        """
+        queryset = ServiceAndTreatment.objects.all()
+
+        queryset = queryset.select_related(
+            'user__agency_details__agency',
+            'user__active_agency',
+            'referral_instance__user',
+            'referral_instance__referred_to',
+            'referral_instance__referred_by'
+        )
+
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                'user__usersubmission_set__submission',
+                queryset=Submission.objects.filter(question_set__name="SCHOOL ENV"),
+                to_attr='school_env_submissions'
+            )
+        )
+
+        agency_name = self.request.query_params.get('agency_name')
+
+        if agency_name and agency_name.lower().strip() not in ['unknown agency', 'null', 'undefined', '']:
+            queryset = queryset.filter(user__agency_details__agency__agency_name__iexact=agency_name)
+
+        return queryset
+
     @action(detail=False, methods=['get'], url_path='get-service-and-treatment')
-    def get_service_and_treatment(self, request):
-        response = create_service_and_treatments(request)
-
-        if response.get('status') == 'error':
-            return Response(response, status=400)
-
+    def get_service_and_treatment(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
+        generic_related_objects = {}
+        items_by_type = {}
+        for item in queryset:
+            if item.content_type_id:
+                items_by_type.setdefault(item.content_type_id, []).append(item.object_id)
+
+        content_types = ContentType.objects.filter(id__in=items_by_type.keys())
+        for ct in content_types:
+            model_class = ct.model_class()
+            
+            prefetch_name = None
+            if model_class == CaseBasedSubmission:
+                # UPDATED with the correct name from your model
+                prefetch_name = 'case_substance_risk_measurements' 
+            elif model_class == EventBasedSubmission:
+                prefetch_name = 'event_substance_risk_measurements'
+
+            if prefetch_name:
+                related_objects = model_class.objects.filter(
+                    id__in=items_by_type[ct.id]
+                ).prefetch_related(prefetch_name)
+            else:
+                related_objects = model_class.objects.filter(id__in=items_by_type[ct.id])
+
+            for obj in related_objects:
+                generic_related_objects[(ct.id, obj.id)] = obj
+        
+        serializer_context = {
+            'request': request,
+            'prefetched_assessments': generic_related_objects,
+        }
+
+        serializer = self.get_serializer(queryset, many=True, context=serializer_context)
+        return Response(serializer.data)
 
 @csrf_exempt
 def submit_rescreening(request):
