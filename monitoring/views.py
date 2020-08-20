@@ -42,6 +42,7 @@ from monitoring.serializers import (
     FinalUserSubmissionSerializer,
     ReferralSerializer,
     ServiceAndTreatmentSerializer,
+    CustomUserSerializer,
 )
 from screening.models import (
     CaseBasedSubmission,
@@ -69,6 +70,10 @@ class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
             "user__agency_details",
             "updated_by",
             "updated_by__active_agency",
+            "referral_instance",
+            "referral_instance__user",
+            "referral_instance__referred_by",
+            "referral_instance__referred_to",
         )
 
     @action(detail=False, methods=["get"], url_path="get-service-and-treatment")
@@ -1156,11 +1161,10 @@ def create_service_and_treatments(request):
                     )
 
             # creating all the service and treatment records in a single db query
-            print(
-                ">>>> len service_and_treatment_object_list:",
-                len(service_and_treatment_object_list),
-            )
-            ServiceAndTreatment.objects.bulk_create(service_and_treatment_object_list)
+            if service_and_treatment_object_list:
+                ServiceAndTreatment.objects.bulk_create(
+                    service_and_treatment_object_list
+                )
 
         return JsonResponse(
             {
@@ -1180,11 +1184,16 @@ def get_notifications(request, user_id):
             notifications = Notification.objects.filter(
                 notification_for__id=user_id
             ).values("id", "notification", "notification_status", "created_at")
+            notifications_list = list(notifications)
 
+            if not notifications_list:
+                return JsonResponse(
+                    {"message": "No notifications found.", "notifications": []},
+                    status=status.HTTP_200_OK,
+                )
             return JsonResponse(
-                {"notifications": list(notifications)}, status.HTTP_200_OK
+                {"notifications": notifications_list}, status=status.HTTP_200_OK
             )
-
         except CustomUser.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status.HTTP_404_NOT_FOUND)
     else:
