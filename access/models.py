@@ -6,7 +6,7 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils import timezone
 
-from access.constants import REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
+from access.constants import REGISTRATION_METHOD_CHOICES, ROLE_CHOICES, GYALSUNG_STATUS
 
 
 class CustomUserManager(BaseUserManager):
@@ -49,6 +49,19 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(username, email, password=password, **extra_fields)
+
+    def gyalsung_users(self):
+        return self.filter(is_gyalsung=True)
+
+    def for_gyalsung_counselors(self):
+        return self.filter(
+            is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
+        )
+
+    def for_gyalsung_reassessment_team(self):
+        return self.filter(
+            is_gyalsung=True, gyalsung_status__in=["pending", "completed"]
+        )
 
 
 class Agency(models.Model):
@@ -113,6 +126,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ps_add_gewog = models.CharField(max_length=255, blank=True, null=True)
     ps_add_dzongkhag = models.CharField(max_length=255, blank=True, null=True)
     is_gyalsung = models.BooleanField(default=False)
+    gyalsung_status = models.CharField(
+        max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
+    )
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
     is_old_case_user = models.BooleanField(default=False, null=True, blank=True)

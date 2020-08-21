@@ -40,3 +40,10 @@ REGISTRATION_METHOD_CHOICES = [
     ("event_registration", "Counselor Event Registered"),
     ("unknown_registration", "Unknown/Legacy"),
 ]
+GYALSUNG_STATUS = [
+    ("", ""),
+    ("registered", "Registered"),
+    ("screened", "Screened"),
+    ("pending", "Pending"),
+    ("completed", "Completed"),
+]
