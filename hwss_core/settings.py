@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "settings_module",
     "screening",
     "gyalsung_users",
+    "gyalsung",
     # 3rd party apps
     "rest_framework",
     "rest_framework.authtoken",

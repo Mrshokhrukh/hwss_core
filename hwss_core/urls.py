@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/v1/reporting/", include("reporting.urls")),
     path("api/v1/screening/", include("screening.urls")),
     path("api/v1/gyalsung_users/", include("gyalsung_users.urls")),
+    path("api/v1/gyalsung/", include("gyalsung.urls")),
     # or for kubernetes settings
     # path("core/admin/", admin.site.urls),
     # path('core/api/v1/access/', include('access.urls')),
