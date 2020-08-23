@@ -54,6 +54,7 @@ def create_event_screening(request):
             duration=data['duration'],
             counselor=data['counselor'],
             selected_tool=data['selected_tool'],
+            total_users_to_screened =data["total_users"],
             created_by=created_by_user  # Assign the created_by user
         )
 
@@ -326,6 +327,7 @@ def get_event_screenings(request):
                 'rejection_reason': event.rejection_reason,
                 'registration_lockout_end_time': event.registration_lockout_end_time,
                 'selected_tool': event.selected_tool,
+                "total_users_to_screened": event.total_users_to_screened,
                 'users': list(event.users.values('id', 'username', 'email')),
                 # Add created_by information
                 'created_by': {

@@ -131,6 +131,7 @@ class EventScreening(models.Model):
     rejection_reason = models.TextField(null=True, blank=True)
     registration_lockout_end_time = models.DateTimeField(null=True, blank=True)
     selected_tool = models.CharField(max_length=100, null=True, blank=True)
+    total_users_to_screened = models.IntegerField(default=0)
     users = models.ManyToManyField(CustomUser, related_name='events', blank=True)
 
     # Add the created_by field
