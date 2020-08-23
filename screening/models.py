@@ -120,6 +120,9 @@ class EventScreening(models.Model):
     end_date = models.DateField()
     duration = models.IntegerField(help_text="Duration in hours")
     counselor = models.CharField(max_length=255)
+    total_number_of_participants = models.IntegerField(
+        null=True, blank=True, help_text="Total number of participants in the event"
+    )
     approval_status_choices = [
         ('pending', 'Pending'),
         ('approved', 'Approved'),

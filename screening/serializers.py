@@ -40,7 +40,7 @@ class EventSubstanceRiskMeasurementSerializer(serializers.ModelSerializer):
 class EventScreeningSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventScreening
-        fields = ['event_name', 'event_purpose', 'location', 'start_date', 'end_date', 'duration', 'counselor', 'approval_status']
+        fields = '__all__'
 
 class EventBasedSubmissionSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()  # Use the detailed user serializer
