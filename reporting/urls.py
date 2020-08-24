@@ -5,6 +5,7 @@ from reporting.views import (
     healthz,
     orchestrate_reporting,
     populate_reporting_model_view,
+    generate_xls_report_with_open_password,
 )
 
 urlpatterns = [
@@ -20,4 +21,9 @@ urlpatterns = [
         name="get_reporting_model_data",
     ),
     path("healthz", healthz, name="healthz"),
+    path(
+        "generate-counselor-report-encrypted-xls/",
+        generate_xls_report_with_open_password,
+        name="generate_counselor_report_encrypted_xls",
+    ),
 ]
