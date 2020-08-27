@@ -41,7 +41,7 @@ from .serializers import CustomUserSerializer, AgencySerializer, UserAgencySeria
 from django.contrib.auth.tokens import default_token_generator
 
 from .constants import GLOBAL_FILE_PATH
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from .models import CustomUser
 from rest_framework.exceptions import AuthenticationFailed
 from django.core.mail import EmailMessage
