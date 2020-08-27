@@ -49,7 +49,6 @@ def process_cid_data_for_user_creation_using_gyalsung(cid_number, agency):
 
 
 def create_user_and_agency_from_raw_data_for_gyalsung(user_data):
-    # Create the user
     user = CustomUser.objects.create_user(
         username=user_data.get("username"),
         email=user_data.get("email"),

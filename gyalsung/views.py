@@ -4,8 +4,6 @@ from rest_framework.permissions import AllowAny
 from access.models import CustomUser
 from gyalsung.serializers import GyalsungCounselorUserSerializer
 
-# Create your views here.
-
 
 class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
 

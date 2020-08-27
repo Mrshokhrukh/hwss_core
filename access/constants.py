@@ -41,12 +41,12 @@ REGISTRATION_METHOD_CHOICES = [
     (
         "gyalsung_registration",
         "Gyalsung Registered",
-    ),  # which new user registered from gyalsung only
+    ),
     ("unknown_registration", "Unknown/Legacy"),
 ]
 GYALSUNG_STATUS = [
     ("", ""),
-    ("registered", "Registered"),  # update register
+    ("registered", "Registered"),
     ("screened", "Screened"),
     ("pending", "Pending"),
     ("completed", "Completed"),
