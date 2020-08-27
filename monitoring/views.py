@@ -39,10 +39,10 @@ from monitoring.models import (
     SubstanceRiskMeasurement,
 )
 from monitoring.serializers import (
+    CustomUserSerializer,
     FinalUserSubmissionSerializer,
     ReferralSerializer,
     ServiceAndTreatmentSerializer,
-    CustomUserSerializer,
 )
 from screening.models import (
     CaseBasedSubmission,

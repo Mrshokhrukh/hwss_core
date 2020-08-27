@@ -26,4 +26,20 @@ class Migration(migrations.Migration):
                 max_length=20,
             ),
         ),
+        migrations.AlterField(
+            model_name="customuser",
+            name="registration_method",
+            field=models.CharField(
+                choices=[
+                    ("cluster_registration", "Clustered Registered"),
+                    ("case_registration", "Counselor Case Registered"),
+                    ("event_registration", "Counselor Event Registered"),
+                    ("gyalsung_registration", "Gyalsung Registered"),
+                    ("unknown_registration", "Unknown/Legacy"),
+                ],
+                default="unknown",
+                help_text="How the user was initially registered.",
+                max_length=22,
+            ),
+        ),
     ]

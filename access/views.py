@@ -40,7 +40,21 @@ from access.serializers import (
     CustomUserSerializer,
     UserAgencySerializer,
 )
-from screening.models import CaseScreening, EventScreening
+from access.utils import (
+    create_user_and_agency_from_raw_data_for_gyalsung,
+    process_cid_data_for_user_creation_using_gyalsung,
+)
+from gyalsung.models import (
+    GyalsungAssessment,
+    GyalsungEventSubstanceRiskMeasurement,
+    GyalsungUserScreeningHistory,
+)
+from screening.models import (
+    CaseBasedSubmission,
+    CaseScreening,
+    EventBasedSubmission,
+    EventScreening,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1146,6 +1160,58 @@ def registerCounselorEventUser(request):
             {"error": "An unexpected error occurred during registration."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def registerGyalsungUser(request):
+    identity_number = user_data.get("CID")
+    if not identity_number:
+        return Response(
+            {"error": "CID (Identity Number) is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    existing_user = CustomUser.objects.filter(identity_number=identity_number).first()
+    newely_created_user = False
+    if not existing_user:
+        current_useragency = UserAgency.objects.filter(user=request.user)
+
+        user_data = process_cid_data_for_user_creation_using_gyalsung(
+            identity_number, current_useragency.agency
+        )
+
+        eamil = f"{user_data["first_name"]}{user_data.get("last_name", '_')}@gmail.com"
+        password = f"{user_data["first_name"]}@2025#"
+
+        user_data["username"] = identity_number
+        user_data["email"] = eamil
+        user_data["password"] = password
+        user_data["identity_number"] = identity_number
+
+        user_id = create_user_and_agency_from_raw_data_for_gyalsung(user_data)
+        newely_created_user = True
+        existing_user = CustomUser.objects.filter(id=user_id)
+
+    gyalsung_user_screen_history = GyalsungUserScreeningHistory.objects.create(
+        user=existing_user
+    )
+
+    # now populate details to the new gyalsung db
+    if not newely_created_user:
+        event_submission_qs = EventBasedSubmission.objects.filter(
+            user_id=existing_user.id
+        )
+        gyalsung_user_screen_history.event_submission.add(*event_submission_qs)
+        case_submission_qs = CaseBasedSubmission.objects.filter(
+            user_id=existing_user.id
+        )
+        gyalsung_user_screen_history.event_submission.add(*case_submission_qs)
+    response_data = {
+        "user_id": existing_user.id,
+        "user_data": CustomUserSerializer(CustomUser).data,
+        "message": "User registered successfully.",
+    }
+    return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class UserCreate(generics.CreateAPIView):

@@ -6,7 +6,7 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils import timezone
 
-from access.constants import REGISTRATION_METHOD_CHOICES, ROLE_CHOICES, GYALSUNG_STATUS
+from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
 
 
 class CustomUserManager(BaseUserManager):
@@ -136,7 +136,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
     registration_method = models.CharField(
-        max_length=20,
+        max_length=22,
         choices=REGISTRATION_METHOD_CHOICES,
         default="unknown",
         blank=False,

@@ -38,11 +38,15 @@ REGISTRATION_METHOD_CHOICES = [
     ("cluster_registration", "Clustered Registered"),
     ("case_registration", "Counselor Case Registered"),
     ("event_registration", "Counselor Event Registered"),
+    (
+        "gyalsung_registration",
+        "Gyalsung Registered",
+    ),  # which new user registered from gyalsung only
     ("unknown_registration", "Unknown/Legacy"),
 ]
 GYALSUNG_STATUS = [
     ("", ""),
-    ("registered", "Registered"),
+    ("registered", "Registered"),  # update register
     ("screened", "Screened"),
     ("pending", "Pending"),
     ("completed", "Completed"),
