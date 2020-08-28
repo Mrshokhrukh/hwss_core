@@ -1,1 +1,16 @@
-{"identity_number": "11506005090", "first_name": "Kinzang", "middle_name": "", "last_name": "Dema", "date_of_birth": "1994-03-03", "gender": "Female", "mob_number": "17570776", "perm_add_village": "Lhamoi Lum /Gopini", "perm_add_gewog": "Dunglagang", "perm_add_dzongkhag": "Tsirang", "nationality": "Bhutanese", "username": "kinzang123", "password": "", "email": "kinzang@gmail.com"}
+{
+    "identity_number": "11506005090",
+    "first_name": "Kinzang",
+    "middle_name": "",
+    "last_name": "Dema",
+    "date_of_birth": "1994-03-03",
+    "gender": "Female",
+    "mob_number": "17570776",
+    "perm_add_village": "Lhamoi Lum /Gopini",
+    "perm_add_gewog": "Dunglagang",
+    "perm_add_dzongkhag": "Tsirang",
+    "nationality": "Bhutanese",
+    "username": "kinzang123",
+    "password": "",
+    "email": "kinzang@gmail.com"
+}

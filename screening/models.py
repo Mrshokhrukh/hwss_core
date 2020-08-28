@@ -7,6 +7,7 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class CaseScreening(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='case_screenings')
     case_name = models.CharField(max_length=255)
@@ -59,11 +60,11 @@ class CaseScreening(models.Model):
             self.registration_lockout_end_time = timezone.now() + timezone.timedelta(hours=24) 
         super().save(*args, **kwargs)
 
+
 class ScreenedUser(models.Model):
     event_screening = models.ForeignKey('EventScreening', on_delete=models.CASCADE, related_name='screened_users')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     screening_date = models.DateField(default=timezone.now)
-
 
 
 class CaseBasedSubmission(models.Model):
@@ -183,6 +184,7 @@ class EventBasedSubmission(models.Model):
 
     def __str__(self):
         return f"Event Based Submission for {self.event.event_name}"
+
 
 class EventSubstance(models.Model):
     name = models.CharField(max_length=100)
