@@ -1164,7 +1164,7 @@ def registerCounselorEventUser(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def registerGyalsungUser(request):
+def register_gyalsung_user_using_cid(request):
     identity_number = user_data.get("CID")
     if not identity_number:
         return Response(
