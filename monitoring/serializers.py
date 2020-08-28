@@ -111,10 +111,14 @@ class EventSubstanceRiskMeasurementSerializer(serializers.ModelSerializer):
 
 
 class FinalUserSubmissionSerializer(serializers.ModelSerializer):
+    mark_as_safe = serializers.SerializerMethodField()
     class Meta:
         model = FinalUserSubmission
         fields = '__all__'
 
+    def get_mark_as_safe(self, obj):
+        return obj.initial_submission.mark_as_safe
+        
 
 class EventScreeningSerializer(serializers.ModelSerializer):
     class Meta:
