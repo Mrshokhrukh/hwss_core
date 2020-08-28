@@ -7,8 +7,14 @@ from gyalsung.views import (
 )
 
 router = DefaultRouter()
-router.register(r"counselor-users", GyalsungCounselorUserViewSet)
-# router.register(r"reassessment-users", GyalsungReassessmentTeamUserViewSet)
+router.register(
+    r"counselor-users", GyalsungCounselorUserViewSet, basename="counselor-users"
+)
+router.register(
+    r"reassessment-users",
+    GyalsungReassessmentTeamUserViewSet,
+    basename="reassessment-users",
+)
 
 urlpatterns = [
     path("", include(router.urls)),

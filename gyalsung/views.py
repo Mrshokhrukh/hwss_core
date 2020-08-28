@@ -21,5 +21,4 @@ class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-
         return CustomUser.objects.for_gyalsung_reassessment_team()
