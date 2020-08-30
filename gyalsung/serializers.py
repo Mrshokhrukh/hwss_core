@@ -1,8 +1,18 @@
 from access.models import CustomUser
-from access.serializers import CustomUserSerializer
+from rest_framework import serializers
 
 
-class GyalsungCounselorUserSerializer(CustomUserSerializer):
+class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
+    active_agency_details = serializers.SerializerMethodField()
+
+    def get_active_agency_details(self, obj):
+        return {
+            "agency_name": obj.active_agency.agency_name if obj.active_agency else None,
+            "agency_code": obj.active_agency.agency_code if obj.active_agency else None,
+            "agency_parent": (
+                obj.active_agency.agency_parent if obj.active_agency else None
+            ),
+        }
 
     class Meta:
         model = CustomUser
@@ -29,13 +39,9 @@ class GyalsungCounselorUserSerializer(CustomUserSerializer):
             "profile_picture",
             "academy_code",
             "date_joined",
-            "password",
             "role",
             "active_agency",
-            "agency_details",
+            "active_agency_details",
             "gyalsung_status",
             "registration_method",
         ]
-        extra_kwargs = {
-            "password": {"read_only": True},
-        }

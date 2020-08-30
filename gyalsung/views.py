@@ -6,19 +6,24 @@ from gyalsung.serializers import GyalsungCounselorUserSerializer
 
 
 class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
-
     queryset = CustomUser.objects.all()
     serializer_class = GyalsungCounselorUserSerializer
-    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return CustomUser.objects.for_gyalsung_counselors()
+        qs = CustomUser.objects.for_gyalsung_counselors()
+        qs.select_related(
+            "active_agency",
+        )
+        return qs
 
 
 class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = GyalsungCounselorUserSerializer
-    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return CustomUser.objects.for_gyalsung_reassessment_team()
+        qs = CustomUser.objects.for_gyalsung_reassessment_team()
+        qs.select_related(
+            "active_agency",
+        )
+        return qs
