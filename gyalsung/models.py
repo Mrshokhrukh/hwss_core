@@ -69,6 +69,7 @@ class GyalsungAssessment(models.Model):
     )
     is_reassessment_screening = models.BooleanField(default=False)
     # Counselor + Reassessment
+    # testing
     counselor_user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
