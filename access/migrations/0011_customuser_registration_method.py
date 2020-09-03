@@ -6,13 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('access', '0010_alter_customuser_role'),
+        ("access", "0010_alter_customuser_role"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customuser',
-            name='registration_method',
-            field=models.CharField(choices=[('self', 'Self Registered'), ('counselor_case', 'Counselor Case Registered'), ('counselor_event', 'Counselor Event Registered'), ('unknown', 'Unknown/Legacy')], default='unknown', help_text='How the user was initially registered.', max_length=20),
+            model_name="customuser",
+            name="registration_method",
+            field=models.CharField(
+                choices=[
+                    ("self", "Self Registered"),
+                    ("counselor_case", "Counselor Case Registered"),
+                    ("counselor_event", "Counselor Event Registered"),
+                    ("unknown", "Unknown/Legacy"),
+                ],
+                default="unknown",
+                help_text="How the user was initially registered.",
+                max_length=20,
+            ),
         ),
     ]

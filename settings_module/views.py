@@ -1,12 +1,9 @@
 from django.http import JsonResponse
-from rest_framework import generics
-from rest_framework.response import Response
-from .models import AppConfig, MenuItem, Video
-from .serializers import AppConfigSerializer, MenuItemSerializer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, status, permissions
-from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics, permissions
+
+from settings_module.models import AppConfig, MenuItem, Video
+from settings_module.serializers import AppConfigSerializer, MenuItemSerializer
 
 
 class AppConfigListView(generics.ListAPIView):
@@ -16,21 +13,20 @@ class AppConfigListView(generics.ListAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['request'] = self.request
+        context["request"] = self.request
         return context
 
 
 class MenuItemsAPIView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny] 
+    permission_classes = [permissions.AllowAny]
     serializer_class = MenuItemSerializer
 
     def get_queryset(self):
         queryset = MenuItem.objects.all()
         if self.request.user.is_authenticated:
-            user_groups = self.request.user.groups.values_list('name', flat=True)
+            user_groups = self.request.user.groups.values_list("name", flat=True)
             queryset = queryset.filter(roles__name__in=user_groups).distinct()
         return queryset
-
 
 
 @csrf_exempt
@@ -39,12 +35,12 @@ def get_videos(request):
     data = []
     for video in videos:
         video_data = {
-            'title': video.title,
-            'thumbnail': video.thumbnail.url,
-            'topic': video.topic,
-            'description': video.description,
-            'video_link': video.video_link,
-            'video_file': video.video_file.url if video.video_file else None
+            "title": video.title,
+            "thumbnail": video.thumbnail.url,
+            "topic": video.topic,
+            "description": video.description,
+            "video_link": video.video_link,
+            "video_file": video.video_file.url if video.video_file else None,
         }
         data.append(video_data)
     return JsonResponse(data, safe=False)
