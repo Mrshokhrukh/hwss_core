@@ -6,6 +6,21 @@ from rest_framework.response import Response
 from access.models import CustomUser
 
 
+def get_gyalsung_data_from_cid_number(cid_number):
+    from access.views import generate_gyalsung_token
+
+    token = "Bearer " + generate_gyalsung_token()
+    headers = {"Authorization": token}
+    params = {"cid": cid_number, "null": None, "appDate": ""}
+    api_url = settings.CREDENTIALS["GYALSUNG_DETAIL_API_URL"]
+    response = requests.get(api_url, params=params, headers=headers)
+    if response.status_code != status.HTTP_200_OK:
+        return {"error": str(response.text)}
+
+    data = response.json()
+    return data
+
+
 def get_data_from_cid_number(cid_number):
     from access.views import generate_token
 
@@ -20,6 +35,54 @@ def get_data_from_cid_number(cid_number):
         )
     data = response.json()
     return data["citizenDetailsResponse"]
+
+
+def process_cid_gyalsung_user_data(cid_number):
+    """
+    Processes Gyalsung user data based on CID number.
+    Args:
+        cid_number (str): Citizen ID number.
+    Returns:
+        Response: Formatted data or error response with appropriate HTTP status.
+    """
+    cid_api_data = get_gyalsung_data_from_cid_number(cid_number)
+    if "error" in cid_api_data:
+        error_msg = cid_api_data["error"]
+
+        if error_msg == "User does not exist":
+            status_code = status.HTTP_400_BAD_REQUEST
+        elif error_msg == "Invalid token":
+            cid_api_data["error"] = (
+                "Invalid token or API credentials. Check with dev team."
+            )
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        elif error_msg == "Service unavailable":
+            cid_api_data["error"] = "Gyalsung's API server is unavailable."
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        else:
+            # Catch-all for unexpected error messages
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        return cid_api_data, status_code
+
+    # Transform and return data
+    formatted_data = {
+        "cid": cid_api_data.get("cid"),
+        "date_of_birth": cid_api_data.get("dob"),
+        "first_name": cid_api_data.get("firstName"),
+        "middle_name": cid_api_data.get("middleName"),
+        "last_name": cid_api_data.get("lastName"),
+        "gender": cid_api_data.get("gender"),
+        "mob_number": cid_api_data.get("ContactNo"),
+        "guard_contact_number": cid_api_data.get("guardContNo"),
+        "hospital_name": cid_api_data.get("hospitalName"),
+        "hospital_dzongkhag": cid_api_data.get("hospitalDzong"),
+        "appointment_date": cid_api_data.get("appointmentDate"),
+        "academy": cid_api_data.get("academy"),
+        "personal_number": cid_api_data.get("personalNo"),
+    }
+
+    return formatted_data, status.HTTP_200_OK
 
 
 def process_cid_data_for_user_creation_using_gyalsung(cid_number, agency):
@@ -74,5 +137,19 @@ def create_user_and_agency_from_raw_data_for_gyalsung(user_data):
         registration_method=user_data.get("registration_method"),
         is_gyalsung=user_data.get("is_gyalsung"),
         gyalsung_status=user_data.get("gyalsung_status"),
+        guard_mob_number=user_data.data.get("guard_contact_number"),
+        hospital_name=user_data.data.get("hospital_name"),
+        hospital_dzongkhag=user_data.data.get("hospital_dzongkhag"),
+        appointment_date=user_data.data.get("appointment_date"),
+        academy_name=user_data.data.get("academy"),
+        personal_number=user_data.data.get("personal_number"),
     )
     return user.id
+
+
+def merged_gyalsung_api_and_cid_api_data_for_user_creation(
+    gyalsung_api_data, cid_api_data
+):
+    final_packet = cid_api_data.copy()
+    final_packet.update(gyalsung_api_data)
+    return final_packet
