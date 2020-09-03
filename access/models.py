@@ -125,16 +125,24 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ps_add_village = models.CharField(max_length=255, blank=True, null=True)
     ps_add_gewog = models.CharField(max_length=255, blank=True, null=True)
     ps_add_dzongkhag = models.CharField(max_length=255, blank=True, null=True)
-    is_gyalsung = models.BooleanField(default=False)
-    gyalsung_status = models.CharField(
-        max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
-    )
+
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
     is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
+    # gyalsung oriented fields starts from here
+    is_gyalsung = models.BooleanField(default=False)
+    gyalsung_status = models.CharField(
+        max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
+    )
+    guard_mob_number = models.CharField(max_length=15, null=True, blank=True)
+    hospital_name = models.CharField(max_length=255, blank=True, null=True)
+    hospital_dzongkhag = models.CharField(max_length=255, blank=True, null=True)
+    appointment_date = models.DateField(blank=True, null=True)
+    academy_name = models.CharField(max_length=255, blank=True, null=True)
+    personal_number = models.CharField(max_length=15, null=True, blank=True)
     registration_method = models.CharField(
         max_length=22,
         choices=REGISTRATION_METHOD_CHOICES,
