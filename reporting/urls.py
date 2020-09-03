@@ -1,14 +1,10 @@
 from django.urls import path
 
 from reporting.views import (
-    (
     get_reporting_model_data,
     healthz,
-    orchestrate_reporting, 
-   
-    populate_reporting_model_view, 
-   
-), 
+    orchestrate_reporting,
+    populate_reporting_model_view,
     generate_counselor_report_encrypted_xls
 )
 

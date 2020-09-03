@@ -305,9 +305,6 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
                 # UPDATED with the correct name from your model
                 representation['event_substance_risks'] = EventSubstanceRiskMeasurementSerializer(
                     assessment_object.event_substance_risk_measurements.all(), many=True).data
-        else:
-            representation["screening_data"] = "Data not available"
-
         # Include substance risk measurements
         if isinstance(assessment_object, CaseBasedSubmission):
             representation["case_substance_risks"] = (
