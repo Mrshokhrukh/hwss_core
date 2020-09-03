@@ -1201,8 +1201,8 @@ def get_gyalsung_user_data_using_cid(request):
             {"error": "CID (Identity Number) is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    user_data = process_cid_gyalsung_user_data(identity_number)
-    return Response(user_data, status=status.HTTP_200_OK)
+    cid_api_data, status_code = process_cid_gyalsung_user_data(identity_number)
+    return Response(cid_api_data, status=status_code)
 
 
 @api_view(["POST"])

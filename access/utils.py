@@ -15,10 +15,8 @@ def get_gyalsung_data_from_cid_number(cid_number):
     api_url = settings.CREDENTIALS["GYALSUNG_DETAIL_API_URL"]
     response = requests.get(api_url, params=params, headers=headers)
     if response.status_code != status.HTTP_200_OK:
-        return Response(
-            {"error": "CID (Identity Number) is not valid."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return {"error": str(response.text)}
+
     data = response.json()
     return data
 
@@ -40,8 +38,35 @@ def get_data_from_cid_number(cid_number):
 
 
 def process_cid_gyalsung_user_data(cid_number):
+    """
+    Processes Gyalsung user data based on CID number.
+    Args:
+        cid_number (str): Citizen ID number.
+    Returns:
+        Response: Formatted data or error response with appropriate HTTP status.
+    """
     cid_api_data = get_gyalsung_data_from_cid_number(cid_number)
-    return {
+    if "error" in cid_api_data:
+        error_msg = cid_api_data["error"]
+
+        if error_msg == "User does not exist":
+            status_code = status.HTTP_400_BAD_REQUEST
+        elif error_msg == "Invalid token":
+            cid_api_data["error"] = (
+                "Invalid token or API credentials. Check with dev team."
+            )
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        elif error_msg == "Service unavailable":
+            cid_api_data["error"] = "Gyalsung's API server is unavailable."
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        else:
+            # Catch-all for unexpected error messages
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        return cid_api_data, status_code
+
+    # Transform and return data
+    formatted_data = {
         "cid": cid_api_data.get("cid"),
         "date_of_birth": cid_api_data.get("dob"),
         "first_name": cid_api_data.get("firstName"),
@@ -56,6 +81,8 @@ def process_cid_gyalsung_user_data(cid_number):
         "academy": cid_api_data.get("academy"),
         "personal_number": cid_api_data.get("personalNo"),
     }
+
+    return formatted_data, status.HTTP_200_OK
 
 
 def process_cid_data_for_user_creation_using_gyalsung(cid_number, agency):
