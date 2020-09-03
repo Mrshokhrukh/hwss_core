@@ -39,6 +39,11 @@ CREDENTIALS = {
     "EMIS_STUDENT_API": "https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/studentdetails/",
     "EMIS_STAFF_API": "https://datahub-apim.tech.gov.bt/moe_emisinformationapi/1.0.0/staffdetails/",
     "RCSC_API": "https://datahub-apim.tech.gov.bt/rcsc_zestemployeedetailserviceapi/1.0.0/employeedetailbycid/",
+    "GYALSUNG_API_KEY": "yKXD76N5VxAbuSJu",
+    "GYALSUNG_API_SECRET": "NnOm1Fjf4nO0NXAMVwk77QX8Qn8CxQhx",
+    "GYALSUNG_API_TOKEN_URL": "http://172.30.3.117:80/api/user/profile/gyalsung_api/token",
+    "GYALSUNG_DETAIL_API_URL": "http://172.30.3.117:80/api/user/profile/gyalsung_api/getGyalsungDetails",
+    "GYALSUNG_REASSESSMENT_REMARKS_API_URL": "http://172.30.3.117:80/api/user/profile/gyalsung_api/updateRemarks",
 }
 
 
@@ -118,26 +123,26 @@ REST_FRAMEWORK = {
 }
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("SQLITE_PATH", BASE_DIR / "db.sqlite3"),
-    }
-}
-
 # DATABASES = {
-#     'default': {
-#         'ENGINE': config('DATABASE_ENGINE', default='django.db.backends.postgresql'),
-#         'NAME': config('DATABASE_NAME', default='hwss_core_db'),
-#         'USER': config('DATABASE_USER', default='hwss-root'),
-#         'PASSWORD': config('DATABASE_PASSWORD', default='hwss@2024'),
-#         'HOST': config('DATABASE_HOST', default='172.30.85.156'),
-#         'PORT': config('DATABASE_PORT', default='5432'),
-#         'OPTIONS': {
-#             'sslmode': 'disable',
-#         },
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": os.environ.get("SQLITE_PATH", BASE_DIR / "db.sqlite3"),
 #     }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": config("DATABASE_ENGINE", default="django.db.backends.postgresql"),
+        "NAME": config("DATABASE_NAME", default="hwss_core_db"),
+        "USER": config("DATABASE_USER", default="hwss-root"),
+        "PASSWORD": config("DATABASE_PASSWORD", default="hwss@2024"),
+        "HOST": config("DATABASE_HOST", default="172.30.85.156"),
+        "PORT": config("DATABASE_PORT", default="5432"),
+        "OPTIONS": {
+            "sslmode": "disable",
+        },
+    }
+}
 
 # DATABASES = {
 #     'default': {

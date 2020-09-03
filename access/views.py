@@ -43,6 +43,8 @@ from access.serializers import (
 from access.utils import (
     create_user_and_agency_from_raw_data_for_gyalsung,
     process_cid_data_for_user_creation_using_gyalsung,
+    process_cid_gyalsung_user_data,
+    merged_gyalsung_api_and_cid_api_data_for_user_creation,
 )
 from gyalsung.models import (
     GyalsungAssessment,
@@ -108,6 +110,14 @@ def get_authorization_code():
 
 
 @permission_classes([AllowAny])
+def get_gyalsung_authorization_code():
+    auth_key = settings.CREDENTIALS["GYALSUNG_API_KEY"]
+    auth_secret = settings.CREDENTIALS["GYALSUNG_API_SECRET"]
+    auth_code = f"{auth_key}:{auth_secret}"
+    return base64.b64encode(auth_code.encode()).decode()
+
+
+@permission_classes([AllowAny])
 def global_session():
     data = read_global()
     if data["accessToken"] != "" and data["expiryTime"] > time.time():
@@ -141,6 +151,26 @@ def generate_token():
             return "Something went wrong. Please try again!"
     else:
         return read_global()["accessToken"]
+
+
+@permission_classes([AllowAny])
+def generate_gyalsung_token():
+    token_url = settings.CREDENTIALS["GYALSUNG_API_TOKEN_URL"]
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "client_id": settings.CREDENTIALS["GYALSUNG_API_KEY"],
+        "client_secret": settings.CREDENTIALS["GYALSUNG_API_SECRET"],
+    }
+    response = requests.post(
+        token_url,
+        headers=headers,
+        json=data,
+    )
+    if response.status_code == 200:
+        json_object = response.json()
+        return json_object["access_token"]
+    else:
+        return "Something went wrong. Please try again!"
 
 
 # -----------------------------------------------//
@@ -1164,8 +1194,21 @@ def registerCounselorEventUser(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+def get_gyalsung_user_data_using_cid(request):
+    identity_number = request.data.get("cid")
+    if not identity_number:
+        return Response(
+            {"error": "CID (Identity Number) is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    user_data = process_cid_gyalsung_user_data(identity_number)
+    return Response(user_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
 def register_gyalsung_user_using_cid(request):
-    identity_number = user_data.get("CID")
+    identity_number = request.data.get("cid")
     if not identity_number:
         return Response(
             {"error": "CID (Identity Number) is required."},
@@ -1188,7 +1231,14 @@ def register_gyalsung_user_using_cid(request):
         user_data["password"] = password
         user_data["identity_number"] = identity_number
 
-        user_id = create_user_and_agency_from_raw_data_for_gyalsung(user_data)
+        final_gyalsung_user_data = (
+            merged_gyalsung_api_and_cid_api_data_for_user_creation(
+                request.data, user_data
+            )
+        )
+        user_id = create_user_and_agency_from_raw_data_for_gyalsung(
+            final_gyalsung_user_data
+        )
         newely_created_user = True
         existing_user = CustomUser.objects.filter(id=user_id)
 
@@ -1198,6 +1248,17 @@ def register_gyalsung_user_using_cid(request):
 
     # now populate details to the new gyalsung db
     if not newely_created_user:
+        # update new gyalsung field data only
+        existing_user.is_gyalsung = True
+        existing_user.gyalsung_status = "registered"
+        existing_user.guard_mob_number = request.data.get("guard_contact_number")
+        existing_user.hospital_name = request.data.get("hospital_name")
+        existing_user.hospital_dzongkhag = request.data.get("hospital_dzongkhag")
+        existing_user.appointment_date = request.data.get("appointment_date")
+        existing_user.academy_name = request.data.get("academy")
+        existing_user.personal_number = request.data.get("personal_number")
+        existing_user.save()
+
         event_submission_qs = EventBasedSubmission.objects.filter(
             user_id=existing_user.id
         )
@@ -1206,6 +1267,7 @@ def register_gyalsung_user_using_cid(request):
             user_id=existing_user.id
         )
         gyalsung_user_screen_history.event_submission.add(*case_submission_qs)
+
     response_data = {
         "user_id": existing_user.id,
         "user_data": CustomUserSerializer(CustomUser).data,
