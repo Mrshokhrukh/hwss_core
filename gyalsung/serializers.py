@@ -19,8 +19,6 @@ class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
-            "is_staff",
-            "is_active",
             "is_gyalsung",
             "identity_number",
             "nationality",
@@ -43,5 +41,11 @@ class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
             "active_agency",
             "active_agency_details",
             "gyalsung_status",
+            "guard_mob_number",
+            "hospital_name",
+            "hospital_dzongkhag",
+            "appointment_date",
+            "academy_name",
+            "personal_number",
             "registration_method",
         ]
