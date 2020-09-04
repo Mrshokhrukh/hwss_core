@@ -43,6 +43,7 @@ from access.serializers import (
 from access.utils import (
     create_user_and_agency_from_raw_data_for_gyalsung,
     process_cid_data_for_user_creation_using_gyalsung,
+    convert_date_format,
     process_cid_gyalsung_user_data,
     merged_gyalsung_api_and_cid_api_data_for_user_creation,
 )
@@ -1208,6 +1209,8 @@ def get_gyalsung_user_data_using_cid(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register_gyalsung_user_using_cid(request):
+    from gyalsung.serializers import GyalsungCounselorUserSerializer
+
     identity_number = request.data.get("cid")
     if not identity_number:
         return Response(
@@ -1218,10 +1221,14 @@ def register_gyalsung_user_using_cid(request):
     newely_created_user = False
     if not existing_user:
         current_useragency = UserAgency.objects.filter(user=request.user)
-
-        user_data = process_cid_data_for_user_creation_using_gyalsung(
-            identity_number, current_useragency.agency
-        )
+        if current_useragency:
+            user_data = process_cid_data_for_user_creation_using_gyalsung(
+                identity_number, current_useragency.agency
+            )
+        else:
+            user_data = process_cid_data_for_user_creation_using_gyalsung(
+                identity_number, None
+            )
 
         eamil = f"{user_data["first_name"]}{user_data.get("last_name", '_')}@gmail.com"
         password = f"{user_data["first_name"]}@2025#"
@@ -1240,7 +1247,7 @@ def register_gyalsung_user_using_cid(request):
             final_gyalsung_user_data
         )
         newely_created_user = True
-        existing_user = CustomUser.objects.filter(id=user_id)
+        existing_user = CustomUser.objects.get(id=user_id)
 
     gyalsung_user_screen_history = GyalsungUserScreeningHistory.objects.create(
         user=existing_user
@@ -1254,7 +1261,9 @@ def register_gyalsung_user_using_cid(request):
         existing_user.guard_mob_number = request.data.get("guard_contact_number")
         existing_user.hospital_name = request.data.get("hospital_name")
         existing_user.hospital_dzongkhag = request.data.get("hospital_dzongkhag")
-        existing_user.appointment_date = request.data.get("appointment_date")
+        existing_user.appointment_date = convert_date_format(
+            request.data.get("appointment_date")
+        )
         existing_user.academy_name = request.data.get("academy")
         existing_user.personal_number = request.data.get("personal_number")
         existing_user.save()
@@ -1270,7 +1279,7 @@ def register_gyalsung_user_using_cid(request):
 
     response_data = {
         "user_id": existing_user.id,
-        "user_data": CustomUserSerializer(CustomUser).data,
+        "user_data": GyalsungCounselorUserSerializer(existing_user).data,
         "message": "User registered successfully.",
     }
     return Response(response_data, status=status.HTTP_201_CREATED)
