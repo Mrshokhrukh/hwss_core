@@ -59,9 +59,7 @@ class CustomUserManager(BaseUserManager):
         )
 
     def for_gyalsung_reassessment_team(self):
-        return self.filter(
-            is_gyalsung=True, gyalsung_status__in=["pending", "completed"]
-        )
+        return self.filter(role=self.model.ROLE_GYALSUNG_REASSESSMENT_TEAM)
 
 
 class Agency(models.Model):
@@ -129,8 +127,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
     is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
-
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
     # gyalsung oriented fields starts from here
     is_gyalsung = models.BooleanField(default=False)
