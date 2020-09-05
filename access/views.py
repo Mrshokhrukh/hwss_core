@@ -567,6 +567,12 @@ def registerCounselorCaseUser(request):
     if not cid:
         return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    if not user_data.get('clientFullName'):
+        return Response({'error': 'Client Full Name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if not user_agency_data.get('user_code'):
+        return Response({'error': 'User code is required in userAgencyData.'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         existing_user = CustomUser.objects.filter(identity_number=cid).first()
 
@@ -738,9 +744,14 @@ def registerCounselorEventUser(request):
     cid = user_data.get('CID')
     if not cid:
         return Response({'error': 'CID (Identity Number) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    # --- START: RECOMMENDED CHANGES ---
 
-    # if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
-    #     return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    # 1. UNCOMMENT THIS BLOCK to enforce that essential data is sent
+    if not user_agency_data.get('user_code') or not user_agency_data.get('user_role_agency'):
+        return Response({'error': 'User code and role within agency are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # --- END: RECOMMENDED CHANGES ---
 
     counselor_name = user_data.get('counselorName')
     if not counselor_name:

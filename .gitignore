@@ -1,102 +1,109 @@
-# ------------------------
+# ==========================
 # Python
-# ------------------------
+# ==========================
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+*.so
 
-# ------------------------
-# Django / Project Files
-# ------------------------
-db.sqlite3
-*.log
-*.pot
-*.pyc
-*.logfile
-logfile.log
-
-# Local Django runtime artifacts
-media/
-staticfiles/
-static/
-
-# Secret keys / Environment
-.env
-.env.*
-
-# Gunicorn
-gunicorn.pid
-gunicorn.log
-gunicorn.sock
-gunicorn.conf.py
-
-# ------------------------
-# Migrations (Optional)
-# ------------------------
-**/migrations/__pycache__/
-**/migrations/*.pyc
-# Uncomment below if you don’t version control migrations
-# **/migrations/*.py
-
-# ------------------------
-# Virtual Environments
-# ------------------------
-venv/
-ENV/
-env/
-
-# ------------------------
-# Build & Packaging
-# ------------------------
-*.egg
-*.egg-info/
-dist/
+# Distribution / Packaging
+.Python
 build/
-*.tar
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# ------------------------
-# Docker
-# ------------------------
-*.pid
-*.pid.lock
-*.sock
-__docker_cache__/
-Dockerfile
-*.dockerfile.backup
-docker-compose.yml
-
-# ------------------------
-# Nginx
-# ------------------------
-nginx.conf
-
-# ------------------------
-# Coverage / Testing
-# ------------------------
-.coverage
+# Unit test / Coverage reports
 htmlcov/
 .tox/
-.pytest_cache/
+.nox/
+.coverage
+.coverage.*
+.cache
 nosetests.xml
 coverage.xml
 *.cover
-.cache/
-*.mocha.json
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
-# ------------------------
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# ==========================
+# Django
+# ==========================
+# Django specific files
+*.log
+*.pot
+*.pyc
+*.pyo
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Ignore migration cache files but not the migration scripts
+*/migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
+# Keep actual migration scripts
+!*/migrations/*.py
+
+# ==========================
+# Environments
+# ==========================
+.env
+.env.* 
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================
 # IDEs / Editors
-# ------------------------
-.vscode/
+# ==========================
+# PyCharm
 .idea/
-*.swp
-*.swo
-*.code-workspace
-*.sublime-*
+*.iml
 
-# ------------------------
-# OS-Specific
-# ------------------------
+# VS Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ==========================
+# OS files
+# ==========================
 .DS_Store
 Thumbs.db
 ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================
+# Other
+# ==========================
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*.rej
