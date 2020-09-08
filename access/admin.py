@@ -195,8 +195,8 @@ class UserAgencyAdmin(admin.ModelAdmin):
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "role", "is_active", "date_joined")
-    search_fields = ("username", "email", "first_name", "last_name")
-    list_filter = ("role", "is_active", "is_staff", "gyalsung_status")
+    search_fields = ("username", "email", "first_name", "last_name", "identity_number")
+    list_filter = ("role", "is_active", "is_staff", "gyalsung_status", "is_gyalsung")
     fieldsets = (
         (
             "Personal Information",
@@ -213,6 +213,19 @@ class CustomUserAdmin(admin.ModelAdmin):
                     "gender",
                     "mob_number",
                     "profile_picture",
+                )
+            },
+        ),
+        (
+            "Gyalsung Information",
+            {
+                "fields": (
+                    "guard_mob_number",
+                    "hospital_name",
+                    "hospital_dzongkhag",
+                    "appointment_date",
+                    "academy_name",
+                    "personal_number",
                 )
             },
         ),
