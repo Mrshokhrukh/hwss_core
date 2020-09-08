@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
@@ -119,7 +120,7 @@ def create_user_and_agency_from_raw_data_for_gyalsung(user_data):
         first_name=user_data.get("first_name"),
         middle_name=user_data.get("middle_name"),
         last_name=user_data.get("last_name"),
-        date_of_birth=user_data.get("date_of_birth"),
+        date_of_birth=convert_date_format(user_data.get("date_of_birth")),
         gender=user_data.get("gender"),
         mob_number=user_data.get("mob_number"),
         perm_add_village=user_data.get("perm_add_village"),
@@ -137,12 +138,12 @@ def create_user_and_agency_from_raw_data_for_gyalsung(user_data):
         registration_method=user_data.get("registration_method"),
         is_gyalsung=user_data.get("is_gyalsung"),
         gyalsung_status=user_data.get("gyalsung_status"),
-        guard_mob_number=user_data.data.get("guard_contact_number"),
-        hospital_name=user_data.data.get("hospital_name"),
-        hospital_dzongkhag=user_data.data.get("hospital_dzongkhag"),
-        appointment_date=user_data.data.get("appointment_date"),
-        academy_name=user_data.data.get("academy"),
-        personal_number=user_data.data.get("personal_number"),
+        guard_mob_number=user_data.get("guard_contact_number"),
+        hospital_name=user_data.get("hospital_name"),
+        hospital_dzongkhag=user_data.get("hospital_dzongkhag"),
+        appointment_date=convert_date_format(user_data.get("appointment_date")),
+        academy_name=user_data.get("academy"),
+        personal_number=user_data.get("personal_number"),
     )
     return user.id
 
@@ -153,3 +154,11 @@ def merged_gyalsung_api_and_cid_api_data_for_user_creation(
     final_packet = cid_api_data.copy()
     final_packet.update(gyalsung_api_data)
     return final_packet
+
+
+def convert_date_format(date_str):
+    try:
+        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+        return date_obj.strftime("%Y-%m-%d")
+    except:
+        return date_str

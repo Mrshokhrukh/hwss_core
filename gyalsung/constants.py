@@ -1,7 +1,6 @@
 SCREENING_STATUS_CHOICES = [
-    ("", ""),
-    ("PASS", "Pass"),
-    ("FAIL", "Fail"),
-    ("FIT", "fit"),
-    ("UNFIT", "unfit"),
+    ("low", "Low Risk"),
+    ("moderate", "Moderate Risk"), 
+    ("high", "High Risk"),
+    ("", "Not Screened"), 
 ]
