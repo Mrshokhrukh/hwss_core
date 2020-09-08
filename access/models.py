@@ -7,6 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
+from gyalsung.constants import SCREENING_STATUS_CHOICES, REFERRAL_STATUS_CHOICES
 
 
 class CustomUserManager(BaseUserManager):
@@ -136,6 +137,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_gyalsung = models.BooleanField(default=False)
     gyalsung_status = models.CharField(
         max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
+    )
+    gyalsung_screening_status = models.CharField(
+        max_length=10, choices=SCREENING_STATUS_CHOICES, default=""
+    )
+    gyalsung_referral_status = models.CharField(
+        max_length=15, choices=REFERRAL_STATUS_CHOICES, default=""
     )
     guard_mob_number = models.CharField(max_length=15, null=True, blank=True)
     hospital_name = models.CharField(max_length=255, blank=True, null=True)

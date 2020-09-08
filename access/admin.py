@@ -196,7 +196,14 @@ class UserAgencyAdmin(admin.ModelAdmin):
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "role", "is_active", "date_joined")
     search_fields = ("username", "email", "first_name", "last_name", "identity_number")
-    list_filter = ("role", "is_active", "is_staff", "gyalsung_status", "is_gyalsung")
+    list_filter = (
+        "role",
+        "is_active",
+        "is_staff",
+        "gyalsung_status",
+        "is_gyalsung",
+        "gyalsung_screening_status",
+    )
     fieldsets = (
         (
             "Personal Information",
@@ -226,6 +233,8 @@ class CustomUserAdmin(admin.ModelAdmin):
                     "appointment_date",
                     "academy_name",
                     "personal_number",
+                    "gyalsung_referral_status",
+                    "gyalsung_screening_status",
                 )
             },
         ),
