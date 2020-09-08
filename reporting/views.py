@@ -1,10 +1,33 @@
+import io
 import json
+import xlsxwriter
+import msoffcrypto
 import logging
-from datetime import date
+from datetime import  date
+from django.contrib.auth.models import User as Token
+from django.db.models import F, ExpressionWrapper, DateField
+from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse
 
+from django.contrib.auth.models import Group, Permission
+from screening.models import CaseBasedSubmission, CaseScreening, CaseSubstanceRiskMeasurement, EventBasedSubmission, EventScreening, EventSubstanceRiskMeasurement, ScreenedUser
+from settings_module.models import Notification
+from .models import Reporting, ReportingModel
+from gyalsung_users.models import GyalsungUserProfile
+from measurement.models import Measurement, MeasurementAssist, UserSubmission, Submission
+from monitoring.models import ServiceAndTreatment, Referral, Rescreening, Substance, SubstanceRiskMeasurement
+from access.models import CustomUser, Agency, UserAgency
+from django.core.exceptions import ObjectDoesNotExist
+from django.core import serializers
+from django.views.decorators.csrf import csrf_exempt
+from django.apps import apps
+from django.forms.models import model_to_dict
 from django.core.serializers import serialize
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from access.models import CustomUser, UserAgency
 from gyalsung_users.models import GyalsungUserProfile
@@ -609,10 +632,52 @@ def get_reporting_model_data(request):
     gyalsung_user_profiles = list(GyalsungUserProfile.objects.values())
 
     # Return the JSON response with both data parts
-    return JsonResponse(
-        {
-            "reporting_model_data": reporting_model_data,
-            "gyalsung_user_profiles": gyalsung_user_profiles,
-        },
-        safe=False,
+    return JsonResponse({
+        'reporting_model_data': reporting_model_data,
+        'gyalsung_user_profiles': gyalsung_user_profiles
+    }, safe=False)
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def generate_counselor_report_encrypted_xls(request):
+    data = request.data.get("data")
+    columns = request.data.get("columns_to_export")
+    password = request.data.get("password")
+
+    if not data or not columns:
+        return Response({"error": "Missing data or columns_to_export"}, status=400)
+
+    # Step 1: Create unencrypted Excel in memory
+    raw_buffer = io.BytesIO()
+    workbook = xlsxwriter.Workbook(raw_buffer, {"in_memory": True})
+    worksheet = workbook.add_worksheet("Report")
+
+    headers = [col["header"] for col in columns]
+    header_format = workbook.add_format({"bold": True, "bg_color": "#D9E1F2", "border": 1})
+
+    # Write headers
+    for col_num, header in enumerate(headers):
+        worksheet.write(0, col_num, header, header_format)
+
+    # Write rows
+    for row_idx, row in enumerate(data, start=1):
+        for col_idx, header in enumerate(headers):
+            worksheet.write(row_idx, col_idx, row.get(header, ""))
+
+    workbook.close()
+    raw_buffer.seek(0)
+
+    # Step 2: Encrypt Excel with password using msoffcrypto
+    encrypted_buffer = io.BytesIO()
+    officefile = msoffcrypto.OfficeFile(raw_buffer)
+    officefile.encrypt(password, encrypted_buffer)
+    encrypted_buffer.seek(0)
+
+    # Step 3: Return encrypted file as response
+    response = HttpResponse(
+        encrypted_buffer.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    response["Content-Disposition"] = 'attachment; filename="report.xlsx"'
+    return response

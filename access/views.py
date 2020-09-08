@@ -1230,11 +1230,11 @@ def register_gyalsung_user_using_cid(request):
                 identity_number, None
             )
 
-        eamil = f"{user_data["first_name"]}{user_data.get("last_name", '_')}@gmail.com"
-        password = f"{user_data["first_name"]}@2025#"
+        email = f"{user_data['first_name']}{user_data.get('last_name', '_')}@gmail.com"
+        password = f"{user_data['first_name']}@2025#"
 
         user_data["username"] = identity_number
-        user_data["email"] = eamil
+        user_data["email"] = email
         user_data["password"] = password
         user_data["identity_number"] = identity_number
 
