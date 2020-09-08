@@ -6,7 +6,7 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils import timezone
 
-from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
+from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES, ROLE_GYALSUNG_REASSESSMENT_TEAM
 
 
 class CustomUserManager(BaseUserManager):
@@ -57,9 +57,8 @@ class CustomUserManager(BaseUserManager):
         return self.filter(
             is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
         )
-
     def for_gyalsung_reassessment_team(self):
-        return self.filter(role=self.model.ROLE_GYALSUNG_REASSESSMENT_TEAM)
+        return self.filter(role=ROLE_GYALSUNG_REASSESSMENT_TEAM)
 
 
 class Agency(models.Model):
