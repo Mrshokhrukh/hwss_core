@@ -59,7 +59,7 @@ class CustomUserManager(BaseUserManager):
             is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
         )
     def for_gyalsung_reassessment_team(self):
-        return self.filter(role=ROLE_GYALSUNG_REASSESSMENT_TEAM)
+        return self.filter(role="gyalsung_reassessment_team")
 
 
 class Agency(models.Model):
