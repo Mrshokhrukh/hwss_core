@@ -2,6 +2,9 @@ import io
 import json
 import xlsxwriter
 import msoffcrypto
+
+import xlsxwriter
+import msoffcrypto
 import logging
 from datetime import  date
 from django.contrib.auth.models import User as Token
@@ -22,6 +25,7 @@ from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from django.apps import apps
 from django.forms.models import model_to_dict
+from django.views.decorators.csrf import csrf_exempt
 from django.core.serializers import serialize
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
@@ -48,6 +52,11 @@ from screening.models import (
     EventSubstanceRiskMeasurement,
     ScreenedUser,
 )
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 
 def healthz(request):
@@ -655,6 +664,52 @@ def generate_counselor_report_encrypted_xls(request):
 
     headers = [col["header"] for col in columns]
     header_format = workbook.add_format({"bold": True, "bg_color": "#D9E1F2", "border": 1})
+
+    # Write headers
+    for col_num, header in enumerate(headers):
+        worksheet.write(0, col_num, header, header_format)
+
+    # Write rows
+    for row_idx, row in enumerate(data, start=1):
+        for col_idx, header in enumerate(headers):
+            worksheet.write(row_idx, col_idx, row.get(header, ""))
+
+    workbook.close()
+    raw_buffer.seek(0)
+
+    # Step 2: Encrypt Excel with password using msoffcrypto
+    encrypted_buffer = io.BytesIO()
+    officefile = msoffcrypto.OfficeFile(raw_buffer)
+    officefile.encrypt(password, encrypted_buffer)
+    encrypted_buffer.seek(0)
+
+    # Step 3: Return encrypted file as response
+    response = HttpResponse(
+        encrypted_buffer.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def generate_xls_report_with_open_password(request):
+    data = request.data.get("data")
+    columns = request.data.get("columns_to_export")
+    password = request.data.get("password")
+
+    if not data or not columns:
+        return Response({"error": "Missing data or columns_to_export"}, status=400)
+
+    # Step 1: Create unencrypted Excel in memory
+    raw_buffer = io.BytesIO()
+    workbook = xlsxwriter.Workbook(raw_buffer, {"in_memory": True})
+    worksheet = workbook.add_worksheet("Report")
+
+    headers = [col["header"] for col in columns]
+    header_format = workbook.add_format(
+        {"bold": True, "bg_color": "#D9E1F2", "border": 1}
+    )
 
     # Write headers
     for col_num, header in enumerate(headers):

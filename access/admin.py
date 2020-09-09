@@ -162,10 +162,96 @@ class PreRecordedUserAdmin(ImportExportModelAdmin):
 
 @admin.register(UserAgency)
 class UserAgencyAdmin(admin.ModelAdmin):
-    """
-    A separate admin for UserAgency is still useful for searching and filtering all assignments.
-    """
-    list_display = ('user', 'agency', 'user_role_agency', 'user_code')
-    search_fields = ('user__username', 'user__email', 'agency__agency_name', 'user_code')
-    list_filter = ('user_role_agency', 'agency__agency_name')
-    raw_id_fields = ('user', 'agency',)
+    list_display = ("user", "agency", "user_role_agency")
+    search_fields = ("user__username", "agency__agency_name")
+    list_filter = ("user_role_agency",)
+
+
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ("username", "email", "role", "is_active", "date_joined")
+    search_fields = ("username", "email", "first_name", "last_name", "identity_number")
+    list_filter = (
+        "role",
+        "is_active",
+        "is_staff",
+        "gyalsung_status",
+        "is_gyalsung",
+        "gyalsung_screening_status",
+    )
+    fieldsets = (
+        (
+            "Personal Information",
+            {
+                "fields": (
+                    "username",
+                    "email",
+                    "first_name",
+                    "middle_name",
+                    "last_name",
+                    "identity_number",
+                    "nationality",
+                    "date_of_birth",
+                    "gender",
+                    "mob_number",
+                    "profile_picture",
+                )
+            },
+        ),
+        (
+            "Gyalsung Information",
+            {
+                "fields": (
+                    "guard_mob_number",
+                    "hospital_name",
+                    "hospital_dzongkhag",
+                    "appointment_date",
+                    "academy_name",
+                    "personal_number",
+                    "gyalsung_referral_status",
+                    "gyalsung_screening_status",
+                )
+            },
+        ),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        (
+            "Agency and Address",
+            {
+                "fields": (
+                    "active_agency",
+                    "perm_add_village",
+                    "perm_add_gewog",
+                    "perm_add_dzongkhag",
+                    "ps_add_village",
+                    "ps_add_gewog",
+                    "ps_add_dzongkhag",
+                )
+            },
+        ),
+        (
+            "Account Details",
+            {
+                "fields": (
+                    "role",
+                    "gyalsung_status",
+                    "access_level",
+                    "is_gyalsung",
+                    "academy_code",
+                    "registration_method",
+                    "date_joined",
+                )
+            },
+        ),
+    )
+    readonly_fields = ("date_joined",)

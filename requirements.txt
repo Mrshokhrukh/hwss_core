@@ -32,6 +32,7 @@ jmespath==1.0.1
 MarkupPy==1.14
 mccabe==0.7.0
 mypy_extensions==1.1.0
+msoffcrypto-tool==5.4.2
 odfpy==1.4.1
 openpyxl==3.1.2
 packaging==24.0
