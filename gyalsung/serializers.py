@@ -5,6 +5,7 @@ from rest_framework import serializers
 from access.models import CustomUser
 from .models import GyalsungAssessment
 from  .constants import SCREENING_STATUS_CHOICES
+from django.contrib.auth.hashers import make_password
 
 class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
     active_agency_details = serializers.SerializerMethodField()
@@ -58,60 +59,55 @@ class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
 
 
 class GyalsungFitUnfitUserSerializer(serializers.ModelSerializer):
-    active_agency_details = serializers.SerializerMethodField()
-    number_of_reassessments = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField() 
+    cid = serializers.CharField(source='identity_number')
+    dob = serializers.DateField(source='date_of_birth', format='%d-%b-%y')
+    finalStatus = serializers.CharField(source='gyalsung_screening_status')
+    severityDetails = serializers.SerializerMethodField()
 
-    def get_active_agency_details(self, obj):
+    def get_name(self, obj):
+        parts = [obj.first_name, obj.middle_name, obj.last_name]
+        return " ".join(part for part in parts if part)
+        
+ 
+    def get_severityDetails(self, obj):
+    
+        latest_assessment = obj.gyalsung_assessments.order_by('-submission_date').first()
+
+        if not latest_assessment:
+            return None 
+
+        
+        
         return {
-            "agency_name": obj.active_agency.agency_name if obj.active_agency else None,
-            "agency_code": obj.active_agency.agency_code if obj.active_agency else None,
-            "agency_parent": (
-                obj.active_agency.agency_parent if obj.active_agency else None
-            ),
+            "phq": {
+                "score": latest_assessment.phq_score,
+                "level": latest_assessment.phq_interpretation
+            },
+            "gad": {
+                "score": latest_assessment.gad_score,
+                "level": latest_assessment.gad_interpretation
+            },
+            "ace": {
+                "score": latest_assessment.ace_score,
+                "level": latest_assessment.ace_interpretation
+            },
+            "psychometric": { 
+                "score": latest_assessment.psy_score,
+                "level": latest_assessment.psy_interpretation
+            }
         }
-
-    def get_number_of_reassessments(self, obj):
-
-        return GyalsungAssessment.objects.filter(user_id=obj.id).count()
 
     class Meta:
         model = CustomUser
+        
         fields = [
-            "id",
-            "username",
-            "identity_number",
-            "first_name",
-            "middle_name",
-            "last_name",
-            "date_of_birth",
-            "gender",
-            "email",
-            "mob_number",
-            "father_name",
-            "mother_name",
-            "perm_add_village",
-            "perm_add_gewog",
-            "perm_add_dzongkhag",
-            "profile_picture",
-            "academy_code",
-            "date_joined",
-            "role",
-            "active_agency",
-            "active_agency_details",
-            "number_of_reassessments",
-            "gyalsung_status",
-            "gyalsung_screening_status",
-            "gyalsung_referral_status",
-            "guard_mob_number",
-            "hospital_name",
-            "hospital_dzongkhag",
-            "appointment_date",
-            "academy_name",
-            "personal_number",
-            "registration_method",
+            'name',
+            'cid',
+            'dob',
+            'finalStatus',
+            'severityDetails',
         ]
-
-
 class GyalsungAssessmentSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
     counselor_user_details = serializers.SerializerMethodField()
@@ -177,3 +173,50 @@ class GyalsungAssessmentSerializer(serializers.ModelSerializer):
         if value and not CustomUser.objects.filter(id=value.id).exists():
             raise serializers.ValidationError("User does not exist")
         return value
+class GyalsungUserRegistrationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating new Gyalsung user accounts.
+    It takes the data from the frontend registration form and creates a CustomUser.
+    """
+    # Use 'cid' from the frontend and map it to the 'identity_number' model field
+    cid = serializers.CharField(source='identity_number', write_only=True)
+
+    class Meta:
+        model = CustomUser
+        # List all fields that your frontend form will send
+        fields = [
+            'cid',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'date_of_birth',
+            'gender',
+            'mob_number',
+            'guard_mob_number',
+            'appointment_date',
+            'hospital_name',
+            'hospital_dzongkhag',
+            'academy_name',
+            'personal_number',
+        ]
+
+    def create(self, validated_data):
+        """
+        Custom create method to handle user creation correctly.
+        """
+        identity_number = validated_data.get('identity_number')
+
+       
+        user, created = CustomUser.objects.update_or_create(
+            identity_number=identity_number,
+            defaults={
+                **validated_data,
+                'username': identity_number,  # Use CID as username
+                'email': f"{identity_number}@gyalsung.user.local", # Create a dummy email
+                'is_gyalsung': True,
+                'registration_method': 'Gyalsung Registered',
+                
+                'password': make_password('defaultpassword123') 
+            }
+        )
+        return user    

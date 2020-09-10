@@ -1,6 +1,3 @@
-# -----------------------------------------------//
-# -------- IMPORTS PART OF THE VIEWS -----------//
-# ----------------------------------------------//
 
 import base64
 import json
@@ -1207,7 +1204,7 @@ def get_gyalsung_user_data_using_cid(request):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def register_gyalsung_user_using_cid(request):
     from gyalsung.serializers import GyalsungCounselorUserSerializer
 
@@ -1217,45 +1214,42 @@ def register_gyalsung_user_using_cid(request):
             {"error": "CID (Identity Number) is required."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    response_status = status.HTTP_200_OK
+    message = "User details updated and registered for screening."
+
+  
     existing_user = CustomUser.objects.filter(identity_number=identity_number).first()
-    newely_created_user = False
+
     if not existing_user:
-        current_useragency = UserAgency.objects.filter(user=request.user)
-        if current_useragency:
-            user_data = process_cid_data_for_user_creation_using_gyalsung(
-                identity_number, current_useragency.agency
-            )
-        else:
-            user_data = process_cid_data_for_user_creation_using_gyalsung(
-                identity_number, None
-            )
+       
+        try:
+            current_useragency = UserAgency.objects.filter(user=request.user).first()
+            agency = current_useragency.agency if current_useragency else None
+            
+            user_data = process_cid_data_for_user_creation_using_gyalsung(identity_number, agency)
+            email = f"{identity_number}@gyalsung.user.local"
+            password = f"{user_data.get('first_name', identity_number)}@2025#"
 
-        email = f"{user_data['first_name']}{user_data.get('last_name', '_')}@gmail.com"
-        password = f"{user_data['first_name']}@2025#"
+            user_data["username"] = identity_number
+            user_data["email"] = email
+            user_data["password"] = password
+            user_data["identity_number"] = identity_number
 
-        user_data["username"] = identity_number
-        user_data["email"] = email
-        user_data["password"] = password
-        user_data["identity_number"] = identity_number
-
-        final_gyalsung_user_data = (
-            merged_gyalsung_api_and_cid_api_data_for_user_creation(
+            final_gyalsung_user_data = merged_gyalsung_api_and_cid_api_data_for_user_creation(
                 request.data, user_data
             )
-        )
-        user_id = create_user_and_agency_from_raw_data_for_gyalsung(
-            final_gyalsung_user_data
-        )
-        newely_created_user = True
-        existing_user = CustomUser.objects.get(id=user_id)
+            
+            user_id = create_user_and_agency_from_raw_data_for_gyalsung(final_gyalsung_user_data)
+            existing_user = CustomUser.objects.get(id=user_id)
+            response_status = status.HTTP_201_CREATED
+            message = "New user created and registered for screening successfully."
 
-    gyalsung_user_screen_history = GyalsungUserScreeningHistory.objects.create(
-        user=existing_user
-    )
-
-    # now populate details to the new gyalsung db
-    if not newely_created_user:
-        # update new gyalsung field data only
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred during user creation: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+    else:
         existing_user.is_gyalsung = True
         existing_user.gyalsung_status = "registered"
         existing_user.guard_mob_number = request.data.get("guard_contact_number")
@@ -1267,22 +1261,24 @@ def register_gyalsung_user_using_cid(request):
         existing_user.academy_name = request.data.get("academy")
         existing_user.personal_number = request.data.get("personal_number")
         existing_user.save()
-
-        event_submission_qs = EventBasedSubmission.objects.filter(
-            user_id=existing_user.id
-        )
+    gyalsung_user_screen_history = GyalsungUserScreeningHistory.objects.create(
+        user=existing_user
+    )
+    event_submission_qs = EventBasedSubmission.objects.filter(user_id=existing_user.id)
+    if event_submission_qs.exists():
         gyalsung_user_screen_history.event_submission.add(*event_submission_qs)
-        case_submission_qs = CaseBasedSubmission.objects.filter(
-            user_id=existing_user.id
-        )
-        gyalsung_user_screen_history.event_submission.add(*case_submission_qs)
+
+    case_submission_qs = CaseBasedSubmission.objects.filter(user_id=existing_user.id)
+    if case_submission_qs.exists():
+        gyalsung_user_screen_history.case_submission.add(*case_submission_qs)
 
     response_data = {
         "user_id": existing_user.id,
         "user_data": GyalsungCounselorUserSerializer(existing_user).data,
-        "message": "User registered successfully.",
+        "message": message,
     }
-    return Response(response_data, status=status.HTTP_201_CREATED)
+    
+    return Response(response_data, status=response_status)
 
 
 class UserCreate(generics.CreateAPIView):

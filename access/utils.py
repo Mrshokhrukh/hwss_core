@@ -87,7 +87,12 @@ def process_cid_gyalsung_user_data(cid_number):
 
 
 def process_cid_data_for_user_creation_using_gyalsung(cid_number, agency):
-    cid_api_data = get_data_from_cid_number(cid_number)
+    
+    cid_api_response = get_data_from_cid_number(cid_number)
+    citizen_detail_list = cid_api_response.get("citizenDetail", [])
+    if not citizen_detail_list:
+        return {}
+    cid_api_data = citizen_detail_list[0]
     return {
         "first_name": cid_api_data.get("firstName"),
         "middle_name": cid_api_data.get("middleName"),
@@ -95,13 +100,13 @@ def process_cid_data_for_user_creation_using_gyalsung(cid_number, agency):
         "date_of_birth": cid_api_data.get("dob"),
         "gender": cid_api_data.get("gender"),
         "mob_number": cid_api_data.get("mobileNumber"),
-        "perm_add_village": cid_api_data.get("villageName"),  # permanent address
+        "perm_add_village": cid_api_data.get("villageName"),  
         "perm_add_gewog": cid_api_data.get("gewogName"),
         "perm_add_dzongkhag": cid_api_data.get("dzongkhagName"),
         "nationality": cid_api_data.get("nationality"),
         "father_name": cid_api_data.get("fatherName"),
         "mother_name": cid_api_data.get("motherName"),
-        "ps_add_village": cid_api_data.get("villageName"),  # present address
+        "ps_add_village": cid_api_data.get("villageName"),  
         "ps_add_gewog": cid_api_data.get("gewogName"),
         "ps_add_dzongkhag": cid_api_data.get("dzongkhagName"),
         "role": "general_public",

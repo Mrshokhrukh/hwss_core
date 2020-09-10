@@ -45,64 +45,143 @@ class UserAgencyInline(admin.StackedInline):
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     """
-    A greatly improved admin for your CustomUser model.
-
-    Key Features:
-    - Inherits from Django's `UserAdmin` to get password reset, permissions management,
-      and a secure user creation form out-of-the-box.
-    - Integrates `UserAgency` details directly on the user page using an inline.
-    - Cleaner layout with organized `fieldsets`.
-    - Useful admin actions to bulk-activate/deactivate users.
+    Custom admin for managing CustomUser.
+    Inherits from UserAdmin for secure auth features,
+    with merged fieldsets and inline agency support.
     """
-    
+
     inlines = (UserAgencyInline,)
-    
+
     list_display = (
-        'username', 
-        'email', 
-        'get_full_name',
-        'role', 
-        'is_staff',
-        'is_active',
+        "username",
+        "email",
+        "get_full_name",
+        "role",
+        "is_active",
+        "is_staff",
+        "date_joined",
     )
-    list_filter = ('role', 'is_active', 'is_staff', 'is_superuser', 'gyalsung_status', 'groups')
-    search_fields = ('username', 'first_name', 'last_name', 'email', 'identity_number')
-    ordering = ('-date_joined',)
+    list_filter = (
+        "role",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "gyalsung_status",
+        "is_gyalsung",
+        "gyalsung_screening_status",
+        "groups",
+    )
+    search_fields = (
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "identity_number",
+    )
+    ordering = ("-date_joined",)
 
-    # We extend the base UserAdmin fieldsets with our custom fields.
-    # Password management is automatically and securely handled by UserAdmin.
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('first_name', 'middle_name', 'last_name', 'email', 'profile_picture', 'identity_number', 'date_of_birth', 'gender', 'mob_number', 'nationality')}),
-        ('Permissions & Role', {'fields': ('is_active', 'is_staff', 'is_superuser', 'role', 'access_level', 'groups', 'user_permissions')}),
-        ('Address', {'classes': ('collapse',), 'fields': ('perm_add_village', 'perm_add_gewog', 'perm_add_dzongkhag', 'ps_add_village', 'ps_add_gewog', 'ps_add_dzongkhag')}),
-        ('Gyalsung Details', {'classes': ('collapse',), 'fields': ('is_gyalsung', 'gyalsung_status', 'academy_code')}),
-        ('System Information', {'fields': ('active_agency', 'registration_method', 'is_old_case_user', 'date_joined', 'last_login')}),
+        (None, {"fields": ("username", "password")}),
+        (
+            "Personal Info",
+            {
+                "fields": (
+                    "first_name",
+                    "middle_name",
+                    "last_name",
+                    "email",
+                    "identity_number",
+                    "nationality",
+                    "date_of_birth",
+                    "gender",
+                    "mob_number",
+                    "profile_picture",
+                )
+            },
+        ),
+        (
+            "Gyalsung Information",
+            {
+                "fields": (
+                    "is_gyalsung",
+                    "gyalsung_status",
+                    "gyalsung_screening_status",
+                    "gyalsung_referral_status",
+                    "guard_mob_number",
+                    "hospital_name",
+                    "hospital_dzongkhag",
+                    "appointment_date",
+                    "academy_name",
+                    "academy_code",
+                    "personal_number",
+                )
+            },
+        ),
+        (
+            "Agency and Address",
+            {
+                "fields": (
+                    "active_agency",
+                    "perm_add_village",
+                    "perm_add_gewog",
+                    "perm_add_dzongkhag",
+                    "ps_add_village",
+                    "ps_add_gewog",
+                    "ps_add_dzongkhag",
+                )
+            },
+        ),
+        (
+            "Permissions & Role",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "role",
+                    "access_level",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        (
+            "System Information",
+            {
+                "fields": (
+                    "registration_method",
+                    "is_old_case_user",
+                    "date_joined",
+                    "last_login",
+                )
+            },
+        ),
     )
 
-    # Customize the fields shown only on the user creation form
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Custom Fields', {'fields': ('first_name', 'last_name', 'role', 'identity_number')}),
+        (
+            "Custom Fields",
+            {"fields": ("first_name", "last_name", "role", "identity_number")},
+        ),
     )
 
-    readonly_fields = ('date_joined', 'last_login')
-    actions = ['activate_users', 'deactivate_users']
-    
+    readonly_fields = ("date_joined", "last_login")
+
+    actions = ["activate_users", "deactivate_users"]
+
     def get_full_name(self, obj):
         return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
-    get_full_name.short_description = 'Full Name'
+
+    get_full_name.short_description = "Full Name"
 
     def activate_users(self, request, queryset):
-        """Activates selected user accounts."""
         queryset.update(is_active=True)
         self.message_user(request, "Selected users have been activated.", messages.SUCCESS)
-    activate_users.short_description = "Activate selected users"
 
     def deactivate_users(self, request, queryset):
-        """Deactivates selected user accounts."""
         queryset.update(is_active=False)
         self.message_user(request, "Selected users have been deactivated.", messages.SUCCESS)
-    deactivate_users.short_description = "Deactivate selected users"
+
 
 
 @admin.register(Agency)
@@ -167,91 +246,3 @@ class UserAgencyAdmin(admin.ModelAdmin):
     list_filter = ("user_role_agency",)
 
 
-@admin.register(CustomUser)
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ("username", "email", "role", "is_active", "date_joined")
-    search_fields = ("username", "email", "first_name", "last_name", "identity_number")
-    list_filter = (
-        "role",
-        "is_active",
-        "is_staff",
-        "gyalsung_status",
-        "is_gyalsung",
-        "gyalsung_screening_status",
-    )
-    fieldsets = (
-        (
-            "Personal Information",
-            {
-                "fields": (
-                    "username",
-                    "email",
-                    "first_name",
-                    "middle_name",
-                    "last_name",
-                    "identity_number",
-                    "nationality",
-                    "date_of_birth",
-                    "gender",
-                    "mob_number",
-                    "profile_picture",
-                )
-            },
-        ),
-        (
-            "Gyalsung Information",
-            {
-                "fields": (
-                    "guard_mob_number",
-                    "hospital_name",
-                    "hospital_dzongkhag",
-                    "appointment_date",
-                    "academy_name",
-                    "personal_number",
-                    "gyalsung_referral_status",
-                    "gyalsung_screening_status",
-                )
-            },
-        ),
-        (
-            "Permissions",
-            {
-                "fields": (
-                    "is_active",
-                    "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
-                )
-            },
-        ),
-        (
-            "Agency and Address",
-            {
-                "fields": (
-                    "active_agency",
-                    "perm_add_village",
-                    "perm_add_gewog",
-                    "perm_add_dzongkhag",
-                    "ps_add_village",
-                    "ps_add_gewog",
-                    "ps_add_dzongkhag",
-                )
-            },
-        ),
-        (
-            "Account Details",
-            {
-                "fields": (
-                    "role",
-                    "gyalsung_status",
-                    "access_level",
-                    "is_gyalsung",
-                    "academy_code",
-                    "registration_method",
-                    "date_joined",
-                )
-            },
-        ),
-    )
-    readonly_fields = ("date_joined",)

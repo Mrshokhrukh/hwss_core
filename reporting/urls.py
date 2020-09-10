@@ -1,4 +1,6 @@
 from django.urls import path
+from .views import generate_counselor_report_encrypted_xls
+
 
 from reporting.views import (
     get_reporting_model_data,
