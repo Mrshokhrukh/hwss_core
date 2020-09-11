@@ -58,6 +58,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
 EXPOSE 8123
-
-# Start Gunicorn and Nginx
-CMD ["sh", "-c", "nginx && gunicorn --config /app/gunicorn.conf.py hwss_core.wsgi:application"]
+# Append to /etc/hosts at container runtime
+CMD sh -c 'echo "172.30.78.43 sso.tech.gov.bt" >> /etc/hosts && echo "172.30.78.42 datahub-apim.tech.gov.bt" >> /etc/hosts && nginx && gunicorn --config /app/gunicorn.conf.py hwss_core.wsgi:application'

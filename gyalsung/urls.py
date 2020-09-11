@@ -3,9 +3,9 @@ from rest_framework.routers import DefaultRouter
 
 from gyalsung.views import (
     GyalsungCounselorUserViewSet,
-    GyalsungReassessmentTeamUserViewSet,
-    GyalsungReassessmentMonitoringUserViewSet,
     GyalsungReassessmentFitUserViewSet,
+    GyalsungReassessmentMonitoringUserViewSet,
+    GyalsungReassessmentTeamUserViewSet,
     GyalsungReassessmentUnfitUserViewSet,
 )
 

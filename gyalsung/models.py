@@ -65,12 +65,9 @@ class GyalsungAssessment(models.Model):
     submission_date = models.DateTimeField(auto_now_add=True)
 
     final_screening_status = models.CharField(
-        max_length=10, 
-        choices=SCREENING_STATUS_CHOICES, 
-        default="", 
-        blank=True
+        max_length=10, choices=SCREENING_STATUS_CHOICES, default="", blank=True
     )
-    
+
     is_reassessment_screening = models.BooleanField(default=False)
     # Counselor + Reassessment
     # testing
@@ -94,7 +91,7 @@ class GyalsungAssessment(models.Model):
     # Audit timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
- 
+
     def __str__(self):
         return f"Gyalsung Assessment for {self.user.username} (Status: {self.final_screening_status})"
 

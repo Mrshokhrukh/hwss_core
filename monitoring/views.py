@@ -11,38 +11,16 @@ from django.db.models import Prefetch, Q
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from gyalsung_users.models import GyalsungUserProfile
-from measurement.models import Measurement, MeasurementAssist, Submission, UserSubmission
-from django.views.decorators.csrf import csrf_exempt
-from access.models import Agency, CustomUser, UserAgency
-from monitoring.serializers import FinalUserSubmissionSerializer
-from django.db.models import Prefetch
-from screening.models import CaseBasedSubmission, CaseScreening, EventBasedSubmission, CaseSubstanceRiskMeasurement, EventScreening, EventSubstanceRiskMeasurement
-from .models import FinalUserSubmission, Notification, Rescreening, ServiceAndTreatment, Referral, ServiceAndTreatmentHistory, Substance, SubstanceRiskMeasurement
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, permission_classes
-from django.views.decorators.http import require_GET
-from django.forms.models import model_to_dict
-from django.db import transaction
-from datetime import date
-from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status
 from django.views.decorators.http import require_POST
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.contrib.contenttypes.models import ContentType
-from .serializers import CustomUserSerializer, ReferralSerializer, ServiceAndTreatmentSerializer
-from django.utils.decorators import method_decorator
-import logging
-from django.core.mail import send_mail
-from django.conf import settings
 
-from access.models import Agency, CustomUser, UserAgency
+from access.models import CustomUser, UserAgency
 from gyalsung_users.models import GyalsungUserProfile
 from measurement.models import (
     Measurement,
@@ -80,8 +58,8 @@ method_decorator(csrf_exempt, name="dispatch")
 
 
 class ServiceAndTreatmentViewSet(viewsets.ModelViewSet):
-    queryset = ServiceAndTreatment.objects.all() 
-    
+    queryset = ServiceAndTreatment.objects.all()
+
     serializer_class = ServiceAndTreatmentSerializer
     permission_classes = [AllowAny]
 
@@ -293,6 +271,9 @@ def get_non_green_flags(request):
 @csrf_exempt
 def process_rescreening(request):
     rescreening_records = get_non_green_flags(request)
+    # Log the data being returned
+    logger.debug("Response data:")
+    logger.debug(rescreening_records)
     return JsonResponse(rescreening_records)
 
 

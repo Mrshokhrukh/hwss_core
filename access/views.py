@@ -1,4 +1,3 @@
-
 import base64
 import json
 import logging
@@ -38,11 +37,11 @@ from access.serializers import (
     UserAgencySerializer,
 )
 from access.utils import (
-    create_user_and_agency_from_raw_data_for_gyalsung,
-    process_cid_data_for_user_creation_using_gyalsung,
     convert_date_format,
-    process_cid_gyalsung_user_data,
+    create_user_and_agency_from_raw_data_for_gyalsung,
     merged_gyalsung_api_and_cid_api_data_for_user_creation,
+    process_cid_data_for_user_creation_using_gyalsung,
+    process_cid_gyalsung_user_data,
 )
 from gyalsung.models import (
     GyalsungAssessment,
@@ -1217,16 +1216,17 @@ def register_gyalsung_user_using_cid(request):
     response_status = status.HTTP_200_OK
     message = "User details updated and registered for screening."
 
-  
     existing_user = CustomUser.objects.filter(identity_number=identity_number).first()
 
     if not existing_user:
-       
+
         try:
             current_useragency = UserAgency.objects.filter(user=request.user).first()
             agency = current_useragency.agency if current_useragency else None
-            
-            user_data = process_cid_data_for_user_creation_using_gyalsung(identity_number, agency)
+
+            user_data = process_cid_data_for_user_creation_using_gyalsung(
+                identity_number, agency
+            )
             email = f"{identity_number}@gyalsung.user.local"
             password = f"{user_data.get('first_name', identity_number)}@2025#"
 
@@ -1235,11 +1235,15 @@ def register_gyalsung_user_using_cid(request):
             user_data["password"] = password
             user_data["identity_number"] = identity_number
 
-            final_gyalsung_user_data = merged_gyalsung_api_and_cid_api_data_for_user_creation(
-                request.data, user_data
+            final_gyalsung_user_data = (
+                merged_gyalsung_api_and_cid_api_data_for_user_creation(
+                    request.data, user_data
+                )
             )
-            
-            user_id = create_user_and_agency_from_raw_data_for_gyalsung(final_gyalsung_user_data)
+
+            user_id = create_user_and_agency_from_raw_data_for_gyalsung(
+                final_gyalsung_user_data
+            )
             existing_user = CustomUser.objects.get(id=user_id)
             response_status = status.HTTP_201_CREATED
             message = "New user created and registered for screening successfully."
@@ -1277,7 +1281,7 @@ def register_gyalsung_user_using_cid(request):
         "user_data": GyalsungCounselorUserSerializer(existing_user).data,
         "message": message,
     }
-    
+
     return Response(response_data, status=response_status)
 
 

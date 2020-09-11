@@ -147,13 +147,14 @@ class EventSubstanceRiskMeasurementSerializer(serializers.ModelSerializer):
 
 class FinalUserSubmissionSerializer(serializers.ModelSerializer):
     mark_as_safe = serializers.SerializerMethodField()
+
     class Meta:
         model = FinalUserSubmission
-        fields = '__all__'
+        fields = "__all__"
 
     def get_mark_as_safe(self, obj):
         return obj.initial_submission.mark_as_safe
-        
+
 
 class EventScreeningSerializer(serializers.ModelSerializer):
     class Meta:
@@ -294,17 +295,25 @@ class ServiceAndTreatmentSerializer(serializers.ModelSerializer):
             assessment_serializer = None
 
             if assessment_serializer:
-                representation['screening_data'] = assessment_serializer.data
-            
+                representation["screening_data"] = assessment_serializer.data
+
             if isinstance(assessment_object, CaseBasedSubmission):
                 # UPDATED with the correct name from your model
-                representation['case_substance_risks'] = CaseSubstanceRiskMeasurementSerializer(
-                    assessment_object.case_substance_risk_measurements.all(), many=True).data
-                    
+                representation["case_substance_risks"] = (
+                    CaseSubstanceRiskMeasurementSerializer(
+                        assessment_object.case_substance_risk_measurements.all(),
+                        many=True,
+                    ).data
+                )
+
             elif isinstance(assessment_object, EventBasedSubmission):
                 # UPDATED with the correct name from your model
-                representation['event_substance_risks'] = EventSubstanceRiskMeasurementSerializer(
-                    assessment_object.event_substance_risk_measurements.all(), many=True).data
+                representation["event_substance_risks"] = (
+                    EventSubstanceRiskMeasurementSerializer(
+                        assessment_object.event_substance_risk_measurements.all(),
+                        many=True,
+                    ).data
+                )
         # Include substance risk measurements
         if isinstance(assessment_object, CaseBasedSubmission):
             representation["case_substance_risks"] = (
