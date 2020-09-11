@@ -7,8 +7,10 @@ from django.http import HttpResponse
 from import_export.admin import ImportExportModelAdmin
 
 # Import your models and resources
-from .models import Agency, CustomUser, PreRecordedUser, UserAgency
-from .resources import PreRecordedUserResource  # Make sure this resource.py file exists
+from access.models import Agency, CustomUser, PreRecordedUser, UserAgency
+from access.resources import (
+    PreRecordedUserResource,
+)  # Make sure this resource.py file exists
 
 # --- Inlines for a More Integrated Experience ---
 
