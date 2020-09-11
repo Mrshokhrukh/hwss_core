@@ -67,15 +67,16 @@ def create_event_screening(request):
 
         # Create EventScreening object
         event_screening = EventScreening(
-            event_name=data["event_name"],
-            event_purpose=data.get("event_purpose", None),
-            location=data["location"],
-            start_date=data["start_date"],
-            end_date=data["end_date"],
-            duration=data["duration"],
-            counselor=data["counselor"],
-            selected_tool=data["selected_tool"],
-            created_by=created_by_user,  # Assign the created_by user
+            event_name=data['event_name'],
+            event_purpose=data.get('event_purpose', None),
+            location=data['location'],
+            start_date=data['start_date'],
+            end_date=data['end_date'],
+            duration=data['duration'],
+            counselor=data['counselor'],
+            selected_tool=data['selected_tool'],
+            total_users_to_screened =data["total_users"],
+            created_by=created_by_user  # Assign the created_by user
         )
 
         # Convert end_date to datetime.date object
@@ -346,20 +347,21 @@ def get_event_screenings(request):
 
         for event in events:
             event_data = {
-                "id": event.id,
-                "event_name": event.event_name,
-                "event_purpose": event.event_purpose,
-                "location": event.location,
-                "start_date": event.start_date,
-                "end_date": event.end_date,
-                "duration": event.duration,
-                "counselor": event.counselor,
-                "approval_status": event.approval_status,
-                "remarks": event.remarks,
-                "rejection_reason": event.rejection_reason,
-                "registration_lockout_end_time": event.registration_lockout_end_time,
-                "selected_tool": event.selected_tool,
-                "users": list(event.users.values("id", "username", "email")),
+                'id': event.id,
+                'event_name': event.event_name,
+                'event_purpose': event.event_purpose,
+                'location': event.location,
+                'start_date': event.start_date,
+                'end_date': event.end_date,
+                'duration': event.duration,
+                'counselor': event.counselor,
+                'approval_status': event.approval_status,
+                'remarks': event.remarks,
+                'rejection_reason': event.rejection_reason,
+                'registration_lockout_end_time': event.registration_lockout_end_time,
+                'selected_tool': event.selected_tool,
+                "total_users_to_screened": event.total_users_to_screened,
+                'users': list(event.users.values('id', 'username', 'email')),
                 # Add created_by information
                 "created_by": (
                     {

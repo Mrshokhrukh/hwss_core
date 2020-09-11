@@ -1,4 +1,6 @@
 from django.urls import path
+from .views import generate_counselor_report_encrypted_xls
+
 
 from reporting.views import (
     get_reporting_model_data,
@@ -20,6 +22,7 @@ urlpatterns = [
         get_reporting_model_data,
         name="get_reporting_model_data",
     ),
+    path('generate-counselor-report-encrypted-xls/', generate_counselor_report_encrypted_xls, name='generate_counselor_report_encrypted_xls'),
     path("healthz", healthz, name="healthz"),
     path(
         "generate-counselor-report-encrypted-xls/",

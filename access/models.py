@@ -7,6 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
+from gyalsung.constants import SCREENING_STATUS_CHOICES, REFERRAL_STATUS_CHOICES
 
 
 class CustomUserManager(BaseUserManager):
@@ -57,11 +58,8 @@ class CustomUserManager(BaseUserManager):
         return self.filter(
             is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
         )
-
     def for_gyalsung_reassessment_team(self):
-        return self.filter(
-            is_gyalsung=True, gyalsung_status__in=["pending", "completed"]
-        )
+        return self.filter(role="gyalsung_reassessment_team")
 
 
 class Agency(models.Model):
@@ -110,7 +108,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_of_birth = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
     email = models.EmailField(unique=True, null=True)
-    mob_number = models.CharField(max_length=15, null=True, blank=True)
+    mob_number = models.CharField(max_length=25, null=True, blank=True)
     father_name = models.CharField(max_length=255, blank=True, null=True)
     mother_name = models.CharField(max_length=255, blank=True, null=True)
     perm_add_village = models.CharField(max_length=255, null=True, blank=True)
@@ -129,13 +127,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     academy_code = models.CharField(max_length=255, blank=True, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
     is_old_case_user = models.BooleanField(default=False, null=True, blank=True)
-
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, null=True)
     access_level = models.IntegerField(default=1)
     # gyalsung oriented fields starts from here
     is_gyalsung = models.BooleanField(default=False)
     gyalsung_status = models.CharField(
         max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
+    )
+    gyalsung_screening_status = models.CharField(
+        max_length=10, choices=SCREENING_STATUS_CHOICES, default=""
+    )
+    gyalsung_referral_status = models.CharField(
+        max_length=15, choices=REFERRAL_STATUS_CHOICES, default=""
     )
     guard_mob_number = models.CharField(max_length=15, null=True, blank=True)
     hospital_name = models.CharField(max_length=255, blank=True, null=True)
@@ -189,7 +192,7 @@ class PreRecordedUser(models.Model):
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
     email = models.EmailField(unique=True)
-    mob_number = models.CharField(max_length=15)
+    mob_number = models.CharField(max_length=25)
     father_name = models.CharField(max_length=255, null=True, blank=True)
     mother_name = models.CharField(max_length=255, null=True, blank=True)
     perm_add_village = models.CharField(max_length=255)
