@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("access", "0013_customuser_gyalsung_status"),
+        ("access", "0013_alter_customuser_mob_number_and_more"),
     ]
 
     operations = [
@@ -32,6 +32,38 @@ class Migration(migrations.Migration):
                 ],
                 max_length=20,
                 null=True,
+            ),
+        ),
+        migrations.AddField(
+            model_name="customuser",
+            name="gyalsung_status",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("", ""),
+                    ("registered", "Registered"),
+                    ("screened", "Screened"),
+                    ("pending", "Pending"),
+                    ("completed", "Completed"),
+                ],
+                default="",
+                max_length=20,
+            ),
+        ),
+        migrations.AlterField(
+            model_name="customuser",
+            name="registration_method",
+            field=models.CharField(
+                choices=[
+                    ("cluster_registration", "Clustered Registered"),
+                    ("case_registration", "Counselor Case Registered"),
+                    ("event_registration", "Counselor Event Registered"),
+                    ("gyalsung_registration", "Gyalsung Registered"),
+                    ("unknown_registration", "Unknown/Legacy"),
+                ],
+                default="unknown",
+                help_text="How the user was initially registered.",
+                max_length=22,
             ),
         ),
     ]

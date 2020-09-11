@@ -4,9 +4,7 @@ from rest_framework.routers import DefaultRouter
 from gyalsung.views import (
     GyalsungCounselorUserViewSet,
     GyalsungReassessmentTeamUserViewSet,
-    GyalsungReassessmentMonitoringUserViewSet,
-    GyalsungReassessmentFitUserViewSet,
-    GyalsungReassessmentUnfitUserViewSet,
+    GyalsungAssessmentViewSet,
 )
 
 router = DefaultRouter()
@@ -19,19 +17,7 @@ router.register(
     basename="reassessment-users",
 )
 router.register(
-    r"reassessment-monitoring",
-    GyalsungReassessmentMonitoringUserViewSet,
-    basename="reassessment-monitoring",
-)
-router.register(
-    r"reassessment-fit-candidates",
-    GyalsungReassessmentFitUserViewSet,
-    basename="reassessment-fit-users",
-)
-router.register(
-    r"reassessment-unfit-candidates",
-    GyalsungReassessmentUnfitUserViewSet,
-    basename="reassessment-unfit-users",
+    r"assessments", GyalsungAssessmentViewSet, basename="gyalsung-assessments"
 )
 
 urlpatterns = [

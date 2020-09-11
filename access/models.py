@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from access.constants import GYALSUNG_STATUS, REGISTRATION_METHOD_CHOICES, ROLE_CHOICES
-from gyalsung.constants import SCREENING_STATUS_CHOICES, REFERRAL_STATUS_CHOICES
+from gyalsung.constants import REFERRAL_STATUS_CHOICES, SCREENING_STATUS_CHOICES
 
 
 class CustomUserManager(BaseUserManager):
@@ -58,8 +58,11 @@ class CustomUserManager(BaseUserManager):
         return self.filter(
             is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
         )
+
     def for_gyalsung_reassessment_team(self):
-        return self.filter(role="gyalsung_reassessment_team")
+        return self.filter(
+            is_gyalsung=True, gyalsung_status__in=["pending", "completed"]
+        )
 
 
 class Agency(models.Model):
