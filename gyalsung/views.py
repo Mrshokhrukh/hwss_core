@@ -1,16 +1,13 @@
-from rest_framework import status, viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 
 from access.models import CustomUser
 from gyalsung.models import GyalsungAssessment
 from gyalsung.serializers import (
-    GyalsungAssessmentSerializer,
     GyalsungCounselorUserSerializer,
-    GyalsungFitUnfitUserSerializer,
-    GyalsungUserRegistrationSerializer,
+    GyalsungAssessmentSerializer,
 )
 
 
@@ -37,53 +34,6 @@ class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
         qs.select_related(
             "active_agency",
         )
-        return qs
-
-
-class GyalsungReassessmentMonitoringUserViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = GyalsungFitUnfitUserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Return users marked as 'UNFIT'.
-        Prefetch the related assessments to optimize database queries.
-        """
-        return (
-            CustomUser.objects.filter(
-                is_gyalsung=True, gyalsung_screening_status="UNFIT"
-            )
-            .prefetch_related("gyalsung_assessments")
-            .order_by("-date_joined")
-        )
-
-
-class GyalsungReassessmentFitUserViewSet(viewsets.ModelViewSet):
-    # Point to the simplified serializer
-    serializer_class = GyalsungFitUnfitUserSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        print("\n--- [STEP 2] Querying database for REAL FIT candidates ---")
-        qs = CustomUser.objects.filter(
-            is_gyalsung=True, gyalsung_screening_status="FIT"
-        )
-        print(f"--- [STEP 2] Found {qs.count()} FIT candidates in database. ---")
-        return qs
-
-
-# --- RESTORE THIS TO THE REAL DATABASE-CONNECTED VERSION ---
-class GyalsungReassessmentUnfitUserViewSet(viewsets.ModelViewSet):
-    # Point to the simplified serializer
-    serializer_class = GyalsungFitUnfitUserSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        print("\n--- [STEP 2] Querying database for REAL UNFIT candidates ---")
-        qs = CustomUser.objects.filter(
-            is_gyalsung=True, gyalsung_screening_status="UNFIT"
-        )
-        print(f"--- [STEP 2] Found {qs.count()} UNFIT candidates in database. ---")
         return qs
 
 
@@ -234,34 +184,3 @@ class GyalsungAssessmentViewSet(viewsets.ModelViewSet):
             {"error": "final_screening_status field is required"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-
-class GyalsungUserRegistrationView(APIView):
-    """
-    Endpoint for counselors to register a new Gyalsung entrant.
-    """
-
-    # Make sure only authenticated counselors can access this
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        serializer = GyalsungUserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            # Return the full user data using your other serializer
-            response_serializer = GyalsungCounselorUserSerializer(user)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-        # If the user already exists, you might want to return their data
-        cid = request.data.get("cid")
-        if "identity_number" in serializer.errors and "unique" in str(
-            serializer.errors["identity_number"]
-        ):
-            try:
-                user = CustomUser.objects.get(identity_number=cid)
-                response_serializer = GyalsungCounselorUserSerializer(user)
-                return Response(response_serializer.data, status=status.HTTP_200_OK)
-            except CustomUser.DoesNotExist:
-                pass  # Fall through to return the validation error
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

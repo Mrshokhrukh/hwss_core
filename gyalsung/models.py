@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from gyalsung.constants import SCREENING_STATUS_CHOICES
 from screening.models import CaseBasedSubmission, EventBasedSubmission, EventSubstance
@@ -38,8 +39,21 @@ class GyalsungUserScreeningHistory(models.Model):
 class GyalsungAssessment(models.Model):
     """Represents a Gyalsung-specific assessment (questions + score)."""
 
+    # Use CharField for CID/identity number instead of ForeignKey
+    identity_number = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="CID/Identity number of the user",
+    )
+
+    # Keep the user field for backward compatibility but make it optional
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="gyalsung_assessments"
+        User,
+        on_delete=models.CASCADE,
+        related_name="gyalsung_assessments",
+        null=True,
+        blank=True,
     )
 
     gad_data = models.JSONField(null=True, blank=True)
@@ -70,7 +84,6 @@ class GyalsungAssessment(models.Model):
 
     is_reassessment_screening = models.BooleanField(default=False)
     # Counselor + Reassessment
-    # testing
     counselor_user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -92,8 +105,53 @@ class GyalsungAssessment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        """Validate that either user or identity_number is provided."""
+        if not self.user and not self.identity_number:
+            raise ValidationError("Either user or identity_number must be provided.")
+        if self.user and self.identity_number:
+            # Ensure consistency
+            if self.user.identity_number != self.identity_number:
+                raise ValidationError(
+                    "User's identity number doesn't match the provided identity_number."
+                )
+
+    def save(self, *args, **kwargs):
+        """Auto-populate user field if identity_number is provided."""
+        if self.identity_number and not self.user:
+            try:
+                self.user = User.objects.get(identity_number=self.identity_number)
+            except User.DoesNotExist:
+                # You might want to handle this case differently
+                # For now, we'll just save without the user
+                pass
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Gyalsung Assessment for {self.user.username} (Status: {self.final_screening_status})"
+        user_identifier = self.user.username if self.user else self.identity_number
+        return f"Gyalsung Assessment for {user_identifier} (Status: {self.final_screening_status})"
+
+    @property
+    def username(self):
+        """Return username if user exists, otherwise return identity number."""
+        return self.user.username if self.user else self.identity_number
+
+    @property
+    def user_details(self):
+        """Return user details if available."""
+        if self.user:
+            return {
+                "username": self.user.username,
+                "first_name": self.user.first_name,
+                "last_name": self.user.last_name,
+                "email": self.user.email,
+            }
+        return {
+            "username": self.identity_number,
+            "first_name": "Unknown",
+            "last_name": "User",
+            "email": "",
+        }
 
 
 class GyalsungEventSubstanceRiskMeasurement(models.Model):
