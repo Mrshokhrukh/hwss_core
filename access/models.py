@@ -56,12 +56,12 @@ class CustomUserManager(BaseUserManager):
 
     def for_gyalsung_counselors(self):
         return self.filter(
-            is_gyalsung=True, gyalsung_status__in=["registered", "screened"]
+            is_gyalsung=True, gyalsung_status__in=["registered", "screened", "pending"]
         )
 
     def for_gyalsung_reassessment_team(self):
         return self.filter(
-            is_gyalsung=True, gyalsung_status__in=["pending", "completed"]
+            is_gyalsung=True, gyalsung_status__in=["pending", "screened", "completed"]
         )
 
 

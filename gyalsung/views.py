@@ -1,6 +1,5 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from access.models import CustomUser
@@ -8,6 +7,7 @@ from gyalsung.models import GyalsungAssessment
 from gyalsung.serializers import (
     GyalsungAssessmentSerializer,
     GyalsungCounselorUserSerializer,
+    GyalsungReassessmentUserSerializer,
 )
 
 
@@ -16,7 +16,10 @@ class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
     serializer_class = GyalsungCounselorUserSerializer
 
     def get_queryset(self):
+        requested_user_agency = self.request.user.active_agency
         qs = CustomUser.objects.for_gyalsung_counselors()
+        if requested_user_agency:
+            qs = qs.filter(active_agency=requested_user_agency)
         qs.select_related(
             "active_agency",
         )
@@ -25,10 +28,13 @@ class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
 
 class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
-    serializer_class = GyalsungCounselorUserSerializer
+    serializer_class = GyalsungReassessmentUserSerializer
 
     def get_queryset(self):
+        requested_user_agency = self.request.user.active_agency
         qs = CustomUser.objects.for_gyalsung_reassessment_team()
+        if requested_user_agency:
+            qs = qs.filter(active_agency=requested_user_agency)
         qs.select_related(
             "active_agency",
         )

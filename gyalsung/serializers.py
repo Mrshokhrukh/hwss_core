@@ -7,6 +7,7 @@ from gyalsung.models import GyalsungAssessment
 
 class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
     active_agency_details = serializers.SerializerMethodField()
+    gyalsung_status = serializers.SerializerMethodField()
 
     def get_active_agency_details(self, obj):
         return {
@@ -16,6 +17,13 @@ class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
                 obj.active_agency.agency_parent if obj.active_agency else None
             ),
         }
+
+    def get_gyalsung_status(self, obj):
+        return (
+            "screened"
+            if obj.gyalsung_status not in ["registered", ""]
+            else obj.gyalsung_status
+        )
 
     class Meta:
         model = CustomUser
@@ -52,6 +60,11 @@ class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
             "personal_number",
             "registration_method",
         ]
+
+
+class GyalsungReassessmentUserSerializer(GyalsungCounselorUserSerializer):
+    def get_gyalsung_status(self, obj):
+        return "pending" if obj.gyalsung_status == "screened" else obj.gyalsung_status
 
 
 class GyalsungAssessmentSerializer(serializers.ModelSerializer):

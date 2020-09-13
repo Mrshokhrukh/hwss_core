@@ -1213,12 +1213,15 @@ def register_gyalsung_user_using_cid(request):
     message = "User details updated and registered for screening."
 
     existing_user = CustomUser.objects.filter(identity_number=identity_number).first()
+    # get custom user current active agency
+    agency = request.user.active_agency
+    if not agency:
+        current_useragency = UserAgency.objects.filter(user=request.user).first()
+        agency = current_useragency.agency if current_useragency else None
 
     if not existing_user:
 
         try:
-            current_useragency = UserAgency.objects.filter(user=request.user).first()
-            agency = current_useragency.agency if current_useragency else None
 
             user_data = process_cid_data_for_user_creation_using_gyalsung(
                 identity_number, agency
@@ -1260,7 +1263,10 @@ def register_gyalsung_user_using_cid(request):
         )
         existing_user.academy_name = request.data.get("academy")
         existing_user.personal_number = request.data.get("personal_number")
+        # update current agency as per the current user agency
+        existing_user.active_agency = agency
         existing_user.save()
+
     gyalsung_user_screen_history = GyalsungUserScreeningHistory.objects.create(
         user=existing_user
     )
