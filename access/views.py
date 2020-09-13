@@ -43,11 +43,7 @@ from access.utils import (
     process_cid_data_for_user_creation_using_gyalsung,
     process_cid_gyalsung_user_data,
 )
-from gyalsung.models import (
-    GyalsungAssessment,
-    GyalsungEventSubstanceRiskMeasurement,
-    GyalsungUserScreeningHistory,
-)
+from gyalsung.models import GyalsungUserScreeningHistory
 from screening.models import (
     CaseBasedSubmission,
     CaseScreening,
@@ -1190,7 +1186,7 @@ def registerCounselorEventUser(request):
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_gyalsung_user_data_using_cid(request):
     identity_number = request.data.get("cid")
     if not identity_number:
