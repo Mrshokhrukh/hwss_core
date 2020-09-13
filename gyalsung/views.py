@@ -1,20 +1,19 @@
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from access.models import CustomUser
 from gyalsung.models import GyalsungAssessment
 from gyalsung.serializers import (
-    GyalsungCounselorUserSerializer,
     GyalsungAssessmentSerializer,
+    GyalsungCounselorUserSerializer,
 )
 
 
 class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = GyalsungCounselorUserSerializer
-    permission_classes = [AllowAny]
 
     def get_queryset(self):
         qs = CustomUser.objects.for_gyalsung_counselors()
@@ -27,7 +26,6 @@ class GyalsungCounselorUserViewSet(viewsets.ModelViewSet):
 class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = GyalsungCounselorUserSerializer
-    permission_classes = [AllowAny]
 
     def get_queryset(self):
         qs = CustomUser.objects.for_gyalsung_reassessment_team()
@@ -40,7 +38,6 @@ class GyalsungReassessmentTeamUserViewSet(viewsets.ModelViewSet):
 class GyalsungAssessmentViewSet(viewsets.ModelViewSet):
     queryset = GyalsungAssessment.objects.all()
     serializer_class = GyalsungAssessmentSerializer
-    permission_classes = [AllowAny]  # You can change this to IsAuthenticated if needed
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

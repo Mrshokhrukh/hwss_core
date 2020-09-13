@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import GyalsungUserProfile
+from gyalsung_users.models import GyalsungUserProfile
 
 
 class GyalsungUserProfileAdmin(admin.ModelAdmin):

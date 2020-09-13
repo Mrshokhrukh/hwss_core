@@ -1,7 +1,8 @@
 from rest_framework import serializers
+
 from access.models import CustomUser
-from .models import GyalsungAssessment
-from .constants import SCREENING_STATUS_CHOICES
+from gyalsung.constants import SCREENING_STATUS_CHOICES
+from gyalsung.models import GyalsungAssessment
 
 
 class GyalsungCounselorUserSerializer(serializers.ModelSerializer):
