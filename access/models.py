@@ -56,7 +56,8 @@ class CustomUserManager(BaseUserManager):
 
     def for_gyalsung_counselors(self):
         return self.filter(
-            is_gyalsung=True, gyalsung_status__in=["registered", "screened", "pending"]
+            is_gyalsung=True,
+            gyalsung_status__in=["registered", "screened", "pending", "completed"],
         )
 
     def for_gyalsung_reassessment_team(self):
@@ -138,10 +139,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         max_length=20, choices=GYALSUNG_STATUS, default="", blank=True
     )
     gyalsung_screening_status = models.CharField(
-        max_length=10, choices=SCREENING_STATUS_CHOICES, default=""
+        max_length=10, choices=SCREENING_STATUS_CHOICES, default="", blank=True
     )
     gyalsung_referral_status = models.CharField(
-        max_length=15, choices=REFERRAL_STATUS_CHOICES, default=""
+        max_length=15, choices=REFERRAL_STATUS_CHOICES, default="", blank=True
     )
     guard_mob_number = models.CharField(max_length=15, null=True, blank=True)
     hospital_name = models.CharField(max_length=255, blank=True, null=True)

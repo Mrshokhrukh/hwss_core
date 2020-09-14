@@ -18,7 +18,7 @@ ROLE_AAA_ADMIN = "aaa_admin"
 ROLE_CECD_ADMIN = "cecd_admin"
 ROLE_PSYCHIATRIST = "psychiatrist"
 ROLE_MEDICAL_OFFICER = "medical_officer"
-ROLE_REASSESMENT_TEAM = "reassesment_team"
+ROLE_REASSESSMENT_TEAM = "reassessment_team"
 
 ROLE_CHOICES = [
     (ROLE_STUDENT, "Student"),
@@ -34,7 +34,7 @@ ROLE_CHOICES = [
     (ROLE_CECD_ADMIN, "CECD Admin"),
     (ROLE_PSYCHIATRIST, "Psychiatrist"),
     (ROLE_MEDICAL_OFFICER, "Medical Officer"),
-    (ROLE_REASSESMENT_TEAM, "Reassesment Team"),
+    (ROLE_REASSESSMENT_TEAM, "Reassessment Team"),
 ]
 REGISTRATION_METHOD_CHOICES = [
     ("cluster_registration", "Clustered Registered"),
